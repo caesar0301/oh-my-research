@@ -1,0 +1,63 @@
+# {{PROJECT_NAME}}
+
+> Research project initialized with Oh-My-Research (report-first)
+
+## Project Overview
+
+**Research Question**: {{RESEARCH_QUESTION}}
+
+**Status**: {{STATUS}}
+
+**Active Pattern**: {{ACTIVE_PATTERN}}
+
+**Started**: {{CREATED_AT}}
+
+**Last Updated**: {{LAST_UPDATED}}
+
+## Workspace Structure
+
+Bootstrap creates only the files below. Content directories are created on demand.
+
+```
+{{PROJECT_NAME}}/
+├── AGENTS.md
+└── .omr/
+    ├── tree-state.json
+    └── pattern.json
+
+# On demand:
+# materials/papers|web|github|datasets|search|failed   [collect]
+# docs/index/                                          [collect / idea]
+# docs/ideas/                                          [idea]
+# docs/plans/                                          [analyze / decide]
+# docs/archive/                                        [reconcile / version]
+# docs/survey|report|manuscript|brief/                 [synth]
+# wiki/                                                [synth]
+```
+
+## Ops (unified skill: oh-my-research)
+
+- `collect <url|query>` — gather materials
+- `analyze` — deep evidence + judgment (Gate A)
+- `think [method]` — first principles / Socratic / triangulation / …
+- `synth [--mode survey|report|…]` — deep research report (Gate D)
+- `idea "…"` — speculative note
+- `decide` — optional stance (Gate B)
+- `reconcile` — contradiction repair / archive
+- `version tag|history|backup|list`
+- `workflow [--pattern Evidence-Deep]`
+
+## Pattern
+
+Default **Evidence-Deep**: collect → analyze ⟲ think → synth (survey/report).
+
+## Gates
+
+- Gate A / QA1 after analyze
+- Gate D / QA2 / document lenses before publish
+- Gate L when Loop active
+- Gate B only if `decide` runs
+
+## Evidence boundaries
+
+Use `proven` / `suggests` / `inferred` correctly. Never upgrade weakly worded sources to proven.

@@ -1,0 +1,39 @@
+{
+  "name": "oh-my-research",
+  "owner": {
+    "name": "Xiaming Chen",
+    "url": "https://xiaming.site/"
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Unified orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, runs collect → deep analyze (+ THINK paradigms) → survey/report synthesis with confirmation gates and graph-guided patterns."
+  },
+  "plugins": [
+    {
+      "name": "oh-my-research",
+      "description": "Unified research orchestrator. Collect materials, deep-analyze with evidence boundaries and BMAD-inspired thinking paradigms, synthesize survey/report. Single entry point replacing the former omr-* skill set (without evaluation/coding).",
+      "version": "1.0.0",
+      "author": {
+        "name": "Xiaming Chen",
+        "url": "https://xiaming.site/"
+      },
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/oh-my-research"
+      ],
+      "category": "workflow",
+      "tags": [
+        "research",
+        "deep-research",
+        "survey",
+        "evidence",
+        "orchestrator",
+        "literature-review",
+        "first-principles",
+        "oh-my-research",
+        "omr"
+      ]
+    }
+  ]
+}
