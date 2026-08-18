@@ -25,7 +25,7 @@ Also: paste of URLs; “search for …”; auto-route from intent detection.
 
 Prefer arxiv SDK / direct PDF when available. Optional Chrome MCP for screenshots of web pages.
 
-Scripts: `scripts/collect_cli.py` (orchestrates handlers).
+Scripts: optional `scripts/collect_cli.py` for recording a URL into `materials/` + index. Routing, naming, depth, and search prioritization are **LLM-driven** per this doc — adapt handlers and destinations to the source type.
 
 ## Indexes
 

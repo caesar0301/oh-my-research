@@ -1,6 +1,6 @@
 # THINK Method Catalog
 
-Research-curated elicitation methods (adapted from BMAD `methods.csv`). Agents pick best-fit; users may name a method.
+Research-curated elicitation methods. Agents pick best-fit; users may name a method.
 
 ## Core research (always prefer these first)
 
@@ -46,6 +46,6 @@ Research-curated elicitation methods (adapted from BMAD `methods.csv`). Agents p
 
 Algorithm Olympics, Rubber Duck Debugging, Code Review Gauntlet, Performance Profiler Panel, Security Audit Personas, Verification-gap code lenses.
 
-## Machine registry
+## Machine catalog (optional)
 
-`assets/think/methods.csv` — columns: `num,category,method_name,description,output_pattern,research_priority` where `research_priority` is `core` or `reshuffle`.
+`assets/think/methods.csv` is a readable catalog. The agent selects methods; there is no registry runner.

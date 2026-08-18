@@ -10,15 +10,15 @@ Detailed operation guide for the unified OMR skill.
 | COLLECT | `collect` | `COLLECT/collect.md` |
 | ANALYZE | `analyze` | `ANALYZE/analyze.md` |
 | THINK | `think [method]` | `THINK/think.md`, `THINK/methods.md` |
-| SYNTH | `synth [--mode] [--format] [--no-wiki]` | `SYNTH/synth.md` |
+| SYNTH | `synth [--mode] [--format] [--language] [--resume] [--chapter] [--no-wiki]` | `SYNTH/synth.md`, `SYNTH/long-report.md` |
+| QA | `qa qa1\|qa2\|all` | `GATES.md`, `LLM-STATE.md` |
 | IDEA | `idea` | `IDEA/idea.md` |
 | DECIDE | `decide` | `DECIDE/decide.md` |
 | RECONCILE | `reconcile`, `archive`, `rollback`, `list` | `RECONCILE/reconcile.md` |
 | VERSION | `version tag\|history\|diff\|backup\|list` | `VERSION/version.md` |
 | WORKFLOW | `workflow [--phase N] [--pattern P]` | `WORKFLOW/workflow-overview.md` |
-| QA | `qa qa1\|qa2\|all` | `GATES.md` |
 
-Cross-cutting: `GATES.md`, `GRAPH.md`.
+Cross-cutting: `GATES.md`, `GRAPH.md`, `LLM-STATE.md`.
 
 ---
 
@@ -108,7 +108,7 @@ File: `.omr/tree-state.json`
 }
 ```
 
-Update after each op using graph rules in `GRAPH.md`. Scripts: `scripts/tree_state.py`.
+Update after each op using graph rules in `GRAPH.md` (LLM edits `.omr/tree-state.json` — see `LLM-STATE.md`).
 
 ---
 
@@ -138,10 +138,11 @@ Templates use `{{PLACEHOLDER}}` syntax:
 
 ## Reference Map
 
-- `GATES.md` — A / B / D / L / QA1 / QA2 / lenses
+- `GATES.md` — A / B / D / L / QA1 / QA2 / lenses (LLM-evaluated)
+- `LLM-STATE.md` — agent-owned state JSON; scripts only for render/backup/optional collect
 - `GRAPH.md` — pattern graphs and next-step routing
 - `THINK/` — elicitation behavior + method catalog
 - `ANALYZE/` — deep analysis pipeline
-- `SYNTH/` — report quality bar
+- `SYNTH/` — incremental long-report protocol + export
 - `WORKFLOW/` — end-to-end Evidence-Deep
 - `patterns/*.json` — machine-readable graphs

@@ -21,7 +21,7 @@ Runtime:
 | Loop | `patterns/loop.json` | survey |
 | Rapid | `patterns/rapid.json` | brief |
 
-**Dropped vs OmniResearch:** Experiment-First, Rapid-Prototype (eval entry), mandatory decide middle node.
+**Out of this skill's scope:** experiment/prototype coding evaluation, and a mandatory decide middle node on the default path.
 
 ## Evidence-Deep (default)
 
@@ -99,10 +99,10 @@ Locked: —
 
 ## Updating State
 
-After each successful op, update:
+After each successful op, the **agent** updates (see `LLM-STATE.md`):
 
-- `.omr/tree-state.json` — move op to `completed`; unlock dependents
+- `.omr/tree-state.json` — move op to `completed`; unlock dependents per this graph and the active pattern
 - `.omr/loop-state.json` — if Loop / Gate L
-- `.omr/quality-gates/*.yaml` — if gate/QA ran
+- `.omr/quality-gates/*.json` — if gate/QA ran (LLM-written)
 
-Helpers: `scripts/tree_state.py`, `scripts/loop_state.py`.
+Do not require Python helpers for tree/loop/quality state.

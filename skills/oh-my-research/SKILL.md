@@ -1,23 +1,11 @@
 ---
 name: oh-my-research
-description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle. Replaces the former omr-* skill set without evaluation/coding.
+description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
   version: "1.0.0"
   author: "Xiaming Chen"
   category: "workflow"
-  replaces:
-    - omr-core
-    - omr-bootstrap
-    - omr-collection
-    - omr-analyze
-    - omr-decision
-    - omr-evaluation
-    - omr-synthesis
-    - omr-idea-note
-    - omr-reconcile
-    - omr-quality-gate
-    - omr-version-control
 ---
 
 # Oh-My-Research
@@ -89,10 +77,10 @@ Passive reception of sources → materials + indexes. Op: `collect <url|query|�
 Deep analysis centerpiece: brief, evidence-map, judgment, optional plan; Gate A / QA1; THINK checkpoint. Op: `analyze`. → `references/ANALYZE/analyze.md`
 
 ### THINK Mode
-BMAD-inspired elicitation on research artifacts (never code). Op: `think [method]`. → `references/THINK/think.md`
+Structured elicitation on research artifacts (never code). Op: `think [method]`. → `references/THINK/think.md`
 
 ### SYNTH Mode
-Primary deliverable: publication-quality English or Chinese Word/PDF survey/report/manuscript/brief + lenses + Gate D / QA2 + optional wiki. Op: `synth [--mode] [--format docx|pdf] [--language en|zh-CN] [--no-wiki]`. Public deliverables must be self-contained and must not expose OMR terms, gates, internal material IDs, evidence-grade labels, or artifact paths. → `references/SYNTH/synth.md`
+Primary deliverable: long, publication-quality English or Chinese Word/PDF reports written **incrementally** (outline → one chapter per turn → continuity brief → assemble). Ops: `synth [--mode] [--format docx|pdf] [--language en|zh-CN] [--resume] [--chapter <id>] [--no-wiki]`. Never generate an entire deep report in one turn. Public deliverables must be self-contained and must not expose workflow terms, internal material IDs, evidence-grade labels, or artifact paths. → `references/SYNTH/synth.md` and `references/SYNTH/long-report.md`
 
 ### IDEA Mode (optional)
 Capture speculative notes. Op: `idea "…"`. → `references/IDEA/idea.md`
@@ -157,15 +145,17 @@ Templates: `assets/`. Patterns: `patterns/`. Detailed ops: `references/REFERENCE
 1. Trust auto-detection; override with canonical ops when needed
 2. Never upgrade `suggests` → `proven` without stronger source language
 3. Use THINK (first principles / triangulation) before Gate A when confidence is low
-4. Prefer a professionally formatted DOCX or PDF in the user's requested English or Chinese
-5. Keep internal traceability private; translate it into standard citations and natural prose
-6. Make the final report self-contained, professional, and accessible to its intended reader
-7. Write full reports to disk; reply in chat with summary only
-8. Run document lenses and visually inspect the rendered file before Gate D
+4. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
+5. Prefer a professionally formatted DOCX or PDF in the user's requested English or Chinese; drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
+6. Keep internal traceability private; translate it into standard citations and natural prose
+7. Make the final report self-contained, professional, and accessible to its intended reader
+8. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
+9. Write full reports to disk; reply in chat with summary only
+10. Run document lenses and visually inspect the rendered file before Gate D
 
 ## Dependencies
 
 - Read/write project workspace
-- Optional scripts under `scripts/` for collection helpers, QA, version, tree/loop state
-- `python-docx` for Word export and `reportlab` for PDF export (see `scripts/requirements.txt`)
-- No BMAD-METHOD install required (elicitation ideas adapted into THINK)
+- Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
+- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `version_control.py` (tags/backups), optional `collect_cli.py`
+- `python-docx` / `reportlab` via `scripts/requirements.txt` for export

@@ -1,6 +1,10 @@
 # SYNTH Mode — Deep Research Report
 
-**Primary deliverable.** Write a self-contained, publication-quality survey/report (or manuscript/brief) from the private research artifacts. The preferred deliverable is a professionally formatted **Word document (`.docx`) or PDF**, in English or Simplified Chinese. Full text goes to disk; chat gets a short summary only.
+**Primary deliverable.** Write a self-contained, publication-quality survey/report (or manuscript/brief) from private research artifacts. Preferred output: professionally formatted **Word (`.docx`) or PDF**, in English or Simplified Chinese.
+
+Long deep reports **must not** be generated in a single model turn. Write **incrementally to disk**, one chapter (or chapter section) at a time, then assemble the final document.
+
+Chat replies stay short: progress, paths, and findings — never full chapters.
 
 ## Trigger
 
@@ -13,11 +17,13 @@ synth --mode brief
 synth --no-wiki
 synth --format docx|pdf
 synth --language en|zh-CN
+synth --resume
+synth --chapter <id>
 ```
 
 Keywords: report, survey, write up, synthesize, manuscript, brief.
 
-**Requires:** `docs/plans/judgment-*.md` (required). Decision optional. Never require evaluation reports.
+**Requires:** `docs/plans/judgment-*.md`. Decision optional.
 
 ## Mode defaults
 
@@ -27,111 +33,136 @@ Keywords: report, survey, write up, synthesize, manuscript, brief.
 | Stance-First | `report` |
 | Idea-First / Rapid | `brief` |
 
+Default `--format`: `docx`. Default language: user request, else research-question language.
+
+## Hard constraint: context-safe writing
+
+Deep reports routinely exceed a single context window. **Mandatory rules:**
+
+1. **Never** draft the entire report body in one response.
+2. **Outline first**, then write **one chapter per turn** (or one major section if a chapter is still too large).
+3. **Flush each chapter to disk immediately** under `docs/<mode>/chapters/`.
+4. Keep a compact **continuity brief** (claims, terms, citation ledger, open threads) — reload that, not all prior chapters.
+5. Write **executive summary and conclusions last**, after body chapters exist.
+6. **Resume** from `.omr/report-state.json` if interrupted (`synth --resume`).
+7. Assemble DOCX/PDF only when all planned chapters are `done`.
+
+Detailed protocol: `long-report.md`.
+
 ## Private working layer vs public report
 
-Research artifacts under `docs/plans/` may use internal material IDs, evidence grades, gate names, and workflow metadata. These are **private working conventions**.
+Private artifacts (`docs/plans/`, indexes, continuity brief) may use internal material IDs and evidence grades.
 
-The report delivered to the reader must not expose:
+Public chapters and the final DOCX/PDF must **not** expose:
 
-- `P-001`, `W-002`, `G-003`, or other internal material IDs
-- OMR / Oh-My-Research, Evidence-Deep, THINK, SYNTH, Gate A/B/D/L, QA1/QA2
-- internal labels such as `proven`, `suggests`, or `inferred`
-- implementation notes, workflow status, or artifact paths
+- internal material IDs (`P-001`, `W-002`, …)
+- workflow names, gates, QA labels, artifact paths
+- internal evidence-grade labels (`proven` / `suggests` / `inferred`)
 
-Translate internal traceability into conventional reader-facing citations:
-
-- Prefer author–date citations: `(Smith, 2025)` / `（张伟，2025）`
-- Numbered citations `[1]` are acceptable for technical reports
-- Include a complete references section with author, title, venue/publisher, year, DOI/URL, and access date for web sources
-- If metadata is incomplete, resolve it from indexes/materials before export; never print an internal ID as a fallback
-
-Translate evidence grades into natural professional prose. Example: write “A controlled study of 1,200 participants found…” rather than “Evidence grade: proven.”
+Translate to conventional citations and natural professional prose. See `long-report.md` § Citation map.
 
 ## Language
 
-- `--language en` → idiomatic professional English
-- `--language zh-CN` → professional Simplified Chinese with natural Chinese terminology and punctuation
-- If omitted, use the language requested by the user; otherwise use the language of the research question
-- Produce one primary language per report unless the user explicitly requests a bilingual edition
-- Translate meaning, not sentence structure; preserve technical terms in English in parentheses on first use when useful
+- `en` — idiomatic professional English
+- `zh-CN` — professional Simplified Chinese
+- One primary language per report unless the user requests bilingual
 
 ## Quality bar (before Gate D)
 
-1. Claims privately map to evidence-map / judgment, but public prose uses conventional citations only
-2. Evidence strength is expressed naturally and precisely, without internal labels
-3. Comparative structure where literature conflicts (not a flat dump)
-4. Open gaps and limitations section **mandatory**
-5. The report is self-contained: definitions, context, methods, findings, limitations, and references require no access to working files
-6. Tone is professional, direct, and user-friendly; explain specialized concepts before using them
-7. Document lenses: Structure → Prose → Adversarial (`GATES.md`)
-8. QA2 + Gate D confirm
-9. Render and inspect the final DOCX/PDF
-10. Optional wiki after Gate D (skip with `--no-wiki`)
+1. All planned chapters on disk; report-state shows complete
+2. Claims privately map to evidence; public prose uses conventional citations only
+3. Evidence strength expressed naturally (no internal labels)
+4. Comparative structure where sources conflict
+5. Gaps and limitations mandatory
+6. Report is self-contained for a reader without working files
+7. Professional, user-friendly tone
+8. Per-chapter lenses as needed; whole-document Structure/Prose/Adversarial pass before export
+9. Rendered DOCX/PDF inspected; publication-safety scan clean
+10. Optional wiki after Gate D (`--no-wiki` to skip)
 
-## Process
+## Process (summary)
 
-1. Load judgment (+ evidence-map, brief, optional decision, indexes).
-2. Choose mode and language; create `docs/<mode>/`.
-3. Build a citation map from internal IDs to complete bibliographic entries.
-4. Draft reader-facing chapters from templates in `assets/synth/`.
-5. Replace every internal material ID with an author–date or numbered citation.
-6. Rewrite internal evidence labels as precise natural-language claims.
-7. Optional THINK Critique and Refine on the weakest chapter.
-8. Run document lenses; apply accepted findings.
-9. Export a review copy with `scripts/export_report.py --format docx|pdf --language en|zh-CN`.
-10. Inspect the rendered document for typography, page breaks, tables, headings, references, and Chinese glyph coverage. Fix and re-export until clean.
-11. Run QA2 on the source and rendered deliverable; present the Gate D checklist.
-12. On Gate D pass: deliver the DOCX/PDF and generate wiki unless `--no-wiki`.
+1. Load judgment + evidence-map + brief + indexes (slim — not wholesale every turn).
+2. LLM: outline + citation map + `.omr/report-state.json` adapted to the topic (`long-report.md`, `LLM-STATE.md`).
+3. Confirm outline (or quick-pass).
+4. Loop: next chapter from report-state → slim context pack → write → save → update continuity → mark done in JSON.
+5. Closing chapters; abstract last.
+6. Lenses (chapter-scoped, then light global).
+7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
+8. LLM QA2 → `export_report.py` for DOCX/PDF → inspect → Gate D.
+9. Deliver path + short summary; optional wiki.
 
-## Survey layout (default)
+## Presentation is LLM-driven (not baked into the script)
+
+The exporter is a **thin, spec-driven renderer**. All presentation decisions live in an LLM-authored `docs/<mode>/_document.json`, not in the script:
+
+- **You decide** title / subtitle / author / date, page size + margins, body & heading fonts (Latin + East Asian + PDF CJK), heading colors and sizes, line spacing, cover elements and order, TOC on/off + title + depth, header text, footer page numbers, and **chapter order/include/exclude**.
+- Start from `assets/synth/_document.json`, or generate a starter: `python scripts/export_report.py --emit-spec --mode <mode>`.
+- Any omitted field falls back to a neutral default; CLI `--title`/`--author` override the file for quick runs.
+- The script never invents structure or styling — it renders exactly what the spec + chapters say, then runs the publication-safety scan.
+
+Tune the spec to the report: e.g. a Chinese report sets `fonts.body.eastasia` + `fonts.pdf_cjk` and `--language zh-CN`; a brief may set `cover.enabled=false` and `toc.enabled=false`; a manuscript may reorder chapters via `chapters.order`.
+
+## Default deep-survey layout
 
 ```
 docs/survey/
-├── 00-overview.md
-├── 01-background.md
-├── 02-themes.md          # comparative, cited
-├── 03-evidence-synthesis.md
-├── 04-gaps-and-limitations.md
-├── 05-conclusions.md
-└── references.md
+├── _outline.md
+├── _citation-map.md          # private; not exported
+├── _continuity.md            # private rolling brief; not exported
+├── _document.json            # LLM-authored presentation spec (drives rendering)
+├── chapters/
+│   ├── 00-title-abstract.md
+│   ├── 01-introduction.md
+│   ├── 02-background.md
+│   ├── 03-theme-a.md
+│   ├── 04-theme-b.md
+│   ├── 05-theme-c.md         # add themes as outline requires
+│   ├── 06-comparative-synthesis.md
+│   ├── 07-gaps-and-limitations.md
+│   ├── 08-conclusions.md
+│   └── 09-references.md
+└── deliverables/
+    └── <topic>-survey-<lang>.docx|pdf
 ```
 
-## Report layout
-
-```
-docs/report/
-├── executive-summary.md
-├── findings.md
-├── analysis.md
-├── recommendations.md    # evidence-bound; not product roadmap unless asked
-└── appendix-sources.md
-```
+Brief mode may use fewer chapters; manuscript may use journal-style sections. Outline drives the actual file set.
 
 ## Final document presentation
 
-- Use a descriptive title; do not name the file “OMR report”
-- Include title page, executive summary/摘要, table of contents, numbered headings, body, limitations, conclusion, and references
-- Use readable typography, page numbers, consistent heading hierarchy, restrained colors, and properly fitted tables
-- DOCX is preferred when the user may edit the report; PDF is preferred for stable distribution
-- Default output names:
-  - English: `docs/<mode>/deliverables/<topic>-<mode>-en.docx|pdf`
-  - Chinese: `docs/<mode>/deliverables/<topic>-<mode>-zh-CN.docx|pdf`
+Driven by `_document.json` (above). Aim for:
 
-## Chat reply template
+- Descriptive, reader-facing title (never an internal/workflow name)
+- Title page, abstract/executive summary, TOC, numbered headings, body, limitations, conclusion, references
+- Readable typography, page numbers, consistent hierarchy
+- DOCX for editable delivery; PDF for stable distribution
+
+## Chat reply templates
+
+While writing:
+
+```
+[SYNTH] Chapter 03/09 done → docs/survey/chapters/03-theme-a.md
+Next: 04-theme-b
+Progress: 33%
+```
+
+When finished:
 
 ```
 Report: docs/survey/deliverables/<topic>-survey-en.docx
 Language: English
+Chapters: 9
 Key findings: …
 Quality review: passed
 ```
 
-**Never** paste full chapters into chat.
-
 ## Hard rules
 
-- No over-claiming
-- No uncitable factual assertions presented as proven
-- Limitations and gaps must appear even when confidence is high
-- No internal IDs, workflow names, gate names, or evidence-grade labels in public deliverables
-- Do not export if the publication-safety scan finds internal terminology
+- No single-shot full-report generation
+- No pasting full chapters into chat
+- No over-claiming; limitations always present
+- No internal IDs / workflow terms in public chapters or export
+- Author `_document.json` for presentation — don't rely on the script to choose styling/structure
+- Do not export if publication-safety scan fails
+- Prefer continuing the chapter loop over rewriting completed chapters

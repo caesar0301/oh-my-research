@@ -51,11 +51,18 @@ Present **Gate A / QA1**. On pass → unlock SYNTH.
 ### 4. SYNTH
 
 ```
-synth --mode survey
+synth --mode survey --format docx --language en
 ```
 
-Draft `docs/survey/…` → document lenses (Structure, Prose, Adversarial) → QA2 → **Gate D**.  
-On pass: optional wiki. Chat: summary only.
+**Long-report path (required for deep surveys):**
+
+1. Outline + citation map + LLM-authored `.omr/report-state.json`  
+2. Write one chapter per turn into `docs/survey/chapters/`  
+3. Update `_continuity.md` after each chapter  
+4. Resume with `synth --resume` if interrupted  
+5. Write abstract last → lenses → author `_document.json` presentation spec → LLM QA2 → export DOCX/PDF → Gate D  
+
+See `references/SYNTH/long-report.md`. Chat: progress only.
 
 ### 5. FINISHED
 

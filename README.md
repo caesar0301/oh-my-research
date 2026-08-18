@@ -7,12 +7,12 @@ A unified Agent Skill for **high-quality deep research reports** from collected 
 
 ## Overview
 
-**Oh-My-Research** is a single orchestrator skill that turns literature and web materials into evidence-bound surveys and reports. It unifies the former multi-skill OmniResearch workflow (minus evaluation/coding), with:
+**Oh-My-Research** is a single orchestrator skill that turns literature and web materials into evidence-bound surveys and reports, with:
 
-- **Intent + workspace-state auto-detection** (Platonic Coding pattern)
+- **Intent + workspace-state auto-detection**
 - **Graph-guided patterns** (default: Evidence-Deep)
 - **Confirmation gates** (A / D / L; optional B)
-- **THINK mode** — BMAD-inspired thinking paradigms (first principles, Socratic, triangulation, …)
+- **THINK mode** — structured thinking paradigms (first principles, Socratic, triangulation, …)
 - **Document lenses** before publish (Structure / Prose / Adversarial)
 - **Professional Word/PDF delivery** in English or Simplified Chinese
 - **Publication-safe output** with standard citations and no internal workflow terminology
@@ -20,10 +20,10 @@ A unified Agent Skill for **high-quality deep research reports** from collected 
 Primary pipeline:
 
 ```
-COLLECT materials → ANALYZE (deep evidence + THINK) → SYNTH (survey / report)
+COLLECT materials → ANALYZE (deep evidence + THINK) → SYNTH (incremental long report → Word/PDF)
 ```
 
-No prototype coding or experiment-evaluation skills.
+Deep reports are written chapter-by-chapter to disk (with a continuity brief and resume support), then assembled into a professional Word or PDF document.
 
 ## Installation
 
@@ -72,12 +72,6 @@ collect → analyze ⟲ think → synth (survey or report)
 Final reports are reader-facing publications: internal material IDs, evidence-grade labels, gate names, and OMR workflow terms remain in private working artifacts and are converted to conventional citations and natural professional language.
 
 See [skills/oh-my-research/SKILL.md](skills/oh-my-research/SKILL.md) and [references/REFERENCE.md](skills/oh-my-research/references/REFERENCE.md).
-
-## Inspiration
-
-- [platonic-coding](https://github.com/caesar0301/platonic-coding) — orchestrator, intent detection, gates
-- [omni-research](https://github.com/OMNILab/omni-research) — evidence boundaries, materials contracts, synthesis
-- [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) — advanced elicitation & document review lenses (adapted, not vendored)
 
 ## License
 

@@ -22,7 +22,7 @@ version list
 | `backup` | Timestamped copy of `docs/plans` + current synth mode dirs (+ optional wiki) into `docs/archive/` or `.omr/backups/` |
 | `list` | List backups and tags |
 
-Script: `scripts/version_control.py`
+Script: `scripts/version_control.py` (mechanical tags/backups only).
 
 ## Practice
 

@@ -41,14 +41,19 @@
 
 ## [SYNTH]
 
-- [ ] Mode selected
-- [ ] Chapters written to `docs/<mode>/`
-- [ ] Citations resolve
+- [ ] Outline + citation map + topic-specific `.omr/report-state.json` (LLM-authored)
+- [ ] Chapters written one-at-a-time under `docs/<mode>/chapters/`
+- [ ] Continuity brief updated and pruned after each chapter
+- [ ] Abstract / executive summary written last
+- [ ] All chapters `done` in report-state (or `synth --resume` until done)
+- [ ] Citations resolve to complete bibliography entries
 - [ ] Gaps/limitations section present
 - [ ] Lenses run; accepted edits applied
-- [ ] QA2 + Gate D passed
+- [ ] Presentation spec authored: `docs/<mode>/_document.json` (title, fonts, cover, TOC, header/footer, chapter order per report/language)
+- [ ] LLM QA2 recorded; DOCX/PDF exported (spec applied) and inspected
+- [ ] Gate D passed
 - [ ] Wiki generated or skipped
-- [ ] Chat summary only
+- [ ] Chat: progress / summary only (no full chapters)
 
 ## [RECONCILE] (as needed)
 

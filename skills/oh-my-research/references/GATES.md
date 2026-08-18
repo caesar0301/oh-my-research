@@ -1,34 +1,56 @@
 # Quality Gates (Report-First)
 
+Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists below with scenario judgment, writes results under `.omr/quality-gates/`, and asks the user to confirm (unless quick-pass). See also `LLM-STATE.md`.
+
 ## Overview
 
 | Gate | Position | Purpose | Required artifacts |
 |------|----------|---------|-------------------|
 | **L** | IDEA / ANALYZE when Loop active | Iterate deeper or advance? | `.omr/loop-state.json` |
 | **A** | After ANALYZE judgment, before unlock SYNTH | Evidence sufficient for report? | brief, evidence-map, judgment |
-| **QA1** | After judgment (auto or `qa qa1`) | Coverage, gaps, traceability metrics | papers-index, evidence, judgment |
+| **QA1** | After judgment (auto or `qa qa1`) | Coverage, gaps, traceability | papers-index, evidence, judgment |
 | **B** | Only if DECIDE runs | Stance sound? | decision draft (≥3 alts, risks, refs) |
-| **Lenses** | Before Gate D on SYNTH draft | Structure / Prose / Adversarial | synthesis draft under `docs/<mode>/` |
+| **Lenses** | Before Gate D on SYNTH draft | Structure / Prose / Adversarial | `docs/<mode>/chapters/` |
 | **D** | Before publishing SYNTH | Traceable, no over-claiming? | judgment (+ optional decision) |
-| **QA2** | Pre-export (`qa qa2`) | Structure, citations, coherence | synthesis files |
+| **QA2** | Pre-export (`qa qa2`) | Structure, citations, coherence, safety | chapters + deliverable |
 
-**Removed:** Gate C and all experiment-design checks.
+**Removed:** Gate C and experiment-design checks. **No quality-gate Python runner** — judgment is agent-side.
 
 ## Enforcement Modes
 
 | Mode | Behavior |
 |------|----------|
 | **Semi-automated** (default) | User confirms at each gate |
-| **Quick-pass / no confirmations** | Gates auto-pass after checks run (still record results) |
-| **Fully-automated** | Same as quick-pass; for agent-driven runs |
+| **Quick-pass / no confirmations** | Agent still runs checks and records JSON; skips user pause |
+| **Fully-automated** | Same as quick-pass |
 
-Record passes under `.omr/quality-gates/`.
+## How to record a gate/QA result
+
+Write JSON (not a fixed script schema beyond this shape):
+
+```json
+{
+  "gate": "QA1",
+  "run_at": "ISO-8601",
+  "status": "pass|warn|fail",
+  "scenario_note": "e.g. narrow 4-paper deep dive — coverage bar lowered deliberately",
+  "checks": [
+    {
+      "id": "coverage",
+      "status": "pass|warn|fail",
+      "details": "human-readable rationale tied to this topic"
+    }
+  ]
+}
+```
+
+Paths: `.omr/quality-gates/QA1-evidence-analysis.json`, `QA2-pre-export.json`, or `gate-a.json`, etc.
 
 ---
 
 ## Gate L — Iterate or Advance (Loop only)
 
-Present only when Loop pattern is active or `loop-state.active == true`.
+Present only when Loop is active or `loop-state.active == true`. Agent updates `.omr/loop-state.json` directly.
 
 **Checks:**
 - [ ] Focus question still productive
@@ -38,73 +60,64 @@ Present only when Loop pattern is active or `loop-state.active == true`.
 
 **Outcomes:** Iterate | Advance | Stop/park
 
-Helper: `scripts/loop_state.py`
-
 Gate L asks “keep digging?”; Gate A asks “good enough to write the report?”
 
 ---
 
 ## Gate A — Within ANALYZE
 
-Position: after judgment (+ optional THINK), before unlocking SYNTH / writing optional plan.
+Position: after judgment (+ optional THINK), before unlocking SYNTH.
 
-**Checks:**
-- [ ] Evidence coverage adequate for the research question
+**Checks (interpret for this question — not universal quotas):**
+- [ ] Evidence coverage adequate **for the stated scope**
 - [ ] Research question clear
 - [ ] Scope defined
-- [ ] Judgment confidence reasonable
+- [ ] Judgment confidence reasonable and explained
 - [ ] Open gaps listed (not hidden)
 
-**Failure:** “Evidence insufficient. Add materials via `collect` or deepen with `think` (e.g. Source Triangulation / First Principles).” Re-run judgment phases before unlocking SYNTH.
+**Failure:** collect more or `think`; do not unlock SYNTH.
+
+On pass: set `synth` ready in `.omr/tree-state.json`.
 
 ---
 
-## QA1 — Post-Analysis Quality
+## QA1 — Post-Analysis Quality (LLM)
 
-Position: after judgment, typically before or with Gate A.
+Position: after judgment, typically with Gate A. Op: `qa qa1`.
 
-| Check | Criteria |
-|-------|----------|
-| `coverage` | Prefer ≥3 primary sources on core themes; total materials ≥5 for deep survey (scale with topic) |
-| `evidence-grade` | At least some `proven` or multiple `suggests` per major claim cluster |
-| `gap-detection` | Open gaps section present with severity |
-| `contradiction` | Conflicts flagged or “None detected” stated |
-| `traceability` | Every finding links to material ID present in indexes |
+| Check | Guidance (adapt to scenario) |
+|-------|------------------------------|
+| `coverage` | Enough sources for the claim strength you will make; deep dive on few papers can pass with explicit narrow-scope note; broad survey needs wider coverage |
+| `evidence-grade` | Major claim clusters have appropriately strong backing; do not require a fixed count of “proven” |
+| `gap-detection` | Open gaps present with severity |
+| `contradiction` | Conflicts handled or “None detected” stated |
+| `traceability` | Findings link to material IDs in private plans/indexes |
 
-Write: `.omr/quality-gates/QA1-evidence-analysis.json`
-
-Script: `scripts/quality_gate.py qa1`
+Write `.omr/quality-gates/QA1-evidence-analysis.json` with rationale per check.
 
 ---
 
-## Gate B — Before finishing DECIDE (optional path only)
+## Gate B — Before finishing DECIDE (optional)
 
 **Checks:**
-- [ ] ≥3 alternatives documented
+- [ ] ≥3 alternatives documented (or document why fewer fit this decision type)
 - [ ] Risks stated
 - [ ] Evidence refs valid
 - [ ] Selection rationale clear
-
-**Failure:** Complete alternatives / risks / refs before marking decision done.
 
 ---
 
 ## Document Lenses (before Gate D)
 
-BMAD-inspired multi-lens review on synthesis drafts. Content ideas are not “corrected away” by Structure/Prose; Adversarial finds missing angles.
+Prefer **chapter-scoped** lenses during the long-report loop; one light global pass before export.
 
 | Lens | Method |
 |------|--------|
-| **Structure** | Propose cuts, merges, moves — does shape serve a deep report? |
-| **Prose** | Clarity, flow, professional tone, plain-language explanations, natural evidence-strength phrasing |
-| **Adversarial** | Forced missing-angle findings (≥ several concrete gaps); empty list not allowed |
+| **Structure** | Cuts, merges, moves — does shape serve a deep report? |
+| **Prose** | Clarity, tone, plain explanations, natural evidence-strength phrasing |
+| **Adversarial** | Forced missing-angle findings; empty list not allowed |
 
-Process:
-1. Announce lenses
-2. Produce findings table (lens, location, trigger, consequence)
-3. User accept/reject row by row
-4. Apply accepted edits
-5. Proceed to QA2 / Gate D
+Process: announce → findings table → user accept/reject → apply → continue.
 
 ---
 
@@ -112,49 +125,38 @@ Process:
 
 **Checks:**
 - [ ] Claims privately traceable to judgment / evidence-map
-- [ ] Public claims use conventional author–date or numbered citations
-- [ ] Evidence strength is stated naturally, without internal grade labels
+- [ ] Public claims use conventional citations only
+- [ ] Evidence strength stated naturally (no internal grade labels)
 - [ ] No over-claiming
-- [ ] Gaps and limitations section present
+- [ ] Gaps and limitations present
 - [ ] Cross-references valid
-- [ ] Report is self-contained for a reader without access to working artifacts
-- [ ] No OMR/workflow terminology, gate names, internal IDs, or artifact paths remain
-- [ ] Language is idiomatic professional English or Simplified Chinese
-- [ ] Final DOCX/PDF has been rendered and visually inspected
-
-**Failure:** Fix links, boundaries, or over-claims; re-run lenses if structural.
+- [ ] Self-contained for a reader without working files
+- [ ] No workflow terms, gate names, internal IDs, or private paths
+- [ ] Language consistent (`en` or `zh-CN`)
+- [ ] All planned chapters complete in `.omr/report-state.json`
+- [ ] Final DOCX/PDF rendered (`export_report.py`) and visually inspected
 
 ---
 
-## QA2 — Pre-Export
+## QA2 — Pre-Export (LLM)
 
-| Check | Criteria |
+Op: `qa qa2`. Evaluate chapters under `docs/<mode>/chapters/` (ignore `_*.md` working files).
+
+| Check | Guidance |
 |-------|----------|
-| `structure` | Required sections for mode (survey/report/…) present |
-| `citations` | Reader-facing citations resolve to complete bibliography entries |
-| `coherence` | No orphan chapters; TOC matches files |
-| `publication-safety` | No internal IDs, OMR terms, gate names, grade labels, or private paths |
-| `self-contained` | Definitions, context, method, findings, limitations, and references stand alone |
-| `language` | Consistent `en` or `zh-CN`; no accidental mixed-language boilerplate |
-| `rendering` | DOCX/PDF opens cleanly; headings, tables, page breaks, fonts, and page numbers are correct |
+| `structure` | Outline chapters exist and match report-state; section set fits **this** mode/topic |
+| `citations` | Reader-facing cites resolve to complete bibliography entries |
+| `coherence` | Order sensible; no orphan stubs; takeaways consistent with continuity |
+| `publication-safety` | No internal IDs, workflow/gate names, grade labels, private paths |
+| `self-contained` | Definitions, context, findings, limitations, references stand alone |
+| `language` | Consistent language; no mixed boilerplate |
+| `rendering` | After export: file exists, opens, typography acceptable |
 
-Write: `.omr/quality-gates/QA2-pre-export.json`
+Write `.omr/quality-gates/QA2-pre-export.json`.
 
-Script: `scripts/quality_gate.py qa2`
+Mechanical backup: `export_report.py` refuses unsafe strings at render time — still fix in prose.
 
 ---
-
-## Gate Metadata Example
-
-```yaml
-gates_passed:
-  - gate: gate_a
-    passed_at: 2026-08-18T10:00:00Z
-    reviewer: user
-    checks:
-      - "Evidence coverage: ✓"
-      - "Question clear: ✓"
-```
 
 ## Failure → Options
 
@@ -162,4 +164,4 @@ gates_passed:
 2. `think` with a named method
 3. `collect` more materials
 4. `reconcile` if contradiction cascade
-5. Switch pattern (e.g. Rapid for time-box)
+5. Switch pattern or narrow scope (document in `scenario_note`)
