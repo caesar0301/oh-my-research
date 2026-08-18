@@ -13,6 +13,12 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.1.5] — 2026-08-18
+
+### Changed
+
+- Fix PDF/DOCX chrome and content rendering: mixed-script header/footer fonts, sequential ordered-list numbering (including restart/startOverride), and inline LaTeX math ($...$) via Unicode with sub/superscripts.
+
 ## [1.1.4] — 2026-08-18
 
 ### Changed

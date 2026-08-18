@@ -552,9 +552,248 @@ def slugify(value: str) -> str:
     return value.strip("-") or "research"
 
 
+# --------------------------------------------------------------------------- #
+# Inline math ($...$) — LaTeX rendered to Unicode with sub/superscripts
+# --------------------------------------------------------------------------- #
+MATH_INLINE_RE = re.compile(r"\$(?!\$)([^$\n]+?)\$")
+
+# LaTeX control words → Unicode. Unknown commands fall back to their bare name.
+_MATH_COMMANDS = {
+    "left": "",
+    "right": "",
+    "equiv": "\u2261",
+    "approx": "\u2248",
+    "sim": "\u223c",
+    "simeq": "\u2243",
+    "cong": "\u2245",
+    "propto": "\u221d",
+    "neq": "\u2260",
+    "ne": "\u2260",
+    "leq": "\u2264",
+    "le": "\u2264",
+    "geq": "\u2265",
+    "ge": "\u2265",
+    "ll": "\u226a",
+    "gg": "\u226b",
+    "times": "\u00d7",
+    "div": "\u00f7",
+    "cdot": "\u00b7",
+    "ast": "\u2217",
+    "star": "\u22c6",
+    "circ": "\u2218",
+    "bullet": "\u2219",
+    "pm": "\u00b1",
+    "mp": "\u2213",
+    "oplus": "\u2295",
+    "ominus": "\u2296",
+    "otimes": "\u2297",
+    "odot": "\u2299",
+    "to": "\u2192",
+    "rightarrow": "\u2192",
+    "longrightarrow": "\u27f6",
+    "Rightarrow": "\u21d2",
+    "implies": "\u21d2",
+    "Leftarrow": "\u21d0",
+    "leftarrow": "\u2190",
+    "leftrightarrow": "\u2194",
+    "Leftrightarrow": "\u21d4",
+    "iff": "\u21d4",
+    "mapsto": "\u21a6",
+    "uparrow": "\u2191",
+    "downarrow": "\u2193",
+    "infty": "\u221e",
+    "partial": "\u2202",
+    "nabla": "\u2207",
+    "forall": "\u2200",
+    "exists": "\u2203",
+    "nexists": "\u2204",
+    "in": "\u2208",
+    "notin": "\u2209",
+    "ni": "\u220b",
+    "subset": "\u2282",
+    "subseteq": "\u2286",
+    "supset": "\u2283",
+    "supseteq": "\u2287",
+    "cup": "\u222a",
+    "cap": "\u2229",
+    "setminus": "\u2216",
+    "emptyset": "\u2205",
+    "varnothing": "\u2205",
+    "wedge": "\u2227",
+    "land": "\u2227",
+    "vee": "\u2228",
+    "lor": "\u2228",
+    "neg": "\u00ac",
+    "lnot": "\u00ac",
+    "sum": "\u2211",
+    "prod": "\u220f",
+    "int": "\u222b",
+    "oint": "\u222e",
+    "coprod": "\u2210",
+    "angle": "\u2220",
+    "perp": "\u22a5",
+    "parallel": "\u2225",
+    "mid": "\u2223",
+    "top": "\u22a4",
+    "bot": "\u22a5",
+    "vdash": "\u22a2",
+    "models": "\u22a8",
+    "ldots": "\u2026",
+    "dots": "\u2026",
+    "cdots": "\u22ef",
+    "vdots": "\u22ee",
+    "ddots": "\u22f1",
+    "langle": "\u27e8",
+    "rangle": "\u27e9",
+    "lceil": "\u2308",
+    "rceil": "\u2309",
+    "lfloor": "\u230a",
+    "rfloor": "\u230b",
+    "prime": "\u2032",
+    "hbar": "\u210f",
+    "ell": "\u2113",
+    "Re": "\u211c",
+    "Im": "\u2111",
+    "aleph": "\u2135",
+    "deg": "\u00b0",
+    "quad": "\u2003",
+    "qquad": "\u2003\u2003",
+    "alpha": "\u03b1",
+    "beta": "\u03b2",
+    "gamma": "\u03b3",
+    "delta": "\u03b4",
+    "epsilon": "\u03b5",
+    "varepsilon": "\u03b5",
+    "zeta": "\u03b6",
+    "eta": "\u03b7",
+    "theta": "\u03b8",
+    "vartheta": "\u03d1",
+    "iota": "\u03b9",
+    "kappa": "\u03ba",
+    "lambda": "\u03bb",
+    "mu": "\u03bc",
+    "nu": "\u03bd",
+    "xi": "\u03be",
+    "omicron": "\u03bf",
+    "pi": "\u03c0",
+    "varpi": "\u03d6",
+    "rho": "\u03c1",
+    "varrho": "\u03f1",
+    "sigma": "\u03c3",
+    "varsigma": "\u03c2",
+    "tau": "\u03c4",
+    "upsilon": "\u03c5",
+    "phi": "\u03d5",
+    "varphi": "\u03c6",
+    "chi": "\u03c7",
+    "psi": "\u03c8",
+    "omega": "\u03c9",
+    "Gamma": "\u0393",
+    "Delta": "\u0394",
+    "Theta": "\u0398",
+    "Lambda": "\u039b",
+    "Xi": "\u039e",
+    "Pi": "\u03a0",
+    "Sigma": "\u03a3",
+    "Upsilon": "\u03a5",
+    "Phi": "\u03a6",
+    "Psi": "\u03a8",
+    "Omega": "\u03a9",
+}
+
+
+def _latex_to_unicode(expr: str) -> str:
+    """Convert a LaTeX math fragment to plain Unicode (no scripts applied)."""
+    s = expr.strip()
+    # Font/structure wrappers: keep the inner text only.
+    wrapper = re.compile(
+        r"\\(?:text|mathrm|mathbf|mathbb|mathcal|mathsf|mathtt|mathit|"
+        r"boldsymbol|operatorname)\s*\{([^{}]*)\}"
+    )
+    for _ in range(4):
+        new = wrapper.sub(r"\1", s)
+        if new == s:
+            break
+        s = new
+    s = re.sub(r"\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}", r"(\1)/(\2)", s)
+    s = re.sub(r"\\sqrt\s*\{([^{}]*)\}", "\u221a(\\1)", s)
+    s = s.replace("\\\\", " ")
+    s = re.sub(r"\\[,;:!> ]", " ", s)
+    s = re.sub(
+        r"\\([A-Za-z]+)", lambda m: _MATH_COMMANDS.get(m.group(1), m.group(1)), s
+    )
+    s = s.replace("\\{", "{").replace("\\}", "}")
+    return re.sub(r"[ \t]{2,}", " ", s)
+
+
+def _split_italic(text: str) -> Iterable[tuple[str, bool]]:
+    """Yield (chunk, italic) runs; ASCII letters (variables) render italic."""
+    for match in re.finditer(r"[A-Za-z]+|[^A-Za-z]+", text):
+        chunk = match.group(0)
+        yield chunk, chunk[0].isalpha() and chunk.isascii()
+
+
+def iter_math_runs(expr: str) -> Iterable[tuple[str, str, bool]]:
+    """Yield (text, script, italic) where script is 'base' | 'sub' | 'sup'."""
+    s = _latex_to_unicode(expr)
+    i, n = 0, len(s)
+    while i < n:
+        ch = s[i]
+        if ch in "_^":
+            script = "sub" if ch == "_" else "sup"
+            i += 1
+            if i < n and s[i] == "{":
+                depth, i, start = 1, i + 1, i + 1
+                while i < n and depth:
+                    if s[i] == "{":
+                        depth += 1
+                    elif s[i] == "}":
+                        depth -= 1
+                    if depth:
+                        i += 1
+                group = s[start:i]
+                i += 1
+            else:
+                group = s[i] if i < n else ""
+                i += 1
+            for chunk, italic in _split_italic(group):
+                yield chunk, script, italic
+        elif ch in "{}":
+            i += 1
+        else:
+            start = i
+            while i < n and s[i] not in "_^{}":
+                i += 1
+            for chunk, italic in _split_italic(s[start:i]):
+                yield chunk, "base", italic
+
+
+def render_math_pdf(expr: str) -> str:
+    """Reportlab markup for an inline math fragment (content pre-escaped)."""
+    out: list[str] = []
+    for text, script, italic in iter_math_runs(expr):
+        if not text:
+            continue
+        piece = html.escape(text)
+        if italic:
+            piece = f"<i>{piece}</i>"
+        if script == "sub":
+            piece = f"<sub>{piece}</sub>"
+        elif script == "sup":
+            piece = f"<super>{piece}</super>"
+        out.append(piece)
+    return "".join(out)
+
+
+def math_plain(expr: str) -> str:
+    """Flatten math to plain Unicode (drops script positioning)."""
+    return "".join(text for text, _, _ in iter_math_runs(expr))
+
+
 def clean_inline(text: str) -> str:
     text = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", text)
     text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = MATH_INLINE_RE.sub(lambda m: math_plain(m.group(1)), text)
     text = re.sub(r"[*_`~]", "", text)
     return text.strip()
 
@@ -632,6 +871,7 @@ def markdown_blocks(text: str) -> Iterable[dict[str, object]]:
             }
             if numbered:
                 # Honour an explicit start ("3." first) but renumber from there.
+                block["first"] = level not in counters
                 counters[level] = counters.get(level, int(numbered.group(2)) - 1) + 1
                 block["index"] = counters[level]
             yield block
@@ -662,6 +902,26 @@ def markdown_blocks(text: str) -> Iterable[dict[str, object]]:
 # --------------------------------------------------------------------------- #
 # DOCX
 # --------------------------------------------------------------------------- #
+def _add_math_runs(
+    paragraph: object,
+    expr: str,
+    latin: str | None = None,
+    eastasia: str | None = None,
+) -> None:
+    for text, script, italic in iter_math_runs(expr):
+        if not text:
+            continue
+        run = paragraph.add_run(text)
+        if script == "sub":
+            run.font.subscript = True
+        elif script == "sup":
+            run.font.superscript = True
+        if italic:
+            run.italic = True
+        if latin and eastasia:
+            _set_run_fonts(run, latin, eastasia)
+
+
 def _docx_inline(
     paragraph: object,
     text: str,
@@ -670,14 +930,17 @@ def _docx_inline(
     mono: str = "Courier New",
 ) -> None:
     token = re.compile(
-        r"(\*\*[^*]+\*\*|(?<!\*)\*[^*]+\*(?!\*)|`[^`]+`|\[[^\]]+\]\([^)]+\))"
+        r"(\$(?!\$)[^$\n]+?\$|\*\*[^*]+\*\*|(?<!\*)\*[^*]+\*(?!\*)|`[^`]+`"
+        r"|\[[^\]]+\]\([^)]+\))"
     )
     position = 0
     for match in token.finditer(text):
         if match.start() > position:
             paragraph.add_run(text[position : match.start()])
         value = match.group(0)
-        if value.startswith("**"):
+        if value.startswith("$"):
+            _add_math_runs(paragraph, value[1:-1], latin, eastasia)
+        elif value.startswith("**"):
             paragraph.add_run(value[2:-2]).bold = True
         elif value.startswith("*"):
             paragraph.add_run(value[1:-1]).italic = True
@@ -771,6 +1034,70 @@ def _normalize_bullets(document: object, latin: str) -> None:
                 for attribute in ("w:ascii", "w:hAnsi", "w:cs"):
                     fonts.set(qn(attribute), latin)
                 fonts.attrib.pop(qn("w:hint"), None)
+
+
+def _style_num_id(document: object, style_id: str) -> str | None:
+    """numId that a built-in list style points at, if any."""
+    from docx.oxml.ns import qn
+
+    for style in document.styles.element.findall(qn("w:style")):
+        if style.get(qn("w:styleId")) == style_id:
+            node = style.find(f"{qn('w:pPr')}/{qn('w:numPr')}/{qn('w:numId')}")
+            return None if node is None else node.get(qn("w:val"))
+    return None
+
+
+def _restart_numbering(document: object, style_id: str, start: int = 1) -> int | None:
+    """Clone a list style's numbering instance so a new list restarts at `start`.
+
+    Every "List Number" paragraph shares one numId, so a second ordered list in
+    the document keeps counting from the first instead of starting over.
+    """
+    from docx.opc.exceptions import PackageNotFoundError
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    source_id = _style_num_id(document, style_id)
+    if source_id is None:
+        return None
+    try:
+        numbering = document.part.numbering_part.element
+    except (AttributeError, KeyError, PackageNotFoundError, ValueError):
+        return None
+
+    abstract = None
+    used: set[int] = set()
+    for num in numbering.findall(qn("w:num")):
+        value = num.get(qn("w:numId")) or ""
+        if value.isdigit():
+            used.add(int(value))
+        if value == source_id:
+            abstract = num.find(qn("w:abstractNumId"))
+    if abstract is None:
+        return None
+
+    new_id = (max(used) if used else 0) + 1
+    element = OxmlElement("w:num")
+    element.set(qn("w:numId"), str(new_id))
+    reference = OxmlElement("w:abstractNumId")
+    reference.set(qn("w:val"), abstract.get(qn("w:val")))
+    element.append(reference)
+    if start != 1:
+        override = OxmlElement("w:lvlOverride")
+        override.set(qn("w:ilvl"), "0")
+        start_override = OxmlElement("w:startOverride")
+        start_override.set(qn("w:val"), str(start))
+        override.append(start_override)
+        element.append(override)
+    numbering.append(element)
+    return new_id
+
+
+def _bind_numbering(paragraph: object, num_id: int) -> None:
+    properties = paragraph._p.get_or_add_pPr()
+    num_pr = properties.get_or_add_numPr()
+    num_pr.get_or_add_ilvl().val = 0
+    num_pr.get_or_add_numId().val = num_id
 
 
 def _field(paragraph: object, instruction: str, placeholder: str = "") -> None:
@@ -918,6 +1245,7 @@ def export_docx(
 
     drop_title = spec.get("drop_first_h1_matching_title", True)
     first_heading = True
+    list_num_ids: dict[int, int | None] = {}
     for block in markdown_blocks("\n\n".join(text for _, text in chapters)):
         kind = block["type"]
         if kind == "heading":
@@ -939,9 +1267,21 @@ def export_docx(
                 mono_font,
             )
         elif kind == "list":
-            style = "List Number" if block["ordered"] else "List Bullet"
+            level = min(int(block.get("level", 0)), 2)
+            suffix = "" if level == 0 else f" {level + 1}"
+            style = f"{'List Number' if block['ordered'] else 'List Bullet'}{suffix}"
+            paragraph = document.add_paragraph(style=style)
+            if block["ordered"]:
+                if block.get("first"):
+                    list_num_ids[level] = _restart_numbering(
+                        document,
+                        style.replace(" ", ""),
+                        int(block.get("index", 1)),
+                    )
+                if list_num_ids.get(level):
+                    _bind_numbering(paragraph, list_num_ids[level])
             _docx_inline(
-                document.add_paragraph(style=style),
+                paragraph,
                 str(block["text"]),
                 body_font,
                 body_ea,
@@ -1065,11 +1405,20 @@ class FontRouter:
 
 
 def _pdf_inline(text: str, router: FontRouter | None = None) -> str:
-    value = html.escape(text)
+    # Stash math first so escaping and markdown subs never touch its markup.
+    math: list[str] = []
+
+    def stash(match: re.Match[str]) -> str:
+        math.append(render_math_pdf(match.group(1)))
+        return f"\x00{len(math) - 1}\x00"
+
+    value = MATH_INLINE_RE.sub(stash, text)
+    value = html.escape(value)
     value = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", value)
     value = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<i>\1</i>", value)
     value = re.sub(r"`([^`]+)`", r"<font name='Courier'>\1</font>", value)
     value = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"<a href='\2'>\1</a>", value)
+    value = re.sub(r"\x00(\d+)\x00", lambda m: math[int(m.group(1))], value)
     return router.tag(value) if router else value
 
 
@@ -1120,6 +1469,8 @@ def export_pdf(
         attribution_label(spec, language) if footer_shows_attribution(spec) else None
     )
 
+    blocks = list(markdown_blocks("\n\n".join(text for _, text in chapters)))
+
     # Latin stays on a Latin face; CJK and symbol spans switch to a CID font.
     document_text = "\n".join(
         [
@@ -1128,6 +1479,20 @@ def export_pdf(
             str(header_text or ""),
             str(credit or ""),
             *(text for _, text in chapters),
+            # Injected list markers need coverage too: a CJK CID font has no
+            # glyph for the nested bullets and would drop them silently.
+            *(
+                BULLET_MARKERS[min(int(block.get("level", 0)), len(BULLET_MARKERS) - 1)]
+                for block in blocks
+                if block["type"] == "list" and not block["ordered"]
+            ),
+            # Converted math symbols (≡ ∘ → …) are absent from the raw text, so
+            # scan them explicitly or the CID font will silently drop them.
+            *(
+                math_plain(m)
+                for _, text in chapters
+                for m in MATH_INLINE_RE.findall(text)
+            ),
         ]
     )
     non_latin = {ch for ch in document_text if not latin_safe(ch)}
@@ -1163,6 +1528,13 @@ def export_pdf(
     router = FontRouter(
         fallback_font, register_symbol_font(symbol_chars) if symbol_chars else None
     )
+
+    def bullet_marker(level: int) -> str:
+        """Nested bullet glyph, degraded to a WinAnsi bullet when uncovered."""
+        glyph = BULLET_MARKERS[min(level, len(BULLET_MARKERS) - 1)]
+        if latin_safe(glyph) or router.symbol_font:
+            return glyph
+        return BULLET_MARKERS[0]
 
     heading_colors = spec["colors"]["heading"]
     heading_sizes = spec["heading_sizes"]
@@ -1329,7 +1701,7 @@ def export_pdf(
 
     drop_title = spec.get("drop_first_h1_matching_title", True)
     first_heading = True
-    for block in markdown_blocks("\n\n".join(text for _, text in chapters)):
+    for block in blocks:
         kind = block["type"]
         if kind == "heading":
             level = min(int(block["level"]), 3)
@@ -1346,7 +1718,7 @@ def export_pdf(
             marker = (
                 f"{block.get('index', 1)}. "
                 if block["ordered"]
-                else BULLET_MARKERS[min(level, len(BULLET_MARKERS) - 1)] + " "
+                else bullet_marker(level) + " "
             )
             story.append(
                 Paragraph(

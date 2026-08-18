@@ -1,7 +1,5 @@
 # Oh-My-Research
 
-**Deep research that ends in a report — not a prototype.**
-
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Agent Skills Format](https://img.shields.io/badge/format-Agent%20Skills%201.0-blue)](https://agentskills.io)
 
