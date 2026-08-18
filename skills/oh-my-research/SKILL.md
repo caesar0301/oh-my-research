@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
   author: "Xiaming Chen"
   category: "workflow"
 ---
