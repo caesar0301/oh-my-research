@@ -222,6 +222,9 @@ def latin_safe(char: str) -> bool:
 
 CJK_ONE_RE = re.compile(f"[{CJK_CHARS}]")
 
+# Bullet glyphs per nesting level (PDF; DOCX uses its own list styles).
+BULLET_MARKERS = ("\u2022", "\u25e6", "\u25aa")
+
 
 # --------------------------------------------------------------------------- #
 # Cross-platform fonts (macOS + Linux + Windows)
@@ -569,10 +572,14 @@ def markdown_blocks(text: str) -> Iterable[dict[str, object]]:
     lines = text.splitlines()
     i = 0
     paragraph: list[str] = []
+    # Ordinal per nesting level. Authors (and LLMs) commonly write every ordered
+    # item as "1.", so the sequence is counted here instead of trusted verbatim.
+    counters: dict[int, int] = {}
 
     def flush() -> Iterable[dict[str, object]]:
         nonlocal paragraph
         if paragraph:
+            counters.clear()
             yield {"type": "paragraph", "text": " ".join(x.strip() for x in paragraph)}
             paragraph = []
 
@@ -591,6 +598,7 @@ def markdown_blocks(text: str) -> Iterable[dict[str, object]]:
         heading = re.match(r"^(#{1,6})\s+(.+)$", line)
         if heading:
             yield from flush()
+            counters.clear()
             yield {
                 "type": "heading",
                 "level": len(heading.group(1)),
@@ -605,26 +613,39 @@ def markdown_blocks(text: str) -> Iterable[dict[str, object]]:
             while i < len(lines) and "|" in lines[i] and lines[i].strip():
                 rows.append(split_table_row(lines[i]))
                 i += 1
+            counters.clear()
             yield {"type": "table", "rows": rows}
             continue
-        bullet = re.match(r"^\s*[-*+]\s+(.+)$", line)
-        numbered = re.match(r"^\s*\d+[.)]\s+(.+)$", line)
+        bullet = re.match(r"^(\s*)[-*+]\s+(.+)$", line)
+        numbered = re.match(r"^(\s*)(\d+)[.)]\s+(.+)$", line)
         if bullet or numbered:
             yield from flush()
-            yield {
+            indent = len((numbered or bullet).group(1).expandtabs(4))
+            level = min(indent // 2, 2)
+            for deeper in [key for key in counters if key > level]:
+                del counters[deeper]
+            block: dict[str, object] = {
                 "type": "list",
                 "ordered": bool(numbered),
-                "text": (numbered or bullet).group(1),
+                "level": level,
+                "text": numbered.group(3) if numbered else bullet.group(2),
             }
+            if numbered:
+                # Honour an explicit start ("3." first) but renumber from there.
+                counters[level] = counters.get(level, int(numbered.group(2)) - 1) + 1
+                block["index"] = counters[level]
+            yield block
             i += 1
             continue
         if line.startswith(">"):
             yield from flush()
+            counters.clear()
             yield {"type": "quote", "text": line.lstrip("> ").strip()}
             i += 1
             continue
         if line.startswith("```"):
             yield from flush()
+            counters.clear()
             i += 1
             code: list[str] = []
             while i < len(lines) and not lines[i].startswith("```"):
@@ -697,7 +718,8 @@ def _set_fonts(element: object, latin: str, eastasia: str) -> None:
     """Bind Latin (ascii/hAnsi/cs) and East Asian faces separately.
 
     Without an explicit ascii/hAnsi face, Word renders Latin inside CJK text with
-    the East Asian font, which mangles accents and letter spacing.
+    the East Asian font, which mangles accents and letter spacing. An inherited
+    w:hint="eastAsia" overrides ascii/hAnsi, so it is dropped as well.
     """
     from docx.oxml.ns import qn
 
@@ -706,6 +728,7 @@ def _set_fonts(element: object, latin: str, eastasia: str) -> None:
     fonts.set(qn("w:hAnsi"), latin)
     fonts.set(qn("w:cs"), latin)
     fonts.set(qn("w:eastAsia"), eastasia)
+    fonts.attrib.pop(qn("w:hint"), None)
 
 
 def _set_run_fonts(run: object, latin: str, eastasia: str) -> None:
@@ -1089,11 +1112,21 @@ def export_pdf(
     font = spec["fonts"].get("pdf_latin", "Helvetica")
     bold_font = standard_bold.get(font, font)
 
+    header_spec = spec.get("header") or {}
+    footer_spec = spec.get("footer") or {}
+    header_text = header_spec.get("text")
+    header_text = title if header_text is None else header_text
+    credit = (
+        attribution_label(spec, language) if footer_shows_attribution(spec) else None
+    )
+
     # Latin stays on a Latin face; CJK and symbol spans switch to a CID font.
     document_text = "\n".join(
         [
             str(title or ""),
             str(spec.get("subtitle") or ""),
+            str(header_text or ""),
+            str(credit or ""),
             *(text for _, text in chapters),
         ]
     )
@@ -1181,33 +1214,30 @@ def export_pdf(
                 # same per-span font binding as the body.
                 self.notify("TOCEntry", (level, rich(plain), self.page, key))
 
-    header_spec = spec.get("header") or {}
-    footer_spec = spec.get("footer") or {}
-    header_text = header_spec.get("text")
-    header_text = title if header_text is None else header_text
-    credit = (
-        attribution_label(spec, language) if footer_shows_attribution(spec) else None
-    )
+    def draw_mixed(canvas: object, x: float, y: float, text: str, size: float) -> None:
+        """Draw chrome text span by span so each script keeps its own face.
+
+        drawString takes a single face, so binding the whole line to a CID font
+        would render Latin words such as the product name in CJK letterforms.
+        """
+        for name, group in itertools.groupby(text, key=router.font_for):
+            span = "".join(group)
+            face = name or font
+            canvas.setFont(face, size)
+            canvas.drawString(x, y, span)
+            x += canvas.stringWidth(span, face, size)
 
     def decorate(canvas: object, doc: object) -> None:
         canvas.saveState()
         canvas.setFillColor(colors.HexColor("#666666"))
         if header_spec.get("enabled", True) and header_text:
-            text = str(header_text)[:90]
-            # drawString takes a single face, so pick one that covers the header.
-            needed = next(
-                (router.font_for(ch) for ch in text if not latin_safe(ch)), None
+            draw_mixed(
+                canvas, margin, page_size[1] - margin + 6 * mm, str(header_text)[:90], 8
             )
-            canvas.setFont(needed or font, 8)
-            canvas.drawString(margin, page_size[1] - margin + 6 * mm, text)
         y = margin - 8 * mm
         if footer_spec.get("enabled", True):
             if credit:
-                needed = next(
-                    (router.font_for(ch) for ch in credit if not latin_safe(ch)), None
-                )
-                canvas.setFont(needed or font, 7)
-                canvas.drawString(margin, y, credit[:80])
+                draw_mixed(canvas, margin, y, credit[:80], 7)
             if footer_spec.get("page_numbers", True):
                 canvas.setFont(font, 8)
                 canvas.drawRightString(page_size[0] - margin, y, str(doc.page))
@@ -1264,12 +1294,12 @@ def export_pdf(
             elif element == "date":
                 story.append(Paragraph(date_str, center))
             elif element == "attribution":
-                credit = attribution_label(spec, language)
-                if credit:
+                cover_credit = attribution_label(spec, language)
+                if cover_credit:
                     story.append(Spacer(1, 18 * mm))
                     story.append(
                         Paragraph(
-                            rich(credit),
+                            rich(cover_credit),
                             ParagraphStyle(
                                 "Attribution",
                                 parent=center,
@@ -1312,12 +1342,20 @@ def export_pdf(
         elif kind == "paragraph":
             story.append(Paragraph(_pdf_inline(str(block["text"]), router), body))
         elif kind == "list":
-            bullet = "1. " if block["ordered"] else "• "
+            level = int(block.get("level", 0))
+            marker = (
+                f"{block.get('index', 1)}. "
+                if block["ordered"]
+                else BULLET_MARKERS[min(level, len(BULLET_MARKERS) - 1)] + " "
+            )
             story.append(
                 Paragraph(
-                    router.tag(bullet) + _pdf_inline(str(block["text"]), router),
+                    router.tag(marker) + _pdf_inline(str(block["text"]), router),
                     ParagraphStyle(
-                        "List", parent=body, leftIndent=14, firstLineIndent=-10
+                        f"List{level}",
+                        parent=body,
+                        leftIndent=14 + level * 16,
+                        firstLineIndent=-10,
                     ),
                 )
             )
