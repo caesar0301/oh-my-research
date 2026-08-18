@@ -8,7 +8,7 @@ Judgment, structure, and progress tracking are **agent-owned**. Do not rely on P
 |---------|--------|
 | Research judgment, outlines, gates, method choice, continuity | **LLM** following reference docs |
 | Report content **and presentation** (title, fonts, colors, cover, TOC, header/footer, chapter order) — via `_document.json` | **LLM** authoring the spec |
-| Bytes on disk: DOCX/PDF render from spec, version backups, optional URL indexing | **Scripts** (`export_report.py`, `version_control.py`, optional `collect_cli.py`) |
+| Bytes on disk: DOCX/PDF render from spec, version backups, skill semver sync, optional URL indexing | **Scripts** (`export_report.py`, `version_control.py`, `skill_version.py`, optional `collect_cli.py`) |
 
 `export_report.py` is a **thin renderer**: it applies the LLM-authored `docs/<mode>/_document.json`, not hardcoded styling. It never invents structure or layout — it renders exactly what the spec + chapters describe.
 
@@ -108,11 +108,17 @@ python scripts/export_report.py --emit-spec --mode survey
 # Final render — applies the LLM-authored spec (mechanical)
 python scripts/export_report.py --mode survey --format docx --language en
 
-# Snapshots / tags
+# Snapshots / tags (workspace research artifacts)
 python scripts/version_control.py tag v1.0
+
+# Skill package semver (from oh-my-research repo root)
+python skills/oh-my-research/scripts/skill_version.py check
+python skills/oh-my-research/scripts/skill_version.py bump minor --message "…"
 
 # Optional: record a URL into materials/index
 python scripts/collect_cli.py "https://arxiv.org/abs/…"
 ```
 
 `export_report.py` still enforces a mechanical publication-safety scan before writing DOCX/PDF — fix prose if it rejects.
+
+`skill_version.py` syncs package semver only; it does not tag research workspaces.

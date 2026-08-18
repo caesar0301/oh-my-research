@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -40,7 +40,7 @@ Before inspecting workspace state, scan the request:
 | `idea`, `brainstorm`, `speculate`, `what if`, `hypothesis` | **IDEA** |
 | URL / DOI / arxiv / GitHub / HuggingFace / `search …` / `collect` | **COLLECT** (init-on-demand if needed) |
 | `report`, `survey`, `write up`, `synthesize`, `manuscript`, `brief` | **SYNTH** |
-| Canonical op (`init`, `collect`, `analyze`, `think`, `synth`, `decide`, `idea`, `reconcile`, `workflow`, `qa`, `version`) | Named mode — **wins** over keyword routing |
+| Canonical op (`init`, `collect`, `analyze`, `think`, `synth`, `decide`, `idea`, `reconcile`, `workflow`, `qa`, `version`, `skill-version`) | Named mode — **wins** over keyword routing |
 
 ### Workspace-State Detection (when no strong intent)
 
@@ -61,7 +61,7 @@ Always show a phase label: `[INIT]`, `[COLLECT]`, `[ANALYZE]`, `[THINK]`, `[SYNT
 COLLECT materials → ANALYZE (deep evidence + THINK) → SYNTH (survey / report)
 ```
 
-Optional: IDEA, DECIDE (stance), RECONCILE, VERSION.
+Optional: IDEA, DECIDE (stance), RECONCILE, VERSION (workspace), skill-version (package).
 
 Default pattern: **Evidence-Deep**. See `references/GRAPH.md` and `patterns/`.
 
@@ -92,7 +92,9 @@ Stance / claim framing with ≥3 alternatives; Gate B. Op: `decide`. → `refere
 Contradiction blast-radius, archive, rollback. → `references/RECONCILE/reconcile.md`
 
 ### VERSION Mode
-Tag / history / diff / backup / list. → `references/VERSION/version.md`
+Two tracks → `references/VERSION/version.md`:
+- **Workspace:** `version tag|history|diff|backup|list` (research artifacts)
+- **Skill package:** `skill-version show|check|sync|set|bump` (semver + `CHANGELOG.md`; source of truth `VERSION`)
 
 ### WORKFLOW Mode
 Graph-driven multi-step Evidence-Deep (or other pattern). Op: `workflow [--pattern P]`. → `references/WORKFLOW/workflow-overview.md`
@@ -157,5 +159,5 @@ Templates: `assets/`. Patterns: `patterns/`. Detailed ops: `references/REFERENCE
 
 - Read/write project workspace
 - Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `version_control.py` (tags/backups), optional `collect_cli.py`
+- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `version_control.py` (workspace tags/backups), `skill_version.py` (package semver sync), optional `collect_cli.py`
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export

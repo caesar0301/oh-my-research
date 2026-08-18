@@ -15,7 +15,7 @@ Detailed operation guide for the unified OMR skill.
 | IDEA | `idea` | `IDEA/idea.md` |
 | DECIDE | `decide` | `DECIDE/decide.md` |
 | RECONCILE | `reconcile`, `archive`, `rollback`, `list` | `RECONCILE/reconcile.md` |
-| VERSION | `version tag\|history\|diff\|backup\|list` | `VERSION/version.md` |
+| VERSION | `version tag\|history\|diff\|backup\|list` (workspace); `skill-version show\|check\|sync\|set\|bump` (package) | `VERSION/version.md` |
 | WORKFLOW | `workflow [--phase N] [--pattern P]` | `WORKFLOW/workflow-overview.md` |
 
 Cross-cutting: `GATES.md`, `GRAPH.md`, `LLM-STATE.md`.
@@ -27,6 +27,12 @@ Cross-cutting: `GATES.md`, `GRAPH.md`, `LLM-STATE.md`.
 ```
 Canonical op name in request?
   → Yes → run that op (wins)
+
+skill-version / bump skill / skill changelog / release skill?
+  → VERSION skill-package track (`skill_version.py`)
+
+version tag|history|diff|backup|list?
+  → VERSION workspace track (`version_control.py`)
 
 THINK keywords? (first principles, socratic, pre-mortem, red team,
                  steelman, deepen, rethink, elicit, think)

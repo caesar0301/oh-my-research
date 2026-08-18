@@ -59,7 +59,8 @@ npx skills add <owner>/oh-my-research
 | `decide` | DECIDE | optional stance (Gate B) |
 | `idea` | IDEA | idea note |
 | `reconcile` | RECONCILE | repaired state / archive |
-| `version …` | VERSION | tags / backups |
+| `version …` | VERSION (workspace) | research tags / backups |
+| `skill-version …` | VERSION (package) | skill semver / changelog / sync |
 | `workflow` | WORKFLOW | graph-driven Evidence-Deep run |
 | `qa qa1\|qa2` | QA | quality gate artifacts |
 
@@ -72,6 +73,18 @@ collect → analyze ⟲ think → synth (survey or report)
 Final reports are reader-facing publications: internal material IDs, evidence-grade labels, gate names, and OMR workflow terms remain in private working artifacts and are converted to conventional citations and natural professional language.
 
 See [skills/oh-my-research/SKILL.md](skills/oh-my-research/SKILL.md) and [references/REFERENCE.md](skills/oh-my-research/references/REFERENCE.md).
+
+## Skill version
+
+Package semver lives in [`skills/oh-my-research/VERSION`](skills/oh-my-research/VERSION) and is synced to `SKILL.md` + `.claude-plugin/marketplace.json`. History: [`CHANGELOG.md`](CHANGELOG.md).
+
+```bash
+python3 skills/oh-my-research/scripts/skill_version.py show
+python3 skills/oh-my-research/scripts/skill_version.py check
+python3 skills/oh-my-research/scripts/skill_version.py bump minor --message "Describe the change"
+```
+
+Workspace research tags (`version tag …`) are separate — see `references/VERSION/version.md`.
 
 ## License
 
