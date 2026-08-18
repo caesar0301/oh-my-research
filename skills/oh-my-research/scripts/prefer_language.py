@@ -169,7 +169,12 @@ TZ_NAME_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"(Dubai|Riyadh|Qatar|Kuwait|Cairo|Casablanca|Baghdad)", re.I), "ar"),
     (re.compile(r"(Berlin|Vienna|Zurich)", re.I), "de"),
     (re.compile(r"(Paris|Brussels|Monaco)", re.I), "fr"),
-    (re.compile(r"(Madrid|Canary|Buenos_Aires|Santiago|Lima|Bogota|Mexico_City)", re.I), "es"),
+    (
+        re.compile(
+            r"(Madrid|Canary|Buenos_Aires|Santiago|Lima|Bogota|Mexico_City)", re.I
+        ),
+        "es",
+    ),
     (re.compile(r"(Sao_Paulo|Fortaleza|Recife|Bahia|Manaus)", re.I), "pt-BR"),
     (re.compile(r"(Lisbon|Azores|Madeira)", re.I), "pt-PT"),
     (re.compile(r"(Rome)", re.I), "it"),
@@ -183,7 +188,13 @@ TZ_NAME_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"(Copenhagen)", re.I), "da"),
     (re.compile(r"(Helsinki)", re.I), "fi"),
     (re.compile(r"(Athens)", re.I), "el"),
-    (re.compile(r"(London|Dublin|New_York|Chicago|Los_Angeles|Toronto|Sydney|Singapore|Manila)", re.I), "en"),
+    (
+        re.compile(
+            r"(London|Dublin|New_York|Chicago|Los_Angeles|Toronto|Sydney|Singapore|Manila)",
+            re.I,
+        ),
+        "en",
+    ),
 ]
 
 # POSIX / BCP-47 locale language → OMR language tag.
@@ -396,7 +407,9 @@ def detect(timezone: str | None = None) -> dict[str, Any]:
     }
 
 
-def write_workspace_locale(workspace: Path, record: dict[str, Any] | None = None) -> Path:
+def write_workspace_locale(
+    workspace: Path, record: dict[str, Any] | None = None
+) -> Path:
     """Persist preferred language under .omr/locale.json (create only when writing)."""
     record = record or detect()
     out = {
@@ -407,7 +420,9 @@ def write_workspace_locale(workspace: Path, record: dict[str, Any] | None = None
     }
     path = workspace / ".omr" / "locale.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return path
 
 
@@ -450,8 +465,12 @@ def resolve_language(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Detect preferred OMR report language")
     parser.add_argument("--timezone", default=None, help="Override IANA timezone name")
-    parser.add_argument("--json", action="store_true", help="Print full detection record")
-    parser.add_argument("--list", action="store_true", help="List known timezone→language mappings")
+    parser.add_argument(
+        "--json", action="store_true", help="Print full detection record"
+    )
+    parser.add_argument(
+        "--list", action="store_true", help="List known timezone→language mappings"
+    )
     parser.add_argument(
         "--write-workspace",
         type=Path,
@@ -472,7 +491,11 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.list:
-        print(json.dumps(dict(sorted(TIMEZONE_LANGUAGE.items())), indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                dict(sorted(TIMEZONE_LANGUAGE.items())), indent=2, ensure_ascii=False
+            )
+        )
         return
 
     result = resolve_language(

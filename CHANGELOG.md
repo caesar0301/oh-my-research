@@ -5,14 +5,19 @@ All notable changes to the **oh-my-research** skill package are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Single source of truth for the package version: `skills/oh-my-research/VERSION`.
+Single source of truth for the package version: `skills/oh-my-research/SKILL.md` → `metadata.version`.
 Keep these in sync (use `scripts/skill_version.py`):
 
-- `skills/oh-my-research/VERSION`
 - `skills/oh-my-research/SKILL.md` → `metadata.version`
 - `.claude-plugin/marketplace.json` → `metadata.version` and `plugins[0].version`
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
+
+## [1.1.4] — 2026-08-18
+
+### Changed
+
+- Removed redundant skills/oh-my-research/VERSION; SKILL.md metadata.version is the single source of truth for package semver.
 
 ## [1.1.3] — 2026-08-18
 

@@ -4,10 +4,7 @@
   "graph": {
     "entry_points": ["collect"],
     "nodes": ["analyze", "synth"],
-    "edges": [
-      "collect → analyze",
-      "analyze → synth"
-    ]
+    "edges": ["collect → analyze", "analyze → synth"]
   },
   "skill_gates": {},
   "contract_overrides": {

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """Skill-package version management for oh-my-research.
 
-Works in two layouts (macOS and Linux):
+Single source of truth: skills/oh-my-research/SKILL.md → metadata.version
 
-  1. Repo checkout — VERSION under skills/oh-my-research/, plus repo-root
-     CHANGELOG.md and .claude-plugin/marketplace.json.
-  2. Installed skill — VERSION + SKILL.md next to this scripts/ folder
-     (e.g. ~/.agents/skills/oh-my-research); marketplace sync is skipped.
+Synced (when present):
+  - .claude-plugin/marketplace.json  (metadata.version + plugins[].version)
+  - CHANGELOG.md                     (prepended on set/bump)
 
-Single source of truth: VERSION (skill package root).
+Works in repo checkouts and installed skill packages (e.g.
+~/.agents/skills/oh-my-research); marketplace sync is skipped when absent.
 
 Commands:
-  show                         Print current VERSION
-  check                        Exit 0 if tracked locations match VERSION
-  sync                         Write VERSION into SKILL.md (+ marketplace if present)
+  show                         Print metadata.version from SKILL.md
+  check                        Exit 0 if marketplace matches SKILL.md
+  sync                         Write SKILL.md version into marketplace.json
   set <X.Y.Z> [--date YYYY-MM-DD] [--message TEXT]
   bump major|minor|patch [--date YYYY-MM-DD] [--message TEXT]
 """
@@ -23,7 +23,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from datetime import date
 from pathlib import Path
 
@@ -35,7 +34,7 @@ SKILL_VERSION_RE = re.compile(
 
 
 def skill_package_root() -> Path:
-    """Directory that contains VERSION + SKILL.md (scripts/ → parent)."""
+    """Directory that contains SKILL.md (scripts/ → parent)."""
     return Path(__file__).resolve().parent.parent
 
 
@@ -52,13 +51,10 @@ def repo_root(explicit: Path | None = None) -> Path | None:
 
 def paths(root: Path | None = None) -> dict[str, Path | None]:
     skill = skill_package_root()
-    # Prefer VERSION beside SKILL.md (works for installed skill and repo).
-    version = skill / "VERSION"
-    if not version.exists() and root is not None:
-        version = root / "skills" / "oh-my-research" / "VERSION"
+    skill_md = skill / "SKILL.md"
+    if not skill_md.exists() and root is not None:
         skill_md = root / "skills" / "oh-my-research" / "SKILL.md"
-    else:
-        skill_md = skill / "SKILL.md"
+        skill = skill_md.parent
 
     repo = repo_root(root) if root is not None else repo_root()
     marketplace = (
@@ -73,20 +69,10 @@ def paths(root: Path | None = None) -> dict[str, Path | None]:
         changelog = repo / "CHANGELOG.md"
 
     return {
-        "version": version,
         "skill": skill_md,
         "marketplace": marketplace if marketplace and marketplace.exists() else None,
         "changelog": changelog,
     }
-
-
-def read_version_file(path: Path) -> str:
-    if not path.exists():
-        raise SystemExit(f"Missing VERSION file: {path}")
-    value = path.read_text(encoding="utf-8").strip().splitlines()[0].strip()
-    if not SEMVER.match(value):
-        raise SystemExit(f"Invalid semver in {path}: {value!r}")
-    return value
 
 
 def parse_semver(value: str) -> tuple[int, int, int]:
@@ -110,6 +96,17 @@ def bump_semver(value: str, kind: str) -> str:
 def skill_md_version(text: str) -> str | None:
     match = SKILL_VERSION_RE.search(text)
     return match.group(3).strip() if match else None
+
+
+def read_skill_version(path: Path) -> str:
+    if not path.exists():
+        raise SystemExit(f"Missing SKILL.md: {path}")
+    value = skill_md_version(path.read_text(encoding="utf-8"))
+    if value is None:
+        raise SystemExit("metadata.version missing in SKILL.md")
+    if not SEMVER.match(value):
+        raise SystemExit(f"Invalid semver in SKILL.md metadata.version: {value!r}")
+    return value
 
 
 def set_skill_md_version(text: str, version: str) -> str:
@@ -140,13 +137,8 @@ def set_marketplace_versions(data: dict, version: str) -> None:
 
 
 def collect_versions(p: dict[str, Path | None]) -> dict[str, str]:
-    assert p["version"] is not None and p["skill"] is not None
-    versions: dict[str, str] = {"VERSION": read_version_file(p["version"])}
-    skill_text = p["skill"].read_text(encoding="utf-8")
-    skill_ver = skill_md_version(skill_text)
-    if skill_ver is None:
-        raise SystemExit("metadata.version missing in SKILL.md")
-    versions["SKILL.md"] = skill_ver
+    assert p["skill"] is not None
+    versions: dict[str, str] = {"SKILL.md": read_skill_version(p["skill"])}
     if p["marketplace"] is not None:
         market = json.loads(p["marketplace"].read_text(encoding="utf-8"))
         for label, value in marketplace_versions(market):
@@ -155,17 +147,17 @@ def collect_versions(p: dict[str, Path | None]) -> dict[str, str]:
 
 
 def cmd_show(p: dict[str, Path | None]) -> int:
-    assert p["version"] is not None
-    print(read_version_file(p["version"]))
+    assert p["skill"] is not None
+    print(read_skill_version(p["skill"]))
     return 0
 
 
 def cmd_check(p: dict[str, Path | None]) -> int:
     versions = collect_versions(p)
-    expected = versions["VERSION"]
+    expected = versions["SKILL.md"]
     mismatches = {k: v for k, v in versions.items() if v != expected}
     if mismatches:
-        print(f"VERSION={expected}")
+        print(f"SKILL.md={expected}")
         for key, value in mismatches.items():
             print(f"  MISMATCH {key}={value}")
         return 1
@@ -177,13 +169,8 @@ def cmd_check(p: dict[str, Path | None]) -> int:
     return 0
 
 
-def write_version_file(path: Path, version: str) -> None:
-    path.write_text(version + "\n", encoding="utf-8")
-
-
 def sync_to_files(p: dict[str, Path | None], version: str) -> None:
-    assert p["version"] is not None and p["skill"] is not None
-    write_version_file(p["version"], version)
+    assert p["skill"] is not None
     skill_text = p["skill"].read_text(encoding="utf-8")
     p["skill"].write_text(set_skill_md_version(skill_text, version), encoding="utf-8")
     if p["marketplace"] is not None:
@@ -195,7 +182,9 @@ def sync_to_files(p: dict[str, Path | None], version: str) -> None:
         )
 
 
-def prepend_changelog(path: Path | None, version: str, when: str, message: str | None) -> None:
+def prepend_changelog(
+    path: Path | None, version: str, when: str, message: str | None
+) -> None:
     if path is None:
         return
     heading = f"## [{version}] — {when}\n"
@@ -232,15 +221,19 @@ def prepend_changelog(path: Path | None, version: str, when: str, message: str |
 
 
 def cmd_sync(p: dict[str, Path | None]) -> int:
-    assert p["version"] is not None
-    version = read_version_file(p["version"])
+    assert p["skill"] is not None
+    version = read_skill_version(p["skill"])
     sync_to_files(p, version)
-    targets = "SKILL.md" + (" + marketplace.json" if p["marketplace"] else "")
-    print(f"Synced {version} → {targets}")
+    if p["marketplace"] is None:
+        print(f"Synced {version} → SKILL.md only (no marketplace.json)")
+    else:
+        print(f"Synced {version} → SKILL.md + marketplace.json")
     return cmd_check(p)
 
 
-def cmd_set(p: dict[str, Path | None], version: str, when: str, message: str | None) -> int:
+def cmd_set(
+    p: dict[str, Path | None], version: str, when: str, message: str | None
+) -> int:
     parse_semver(version)
     sync_to_files(p, version)
     prepend_changelog(p["changelog"], version, when, message)
@@ -248,15 +241,19 @@ def cmd_set(p: dict[str, Path | None], version: str, when: str, message: str | N
     return cmd_check(p)
 
 
-def cmd_bump(p: dict[str, Path | None], kind: str, when: str, message: str | None) -> int:
-    assert p["version"] is not None
-    current = read_version_file(p["version"])
+def cmd_bump(
+    p: dict[str, Path | None], kind: str, when: str, message: str | None
+) -> int:
+    assert p["skill"] is not None
+    current = read_skill_version(p["skill"])
     next_version = bump_semver(current, kind)
     return cmd_set(p, next_version, when, message)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Oh-My-Research skill package versioning")
+    parser = argparse.ArgumentParser(
+        description="Oh-My-Research skill package versioning (SKILL.md is source of truth)"
+    )
     parser.add_argument(
         "--root",
         type=Path,
@@ -265,9 +262,9 @@ def main() -> None:
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("show", help="Print VERSION")
-    sub.add_parser("check", help="Verify tracked version locations match")
-    sub.add_parser("sync", help="Write VERSION into SKILL.md (+ marketplace if present)")
+    sub.add_parser("show", help="Print SKILL.md metadata.version")
+    sub.add_parser("check", help="Verify marketplace matches SKILL.md")
+    sub.add_parser("sync", help="Write SKILL.md version into marketplace.json")
 
     set_p = sub.add_parser("set", help="Set an explicit semver and sync")
     set_p.add_argument("version")
@@ -281,7 +278,9 @@ def main() -> None:
 
     args = parser.parse_args()
     p = paths(args.root)
-    when = args.date if hasattr(args, "date") and args.date else date.today().isoformat()
+    when = (
+        args.date if hasattr(args, "date") and args.date else date.today().isoformat()
+    )
 
     if args.cmd == "show":
         raise SystemExit(cmd_show(p))

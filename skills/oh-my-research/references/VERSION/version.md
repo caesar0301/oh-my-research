@@ -7,7 +7,7 @@ Two distinct version tracks:
 | **Workspace** | Research artifacts in a project (plans, chapters, deliverables) | `version tag\|history\|diff\|backup\|list` |
 | **Skill package** | The oh-my-research skill itself (semver + changelog) | `skill-version show\|check\|sync\|set\|bump` |
 
-Do not mix them. Workspace tags live under `.omr/versions/`; skill semver lives in `skills/oh-my-research/VERSION`.
+Do not mix them. Workspace tags live under `.omr/versions/`; skill semver lives in `SKILL.md` → `metadata.version`.
 
 ---
 
@@ -49,11 +49,10 @@ Semver for the **oh-my-research** skill package (not a user research workspace).
 
 ### Source of truth
 
-`skills/oh-my-research/VERSION` — single line, e.g. `1.1.0`.
+`skills/oh-my-research/SKILL.md` → `metadata.version` (e.g. `"1.1.3"`).
 
 Kept in sync with:
 
-- `skills/oh-my-research/SKILL.md` → `metadata.version`
 - `.claude-plugin/marketplace.json` → `metadata.version` and `plugins[0].version`
 - `CHANGELOG.md` (human-readable history)
 
@@ -73,10 +72,10 @@ Keywords: skill version, bump skill, changelog, release skill.
 
 | Command | Action |
 |---------|--------|
-| `show` | Print `VERSION` |
-| `check` | Exit 0 only if all synced locations match `VERSION` |
-| `sync` | Write `VERSION` into `SKILL.md` + `marketplace.json` |
-| `set` | Set an explicit semver, sync files, prepend a `CHANGELOG.md` stub |
+| `show` | Print `SKILL.md` `metadata.version` |
+| `check` | Exit 0 only if marketplace matches `SKILL.md` |
+| `sync` | Write `SKILL.md` version into `marketplace.json` |
+| `set` | Set an explicit semver in `SKILL.md`, sync marketplace, prepend a `CHANGELOG.md` stub |
 | `bump` | Semver bump (`major` / `minor` / `patch`), then same as `set` |
 
 Script (from repo root):
@@ -103,4 +102,4 @@ python3 skills/oh-my-research/scripts/skill_version.py set 2.0.0 --message "Brea
 2. Run `skill-version bump … --message "…"` (or `set`).
 3. Fill in the new `CHANGELOG.md` section (Added / Changed / Fixed).
 4. Run `skill-version check` — must pass before commit/tag.
-5. Do **not** invent a parallel version string in README body text; point to `VERSION` / changelog.
+5. Do **not** invent a parallel version string in README body text; point to `SKILL.md` / changelog.

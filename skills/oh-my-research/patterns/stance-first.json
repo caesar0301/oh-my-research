@@ -4,11 +4,7 @@
   "graph": {
     "entry_points": ["decide"],
     "nodes": ["collect", "analyze", "synth"],
-    "edges": [
-      "decide → collect",
-      "collect → analyze",
-      "analyze → synth"
-    ]
+    "edges": ["decide → collect", "collect → analyze", "analyze → synth"]
   },
   "skill_gates": {
     "decide": "gate_b",

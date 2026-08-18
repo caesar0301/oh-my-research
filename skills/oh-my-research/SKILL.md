@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.1.3"
+  version: "1.1.4"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -94,7 +94,7 @@ Contradiction blast-radius, archive, rollback. → `references/RECONCILE/reconci
 ### VERSION Mode
 Two tracks → `references/VERSION/version.md`:
 - **Workspace:** `version tag|history|diff|backup|list` (research artifacts)
-- **Skill package:** `skill-version show|check|sync|set|bump` (semver + `CHANGELOG.md`; source of truth `VERSION`)
+- **Skill package:** `skill-version show|check|sync|set|bump` (semver + `CHANGELOG.md`; source of truth `SKILL.md` → `metadata.version`)
 
 ### WORKFLOW Mode
 Graph-driven multi-step Evidence-Deep (or other pattern). Op: `workflow [--pattern P]`. → `references/WORKFLOW/workflow-overview.md`

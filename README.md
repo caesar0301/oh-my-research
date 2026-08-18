@@ -78,7 +78,7 @@ See [skills/oh-my-research/SKILL.md](skills/oh-my-research/SKILL.md) and [refere
 
 ## Skill version
 
-Package semver lives in [`skills/oh-my-research/VERSION`](skills/oh-my-research/VERSION) and is synced to `SKILL.md` + `.claude-plugin/marketplace.json`. History: [`CHANGELOG.md`](CHANGELOG.md).
+Package semver lives in [`skills/oh-my-research/SKILL.md`](skills/oh-my-research/SKILL.md) → `metadata.version` and is synced to `.claude-plugin/marketplace.json`. History: [`CHANGELOG.md`](CHANGELOG.md).
 
 ```bash
 python3 skills/oh-my-research/scripts/skill_version.py show
@@ -87,6 +87,23 @@ python3 skills/oh-my-research/scripts/skill_version.py bump minor --message "Des
 ```
 
 Workspace research tags (`version tag …`) are separate — see `references/VERSION/version.md`.
+
+## Development
+
+Format Python / JSON / YAML (and optionally Markdown) from the repo root:
+
+```bash
+make help
+make format          # python + json + yaml
+make format-python
+make format-json
+make format-yaml
+make format-md       # optional
+make check           # CI: ruff format --check + lint
+make install-format-tools
+```
+
+Requires [ruff](https://docs.astral.sh/ruff/) for Python. JSON falls back to `jq` or the stdlib if Prettier is missing; YAML/Markdown need Prettier (`npm install -g prettier`).
 
 ## License
 

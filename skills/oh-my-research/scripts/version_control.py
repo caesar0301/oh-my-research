@@ -32,7 +32,14 @@ def _hash_file(path: Path) -> str:
 
 def _collect_paths(workspace: Path) -> list[Path]:
     paths: list[Path] = []
-    for rel in ("docs/plans", "docs/survey", "docs/report", "docs/manuscript", "docs/brief", "wiki"):
+    for rel in (
+        "docs/plans",
+        "docs/survey",
+        "docs/report",
+        "docs/manuscript",
+        "docs/brief",
+        "wiki",
+    ):
         root = workspace / rel
         if root.is_dir():
             paths.extend(sorted(p for p in root.rglob("*") if p.is_file()))
@@ -42,11 +49,19 @@ def _collect_paths(workspace: Path) -> list[Path]:
 def tag(workspace: Path, label: str) -> dict[str, Any]:
     files = []
     for p in _collect_paths(workspace):
-        files.append({"path": str(p.relative_to(workspace)), "sha256_16": _hash_file(p)})
-    record = {"label": label, "at": datetime.now(timezone.utc).isoformat(), "files": files}
+        files.append(
+            {"path": str(p.relative_to(workspace)), "sha256_16": _hash_file(p)}
+        )
+    record = {
+        "label": label,
+        "at": datetime.now(timezone.utc).isoformat(),
+        "files": files,
+    }
     out = versions_dir(workspace)
     out.mkdir(parents=True, exist_ok=True)
-    (out / f"{label}.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    (out / f"{label}.json").write_text(
+        json.dumps(record, indent=2) + "\n", encoding="utf-8"
+    )
     return record
 
 
@@ -61,12 +76,21 @@ def backup(workspace: Path) -> Path:
     stamp = _stamp()
     dest = backups_dir(workspace) / stamp
     dest.mkdir(parents=True, exist_ok=True)
-    for rel in ("docs/plans", "docs/survey", "docs/report", "docs/manuscript", "docs/brief", "wiki"):
+    for rel in (
+        "docs/plans",
+        "docs/survey",
+        "docs/report",
+        "docs/manuscript",
+        "docs/brief",
+        "wiki",
+    ):
         src = workspace / rel
         if src.exists():
             shutil.copytree(src, dest / rel, dirs_exist_ok=True)
     meta = {"at": datetime.now(timezone.utc).isoformat(), "path": str(dest)}
-    (dest / "backup-meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    (dest / "backup-meta.json").write_text(
+        json.dumps(meta, indent=2) + "\n", encoding="utf-8"
+    )
     return dest
 
 
@@ -98,7 +122,19 @@ def main() -> None:
     if args.cmd == "tag":
         print(json.dumps(tag(ws, args.label), indent=2))
     elif args.cmd in ("history", "list"):
-        print(json.dumps({"tags": history(ws), "backups": sorted(p.name for p in backups_dir(ws).glob("*") if p.is_dir()) if backups_dir(ws).exists() else []}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "tags": history(ws),
+                    "backups": sorted(
+                        p.name for p in backups_dir(ws).glob("*") if p.is_dir()
+                    )
+                    if backups_dir(ws).exists()
+                    else [],
+                },
+                indent=2,
+            )
+        )
     elif args.cmd == "backup":
         print(json.dumps({"backup": str(backup(ws))}, indent=2))
     elif args.cmd == "diff":
