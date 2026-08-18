@@ -13,7 +13,7 @@ Keywords: idea, brainstorm, speculate, what if, hypothesis (when not clearly ask
 ## Steps
 
 1. Ensure workspace (init-on-demand if needed).
-2. Write `docs/ideas/YYYY-MM-DD-<slug>.md` with timestamp, free-form insight, optional links to materials/decisions later.
+2. Write `docs/ideas/YYYY-MM-DD-<slug>.md` (creates `docs/ideas/` only because this file is written). Include timestamp, free-form insight, optional links to materials/decisions later.
 3. If Loop idea-dev active → present Gate L (iterate vs advance).
 4. Update tree-state / loop-state as needed.
 

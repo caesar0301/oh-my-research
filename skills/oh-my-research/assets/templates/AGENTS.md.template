@@ -16,7 +16,7 @@
 
 ## Workspace Structure
 
-Bootstrap creates only the files below. Content directories are created on demand.
+INIT creates **only** the files below. Every other path appears when the first real file is written there — never as an empty folder.
 
 ```
 {{PROJECT_NAME}}/
@@ -24,16 +24,22 @@ Bootstrap creates only the files below. Content directories are created on deman
 └── .omr/
     ├── tree-state.json
     └── pattern.json
-
-# On demand:
-# materials/papers|web|github|datasets|search|failed   [collect]
-# docs/index/                                          [collect / idea]
-# docs/ideas/                                          [idea]
-# docs/plans/                                          [analyze / decide]
-# docs/archive/                                        [reconcile / version]
-# docs/survey|report|manuscript|brief/                 [synth]
-# wiki/                                                [synth]
 ```
+
+### Created on first write (examples)
+
+| When | Path created |
+|------|----------------|
+| Collect a paper | `materials/papers/<file>` (+ `docs/index/` when indexing) |
+| Collect a web page | `materials/web/<file>` |
+| Collect a GitHub URL | `materials/github/<file>` |
+| Search log / HF / failure | `materials/search|datasets|failed/<file>` only if used |
+| Idea note | `docs/ideas/<file>` |
+| Analyze / decide | `docs/plans/<file>` |
+| Synth chapters | `docs/<mode>/…` (outline, chapters, `_document.json`, deliverables) |
+| QA / gates | `.omr/quality-gates/<file>` |
+| Version tag / backup | `.omr/versions/` or `.omr/backups/` |
+| Wiki | `wiki/` after Gate D if generated |
 
 ## Ops (unified skill: oh-my-research)
 

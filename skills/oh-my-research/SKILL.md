@@ -68,7 +68,7 @@ Default pattern: **Evidence-Deep**. See `references/GRAPH.md` and `patterns/`.
 ## Operation Modes
 
 ### INIT Mode
-Bootstrap workspace. Op: `init "<topic>"`. Creates `AGENTS.md` + `.omr/tree-state.json`. Content dirs on demand. → `references/INIT/init.md`
+Bootstrap workspace. Op: `init "<topic>"`. Creates **only** `AGENTS.md` + `.omr/tree-state.json` + `.omr/pattern.json`. **No empty folders** — every other path is created on first content write. → `references/INIT/init.md`
 
 ### COLLECT Mode
 Passive reception of sources → materials + indexes. Op: `collect <url|query|…>`. → `references/COLLECT/collect.md`
@@ -129,12 +129,14 @@ After IDEA / Gate A / THINK proceed / Gate B:
 
 ## Default Paths
 
-| Artifact | Path |
+Paths below are **logical destinations**. Create a folder only when writing the first file into it (see `references/INIT/init.md`).
+
+| Artifact | Path (when content exists) |
 |----------|------|
-| State | `.omr/` |
-| Materials | `materials/{papers,web,github,datasets,search,failed}/` |
+| State | `.omr/` (tree-state, pattern; other JSON as needed) |
+| Materials | `materials/{papers,web,github,datasets,search,failed}/` — only buckets that receive files |
 | Indexes | `docs/index/` |
-| Plans | `docs/plans/` (brief, evidence-map, judgment, plan, optional decision) |
+| Plans | `docs/plans/` |
 | Ideas | `docs/ideas/` |
 | Reports | `docs/{survey,report,manuscript,brief}/` |
 | Wiki | `wiki/` |
@@ -145,15 +147,16 @@ Templates: `assets/`. Patterns: `patterns/`. Detailed ops: `references/REFERENCE
 ## Best Practices
 
 1. Trust auto-detection; override with canonical ops when needed
-2. Never upgrade `suggests` → `proven` without stronger source language
-3. Use THINK (first principles / triangulation) before Gate A when confidence is low
-4. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
-5. Prefer a professionally formatted DOCX or PDF in the user's requested English or Chinese; drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
-6. Keep internal traceability private; translate it into standard citations and natural prose
-7. Make the final report self-contained, professional, and accessible to its intended reader
-8. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
-9. Write full reports to disk; reply in chat with summary only
-10. Run document lenses and visually inspect the rendered file before Gate D
+2. Never create empty directories — mkdir only as the parent of a real file write
+3. Never upgrade `suggests` → `proven` without stronger source language
+4. Use THINK (first principles / triangulation) before Gate A when confidence is low
+5. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
+6. Prefer a professionally formatted DOCX or PDF in the user's requested English or Chinese; drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
+7. Keep internal traceability private; translate it into standard citations and natural prose
+8. Make the final report self-contained, professional, and accessible to its intended reader
+9. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
+10. Write full reports to disk; reply in chat with summary only
+11. Run document lenses and visually inspect the rendered file before Gate D
 
 ## Dependencies
 

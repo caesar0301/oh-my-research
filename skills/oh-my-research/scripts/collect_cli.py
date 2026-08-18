@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Lightweight collect CLI: record sources into materials/ + papers-index.json.
 
-Full download handlers (arxiv SDK, git clone, etc.) can be layered later; this
-CLI ensures workspace shape and index IDs for the report-first workflow.
+Creates only the directories needed for the files being written — never a full
+empty materials/ tree. Full download handlers (arxiv SDK, git clone, etc.) can
+be layered later; this CLI records index IDs for the report-first workflow.
 """
 
 from __future__ import annotations
@@ -16,17 +17,10 @@ from typing import Any
 from urllib.parse import urlparse
 
 
-def ensure_dirs(workspace: Path) -> None:
-    for rel in (
-        "materials/papers",
-        "materials/web",
-        "materials/github",
-        "materials/datasets",
-        "materials/search",
-        "materials/failed",
-        "docs/index",
-    ):
-        (workspace / rel).mkdir(parents=True, exist_ok=True)
+def write_text(path: Path, text: str) -> None:
+    """Create parent dirs only when writing a real file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
 
 
 def load_index(workspace: Path) -> dict[str, Any]:
@@ -43,18 +37,20 @@ def load_index(workspace: Path) -> dict[str, Any]:
 
 def save_index(workspace: Path, data: dict[str, Any]) -> None:
     path = workspace / "docs" / "index" / "papers-index.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    write_text(path, json.dumps(data, indent=2) + "\n")
     md = workspace / "docs" / "index" / "papers-index.md"
     lines = ["# Materials Index", ""]
     for bucket in ("papers", "web", "github", "search"):
+        items = data.get(bucket, [])
+        if not items:
+            continue  # skip empty sections — and never invent empty bucket dirs
         lines.append(f"## {bucket}")
-        for item in data.get(bucket, []):
+        for item in items:
             lines.append(
                 f"- [{item['id']}] {item.get('title') or item.get('source')} — {item.get('source')}"
             )
         lines.append("")
-    md.write_text("\n".join(lines), encoding="utf-8")
+    write_text(md, "\n".join(lines).rstrip() + "\n")
 
 
 def next_id(items: list[dict[str, Any]], prefix: str) -> str:
@@ -81,7 +77,6 @@ def classify(source: str) -> str:
 
 
 def record(workspace: Path, source: str, title: str | None = None) -> dict[str, Any]:
-    ensure_dirs(workspace)
     data = load_index(workspace)
     kind = classify(source)
     now = datetime.now(timezone.utc).isoformat()
@@ -94,7 +89,7 @@ def record(workspace: Path, source: str, title: str | None = None) -> dict[str, 
             "collected_at": now,
         }
         note = workspace / "materials" / "papers" / f"{item['id']}.source.txt"
-        note.write_text(f"source: {source}\ntitle: {item['title']}\n", encoding="utf-8")
+        write_text(note, f"source: {source}\ntitle: {item['title']}\n")
         item["path"] = str(note.relative_to(workspace))
         data["papers"].append(item)
     elif kind == "github":
@@ -105,7 +100,7 @@ def record(workspace: Path, source: str, title: str | None = None) -> dict[str, 
             "collected_at": now,
         }
         note = workspace / "materials" / "github" / f"{item['id']}.source.txt"
-        note.write_text(f"source: {source}\n", encoding="utf-8")
+        write_text(note, f"source: {source}\n")
         item["path"] = str(note.relative_to(workspace))
         data["github"].append(item)
     elif kind == "web" or kind == "datasets":
@@ -116,9 +111,9 @@ def record(workspace: Path, source: str, title: str | None = None) -> dict[str, 
             "collected_at": now,
             "kind": kind,
         }
-        note = workspace / "materials" / ("datasets" if kind == "datasets" else "web") / f"{item['id']}.source.txt"
-        note.parent.mkdir(parents=True, exist_ok=True)
-        note.write_text(f"source: {source}\n", encoding="utf-8")
+        dest = "datasets" if kind == "datasets" else "web"
+        note = workspace / "materials" / dest / f"{item['id']}.source.txt"
+        write_text(note, f"source: {source}\n")
         item["path"] = str(note.relative_to(workspace))
         data["web"].append(item)
     else:
@@ -130,7 +125,7 @@ def record(workspace: Path, source: str, title: str | None = None) -> dict[str, 
             "kind": "search",
         }
         note = workspace / "materials" / "search" / f"{item['id']}.query.txt"
-        note.write_text(f"query: {source}\n", encoding="utf-8")
+        write_text(note, f"query: {source}\n")
         item["path"] = str(note.relative_to(workspace))
         data["search"].append(item)
 

@@ -66,7 +66,7 @@ Write `docs/<mode>/_outline.md` adapted to **this** research (not a fixed theme-
 3. Dependencies (conclusions after themes, abstract last)
 4. Writing order note
 
-Confirm with user unless quick-pass. Then create matching `.omr/report-state.json` and `chapters/` directory.
+Confirm with user unless quick-pass. Then write matching `.omr/report-state.json`. Create `docs/<mode>/chapters/` only when writing the first chapter file (and other `docs/<mode>/` files only when writing them).
 
 **Starter shapes (customize freely):**
 

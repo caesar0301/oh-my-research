@@ -14,18 +14,20 @@ Also: paste of URLs; “search for …”; auto-route from intent detection.
 
 ## Handlers
 
-| Input | Handler | Dest |
+| Input | Handler | Dest (create only when writing) |
 |-------|---------|------|
-| arxiv / DOI / PDF paper URL | paper | `materials/papers/` |
-| Generic http(s) page | web | `materials/web/` |
-| github.com/… | github | `materials/github/` |
-| huggingface.co/… | huggingface | `materials/datasets/` or models note in index |
-| Free-text query | search | prioritize downloads into papers/web; log in `materials/search/` |
-| Failures | — | `materials/failed/` with reason |
+| arxiv / DOI / PDF paper URL | paper | `materials/papers/<file>` |
+| Generic http(s) page | web | `materials/web/<file>` |
+| github.com/… | github | `materials/github/<file>` |
+| huggingface.co/… | huggingface | `materials/datasets/<file>` or models note in index |
+| Free-text query | search | prioritize downloads into papers/web; log in `materials/search/<file>` |
+| Failures | — | `materials/failed/<file>` with reason |
+
+**Do not** pre-create the full `materials/{papers,web,…}` tree. Create only the bucket that receives this source. Index files under `docs/index/` appear when the first index entry is written.
 
 Prefer arxiv SDK / direct PDF when available. Optional Chrome MCP for screenshots of web pages.
 
-Scripts: optional `scripts/collect_cli.py` for recording a URL into `materials/` + index. Routing, naming, depth, and search prioritization are **LLM-driven** per this doc — adapt handlers and destinations to the source type.
+Scripts: optional `scripts/collect_cli.py` for recording a URL into `materials/` + index (creates parent dirs only for files it writes). Routing, naming, depth, and search prioritization are **LLM-driven** per this doc — adapt handlers and destinations to the source type.
 
 ## Indexes
 

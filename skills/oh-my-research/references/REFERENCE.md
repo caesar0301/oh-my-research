@@ -86,6 +86,8 @@ Ambiguous ?
 
 `{id}` default: `R-001` for first research thread (increment if multiple threads).
 
+**Layout rule:** locations above are destinations for real files. Never create those directories empty — write the file (parent dirs appear as a side effect). INIT only creates `AGENTS.md` + `.omr/*.json`. See `INIT/init.md`.
+
 ---
 
 ## Evidence Boundaries (non-negotiable)

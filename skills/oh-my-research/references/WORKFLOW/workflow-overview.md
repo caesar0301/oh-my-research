@@ -20,7 +20,7 @@ Always show current phase in status lines, e.g. `[ANALYZE] Pattern: Evidence-Dee
 init "agent memory mechanisms"
 ```
 
-Creates `AGENTS.md`, `.omr/tree-state.json`, `.omr/pattern.json` = Evidence-Deep.
+Creates **only** `AGENTS.md`, `.omr/tree-state.json`, `.omr/pattern.json` = Evidence-Deep. No empty content folders.
 
 ### 2. COLLECT
 
@@ -29,7 +29,7 @@ collect https://arxiv.org/abs/2401.xxxxx
 collect "lifecycle formation evolution survey"
 ```
 
-Materials land under `materials/`; indexes under `docs/index/`. Tree: `analyze` becomes ready.
+Materials land under `materials/<bucket>/` only for buckets that receive files; indexes under `docs/index/` on first index write. Tree: `analyze` becomes ready.
 
 ### 3. ANALYZE
 

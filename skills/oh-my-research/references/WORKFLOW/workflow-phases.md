@@ -5,13 +5,14 @@
 - [ ] Topic confirmed
 - [ ] `AGENTS.md` written
 - [ ] `.omr/tree-state.json` + `pattern.json` (Evidence-Deep default)
+- [ ] No empty content dirs scaffolded (`materials/`, `docs/`, `wiki/`, …)
 - [ ] User shown `collect` next step
 
 ## [COLLECT]
 
 - [ ] Inputs routed to handlers
-- [ ] Files under `materials/`
-- [ ] Indexes updated with stable IDs
+- [ ] Only destination buckets with real files exist under `materials/`
+- [ ] Indexes updated with stable IDs (`docs/index/` created on first write)
 - [ ] Failures logged
 - [ ] `analyze` marked ready when ≥1 usable source
 

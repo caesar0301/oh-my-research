@@ -65,8 +65,8 @@ Agent evaluates checklists in `GATES.md` and writes results with rationale — s
 ## INIT without a script
 
 1. Create `AGENTS.md` from `assets/templates/AGENTS.md.template` (fill placeholders for this topic).
-2. Create `.omr/tree-state.json` and `.omr/pattern.json` as above.
-3. Skip empty content dirs until first write.
+2. Create `.omr/tree-state.json` and `.omr/pattern.json` as above (writing those files creates `.omr/`).
+3. **Never** pre-create empty `materials/`, `docs/`, `wiki/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`).
 
 ## THINK without a registry script
 
