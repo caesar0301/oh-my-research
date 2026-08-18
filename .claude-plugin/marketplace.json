@@ -19,9 +19,7 @@
       },
       "source": "./",
       "strict": false,
-      "skills": [
-        "./skills/oh-my-research"
-      ],
+      "skills": ["./skills/oh-my-research"],
       "category": "workflow",
       "tags": [
         "research",

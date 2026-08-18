@@ -99,11 +99,13 @@ make format-python
 make format-json
 make format-yaml
 make format-md       # optional
-make check           # CI: ruff format --check + lint
+make check           # CI: format --check (py/json/yaml) + lint
 make install-format-tools
 ```
 
 Requires [ruff](https://docs.astral.sh/ruff/) for Python. JSON falls back to `jq` or the stdlib if Prettier is missing; YAML/Markdown need Prettier (`npm install -g prettier`).
+
+GitHub Actions runs the same checks on push/PR via [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (`make format-check`, `json-check`, `yaml-check`, `lint`).
 
 ## License
 

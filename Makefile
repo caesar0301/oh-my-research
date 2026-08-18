@@ -11,7 +11,7 @@
 #   make check
 
 .PHONY: help format format-python format-json format-yaml format-md \
-	lint check format-check install-format-tools
+	lint check format-check json-check yaml-check install-format-tools
 
 PYTHON ?= python3
 RUFF ?= ruff
@@ -88,11 +88,49 @@ lint: ## Lint Python with ruff
 	@command -v $(RUFF) >/dev/null || { echo "ruff not found. Try: make install-format-tools"; exit 1; }
 	$(RUFF) check $(PYTHON_PATHS)
 
-check: format-check lint ## CI: verify Python format + lint (no write)
+check: format-check json-check yaml-check lint ## CI: verify format + lint (no write)
+
 format-check: ## Check Python formatting without writing
 	@command -v $(RUFF) >/dev/null || { echo "ruff not found. Try: make install-format-tools"; exit 1; }
 	$(RUFF) format --check $(PYTHON_PATHS)
 	$(RUFF) check --select I $(PYTHON_PATHS)
+
+json-check: ## Check JSON is pretty-printed (prettier --check, else python)
+	@files="$(JSON_FILES)"; \
+	if [ -z "$$files" ]; then echo "No JSON files."; exit 0; fi; \
+	if command -v $(PRETTIER) >/dev/null 2>&1; then \
+		$(PRETTIER) --check --parser json $$files; \
+	else \
+		$(PYTHON) -c "\
+from pathlib import Path; import json, sys;\
+bad = [];\
+for raw in sys.argv[1:]:\
+    path = Path(raw);\
+    text = path.read_text(encoding='utf-8');\
+    data = json.loads(text);\
+    expected = json.dumps(data, indent=2, ensure_ascii=False) + '\n';\
+    if text != expected and text.rstrip() + '\n' != expected:\
+        # allow trailing-newline-only variance vs prettier ending\
+        if text.rstrip('\n') + '\n' != expected:\
+            bad.append(str(path));\
+\
+if bad:\
+    print('JSON not formatted (indent=2):');\
+    print('\n'.join(bad));\
+    raise SystemExit(1);\
+print(f'OK — {len(sys.argv)-1} JSON file(s)');\
+" $$files; \
+	fi
+
+yaml-check: ## Check YAML formatting with prettier (skip if no files)
+	@files="$(YAML_FILES)"; \
+	if [ -z "$$files" ]; then echo "No YAML files."; exit 0; fi; \
+	if command -v $(PRETTIER) >/dev/null 2>&1; then \
+		$(PRETTIER) --check $$files; \
+	else \
+		echo "prettier not found; cannot check YAML. Install: npm install -g prettier"; \
+		exit 1; \
+	fi
 
 install-format-tools: ## Install ruff (pip) — prettier is npm: npm i -g prettier
 	$(PYTHON) -m pip install -U ruff
