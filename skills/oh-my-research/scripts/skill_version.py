@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 """Skill-package version management for oh-my-research.
 
-Single source of truth: skills/oh-my-research/VERSION
+Works in two layouts (macOS and Linux):
 
-Synced locations:
-  - skills/oh-my-research/SKILL.md          (metadata.version)
-  - .claude-plugin/marketplace.json        (metadata.version + plugins[0].version)
+  1. Repo checkout — VERSION under skills/oh-my-research/, plus repo-root
+     CHANGELOG.md and .claude-plugin/marketplace.json.
+  2. Installed skill — VERSION + SKILL.md next to this scripts/ folder
+     (e.g. ~/.agents/skills/oh-my-research); marketplace sync is skipped.
 
-Workspace research tags/backups are handled by version_control.py — not this script.
+Single source of truth: VERSION (skill package root).
 
 Commands:
   show                         Print current VERSION
-  check                        Exit 0 if all locations match VERSION
-  sync                         Write VERSION into SKILL.md + marketplace.json
+  check                        Exit 0 if tracked locations match VERSION
+  sync                         Write VERSION into SKILL.md (+ marketplace if present)
   set <X.Y.Z> [--date YYYY-MM-DD] [--message TEXT]
-                               Set VERSION, sync, prepend CHANGELOG stub
   bump major|minor|patch [--date YYYY-MM-DD] [--message TEXT]
-                               Semver bump, sync, prepend CHANGELOG stub
 """
 
 from __future__ import annotations
@@ -35,27 +34,49 @@ SKILL_VERSION_RE = re.compile(
 )
 
 
-def repo_root() -> Path:
-    # scripts/skill_version.py → skills/oh-my-research/scripts → … → repo root
+def skill_package_root() -> Path:
+    """Directory that contains VERSION + SKILL.md (scripts/ → parent)."""
+    return Path(__file__).resolve().parent.parent
+
+
+def repo_root(explicit: Path | None = None) -> Path | None:
+    """Repo root containing .claude-plugin/marketplace.json, if any."""
+    if explicit is not None:
+        return explicit.resolve()
     here = Path(__file__).resolve()
-    # Prefer walking up until marketplace.json is found
     for parent in [here.parent, *here.parents]:
         if (parent / ".claude-plugin" / "marketplace.json").exists():
             return parent
-        if (parent / "skills" / "oh-my-research" / "SKILL.md").exists() and (
-            parent / ".claude-plugin"
-        ).exists():
-            return parent
-    # Fallback: skills/oh-my-research/scripts → ../../../
-    return here.parents[3]
+    return None
 
 
-def paths(root: Path) -> dict[str, Path]:
+def paths(root: Path | None = None) -> dict[str, Path | None]:
+    skill = skill_package_root()
+    # Prefer VERSION beside SKILL.md (works for installed skill and repo).
+    version = skill / "VERSION"
+    if not version.exists() and root is not None:
+        version = root / "skills" / "oh-my-research" / "VERSION"
+        skill_md = root / "skills" / "oh-my-research" / "SKILL.md"
+    else:
+        skill_md = skill / "SKILL.md"
+
+    repo = repo_root(root) if root is not None else repo_root()
+    marketplace = (
+        (repo / ".claude-plugin" / "marketplace.json") if repo is not None else None
+    )
+    changelog = None
+    if repo is not None and (repo / "CHANGELOG.md").exists():
+        changelog = repo / "CHANGELOG.md"
+    elif (skill / "CHANGELOG.md").exists():
+        changelog = skill / "CHANGELOG.md"
+    elif repo is not None:
+        changelog = repo / "CHANGELOG.md"
+
     return {
-        "version": root / "skills" / "oh-my-research" / "VERSION",
-        "skill": root / "skills" / "oh-my-research" / "SKILL.md",
-        "marketplace": root / ".claude-plugin" / "marketplace.json",
-        "changelog": root / "CHANGELOG.md",
+        "version": version,
+        "skill": skill_md,
+        "marketplace": marketplace if marketplace and marketplace.exists() else None,
+        "changelog": changelog,
     }
 
 
@@ -118,25 +139,28 @@ def set_marketplace_versions(data: dict, version: str) -> None:
         plugin["version"] = version
 
 
-def collect_versions(p: dict[str, Path]) -> dict[str, str]:
+def collect_versions(p: dict[str, Path | None]) -> dict[str, str]:
+    assert p["version"] is not None and p["skill"] is not None
     versions: dict[str, str] = {"VERSION": read_version_file(p["version"])}
     skill_text = p["skill"].read_text(encoding="utf-8")
     skill_ver = skill_md_version(skill_text)
     if skill_ver is None:
         raise SystemExit("metadata.version missing in SKILL.md")
     versions["SKILL.md"] = skill_ver
-    market = json.loads(p["marketplace"].read_text(encoding="utf-8"))
-    for label, value in marketplace_versions(market):
-        versions[f"marketplace.json:{label}"] = value
+    if p["marketplace"] is not None:
+        market = json.loads(p["marketplace"].read_text(encoding="utf-8"))
+        for label, value in marketplace_versions(market):
+            versions[f"marketplace.json:{label}"] = value
     return versions
 
 
-def cmd_show(p: dict[str, Path]) -> int:
+def cmd_show(p: dict[str, Path | None]) -> int:
+    assert p["version"] is not None
     print(read_version_file(p["version"]))
     return 0
 
 
-def cmd_check(p: dict[str, Path]) -> int:
+def cmd_check(p: dict[str, Path | None]) -> int:
     versions = collect_versions(p)
     expected = versions["VERSION"]
     mismatches = {k: v for k, v in versions.items() if v != expected}
@@ -148,6 +172,8 @@ def cmd_check(p: dict[str, Path]) -> int:
     print(f"OK — all locations at {expected}")
     for key, value in versions.items():
         print(f"  {key}: {value}")
+    if p["marketplace"] is None:
+        print("  (marketplace.json not present — skipped)")
     return 0
 
 
@@ -155,19 +181,23 @@ def write_version_file(path: Path, version: str) -> None:
     path.write_text(version + "\n", encoding="utf-8")
 
 
-def sync_to_files(p: dict[str, Path], version: str) -> None:
+def sync_to_files(p: dict[str, Path | None], version: str) -> None:
+    assert p["version"] is not None and p["skill"] is not None
     write_version_file(p["version"], version)
     skill_text = p["skill"].read_text(encoding="utf-8")
     p["skill"].write_text(set_skill_md_version(skill_text, version), encoding="utf-8")
-    market = json.loads(p["marketplace"].read_text(encoding="utf-8"))
-    set_marketplace_versions(market, version)
-    p["marketplace"].write_text(
-        json.dumps(market, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    if p["marketplace"] is not None:
+        market = json.loads(p["marketplace"].read_text(encoding="utf-8"))
+        set_marketplace_versions(market, version)
+        p["marketplace"].write_text(
+            json.dumps(market, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
 
 
-def prepend_changelog(path: Path, version: str, when: str, message: str | None) -> None:
+def prepend_changelog(path: Path | None, version: str, when: str, message: str | None) -> None:
+    if path is None:
+        return
     heading = f"## [{version}] — {when}\n"
     body = (
         f"\n### Changed\n\n- {message.strip()}\n"
@@ -184,15 +214,12 @@ def prepend_changelog(path: Path, version: str, when: str, message: str | None) 
         )
         return
     text = path.read_text(encoding="utf-8")
-    # Insert after the preamble (before the first ## [version] heading)
     match = re.search(r"^## \[", text, re.M)
     if match:
         text = text[: match.start()] + entry + text[match.start() :]
     else:
         text = text.rstrip() + "\n\n" + entry
-    # Avoid duplicate heading for same version
     if text.count(f"## [{version}]") > 1:
-        # Keep only the newly prepended one: drop older duplicates below
         parts = re.split(rf"(?=^## \[{re.escape(version)}\])", text, flags=re.M)
         kept = [parts[0]]
         version_blocks = [b for b in parts[1:] if b.startswith(f"## [{version}]")]
@@ -204,22 +231,25 @@ def prepend_changelog(path: Path, version: str, when: str, message: str | None) 
     path.write_text(text, encoding="utf-8")
 
 
-def cmd_sync(p: dict[str, Path]) -> int:
+def cmd_sync(p: dict[str, Path | None]) -> int:
+    assert p["version"] is not None
     version = read_version_file(p["version"])
     sync_to_files(p, version)
-    print(f"Synced {version} → SKILL.md + marketplace.json")
+    targets = "SKILL.md" + (" + marketplace.json" if p["marketplace"] else "")
+    print(f"Synced {version} → {targets}")
     return cmd_check(p)
 
 
-def cmd_set(p: dict[str, Path], version: str, when: str, message: str | None) -> int:
-    parse_semver(version)  # validate
+def cmd_set(p: dict[str, Path | None], version: str, when: str, message: str | None) -> int:
+    parse_semver(version)
     sync_to_files(p, version)
     prepend_changelog(p["changelog"], version, when, message)
     print(f"Set version {version}")
     return cmd_check(p)
 
 
-def cmd_bump(p: dict[str, Path], kind: str, when: str, message: str | None) -> int:
+def cmd_bump(p: dict[str, Path | None], kind: str, when: str, message: str | None) -> int:
+    assert p["version"] is not None
     current = read_version_file(p["version"])
     next_version = bump_semver(current, kind)
     return cmd_set(p, next_version, when, message)
@@ -231,13 +261,13 @@ def main() -> None:
         "--root",
         type=Path,
         default=None,
-        help="Repo root (auto-detected from script location)",
+        help="Optional repo root (auto-detected; not required for installed skills)",
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("show", help="Print VERSION")
-    sub.add_parser("check", help="Verify all version locations match")
-    sub.add_parser("sync", help="Write VERSION into SKILL.md + marketplace.json")
+    sub.add_parser("check", help="Verify tracked version locations match")
+    sub.add_parser("sync", help="Write VERSION into SKILL.md (+ marketplace if present)")
 
     set_p = sub.add_parser("set", help="Set an explicit semver and sync")
     set_p.add_argument("version")
@@ -250,8 +280,7 @@ def main() -> None:
     bump_p.add_argument("--message", default=None)
 
     args = parser.parse_args()
-    root = (args.root or repo_root()).resolve()
-    p = paths(root)
+    p = paths(args.root)
     when = args.date if hasattr(args, "date") and args.date else date.today().isoformat()
 
     if args.cmd == "show":

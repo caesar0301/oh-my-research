@@ -111,9 +111,9 @@ The exporter is a **thin, spec-driven renderer**. All presentation decisions liv
 
 Tune the spec to the report: e.g. a Chinese report sets `fonts.body.eastasia` + `fonts.pdf_cjk` and `--language zh-CN`; a brief may set `cover.enabled=false` and `toc.enabled=false`; a manuscript may reorder chapters via `chapters.order`.
 
-**Mixed-script text:** Latin and East Asian faces are bound separately (`latin`/`eastasia`, `pdf_latin`/`pdf_cjk`). Keep a Latin font in `latin`/`pdf_latin` so terms like `Gödel Agent`, `DeepSeek-R1`, and `·` inside Chinese prose render with correct glyphs and spacing.
+**Mixed-script text:** Latin and East Asian faces are bound separately (`latin`/`eastasia`, `pdf_latin`/`pdf_cjk`). Keep a Latin font in `latin`/`pdf_latin` so terms like `Gödel Agent`, `DeepSeek-R1`, and `·` inside Chinese prose render with correct glyphs and spacing. When those fields are omitted, the exporter picks OS-appropriate defaults (macOS / Linux / Windows).
 
-**Unicode symbols:** characters outside both faces (`→ ⇒ ≥ ✓ ✗ ★ ① …`) are routed to a wide-coverage system font automatically, in any language. Nothing to configure — write symbols in Markdown as usual.
+**Unicode symbols:** characters outside both faces (`→ ⇒ ≥ ✓ ✗ ★ ① …`) are routed to a wide-coverage system font discovered from standard font directories on the host OS. On Linux, install `fonts-dejavu` and/or `fonts-noto-core` for best coverage.
 
 ## Default deep-survey layout
 

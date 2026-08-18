@@ -10,12 +10,24 @@
 | `skill_version.py` | Skill-package semver: `show` / `check` / `sync` / `set` / `bump` against `VERSION` + `SKILL.md` + marketplace + `CHANGELOG.md` |
 | `collect_cli.py` | Optional: record a URL/query into `materials/` + index (creates only parent dirs of files written) |
 
-Install export dependencies:
+Install export dependencies (macOS or Linux):
 
 ```bash
 python3 -m pip install -r scripts/requirements.txt
 ```
 
+**Linux PDF symbol coverage** (optional but recommended):
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install -y fonts-dejavu fonts-noto-core fonts-noto-cjk
+# Fedora
+sudo dnf install -y dejavu-sans-fonts google-noto-sans-fonts google-noto-sans-cjk-fonts
+```
+
+PDF CJK text uses reportlab's built-in CID fonts (`STSong-Light`, etc.) and needs no system Chinese fonts. DOCX East Asian face names default to `Noto Sans CJK SC` on Linux / `PingFang SC` on macOS / `Microsoft YaHei` on Windows — override in `_document.json` if needed.
+
+All scripts use `#!/usr/bin/env python3` and the stdlib `pathlib` API; they are intended to run unchanged on macOS and Linux.
 Examples:
 
 ```bash

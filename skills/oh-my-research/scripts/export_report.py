@@ -22,6 +22,7 @@ import copy
 import html
 import itertools
 import json
+import os
 import re
 import sys
 from datetime import date
@@ -48,8 +49,8 @@ INTERNAL_PATTERNS = {
     ),
 }
 
-# Minimal, neutral defaults. The LLM spec is expected to override anything that
-# should vary by report, audience, or language. These are only a safety net.
+# Minimal, neutral defaults. Platform-specific faces are applied in
+# apply_platform_font_defaults() so macOS/Linux/Windows pick local-friendly names.
 DEFAULT_SPEC: dict[str, Any] = {
     "title": None,
     "subtitle": None,
@@ -57,9 +58,9 @@ DEFAULT_SPEC: dict[str, Any] = {
     "date": None,
     "page": {"size": "A4", "margin_mm": 22},
     "fonts": {
-        "body": {"latin": "Calibri", "eastasia": "Microsoft YaHei", "size": 10.5},
-        "heading": {"latin": "Calibri", "eastasia": "Microsoft YaHei"},
-        "mono": {"latin": "Courier New", "size": 9},
+        "body": {"size": 10.5},
+        "heading": {},
+        "mono": {"size": 9},
         "pdf_latin": "Helvetica",
         "pdf_cjk": "STSong-Light",
     },
@@ -142,36 +143,148 @@ def latin_safe(char: str) -> bool:
 
 CJK_ONE_RE = re.compile(f"[{CJK_CHARS}]")
 
-# CID fonts cover CJK but drop symbols such as ⇒ ✓ ✗. A wide-coverage TrueType
-# font is embedded for those when the system provides one.
-SYMBOL_FONT_CANDIDATES = (
-    ("ArialUnicode", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"),
-    ("ArialUnicode", "/Library/Fonts/Arial Unicode.ttf"),
-    ("DejaVuSans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-    ("DejaVuSans", "/usr/local/share/fonts/DejaVuSans.ttf"),
-    ("FreeSerif", "/usr/share/fonts/truetype/freefont/FreeSerif.ttf"),
-    ("SegoeUISymbol", "C:/Windows/Fonts/seguisym.ttf"),
-    ("AppleSymbols", "/System/Library/Fonts/Apple Symbols.ttf"),
+# --------------------------------------------------------------------------- #
+# Cross-platform fonts (macOS + Linux + Windows)
+# --------------------------------------------------------------------------- #
+def platform_family() -> str:
+    name = sys.platform
+    if name == "darwin":
+        return "macos"
+    if name.startswith("linux"):
+        return "linux"
+    if name in ("win32", "cygwin", "msys"):
+        return "windows"
+    return name
+
+
+def font_search_dirs() -> list[Path]:
+    """Standard font directories on macOS, Linux, and Windows (existing only)."""
+    home = Path.home()
+    windir = Path(os.environ.get("WINDIR", r"C:\Windows"))
+    candidates = [
+        # Linux / BSD
+        Path("/usr/share/fonts"),
+        Path("/usr/local/share/fonts"),
+        Path("/usr/share/fonts/truetype"),
+        Path("/usr/share/fonts/opentype"),
+        Path("/usr/share/fonts/TTF"),
+        home / ".local/share/fonts",
+        home / ".fonts",
+        # macOS
+        Path("/System/Library/Fonts"),
+        Path("/System/Library/Fonts/Supplemental"),
+        Path("/Library/Fonts"),
+        home / "Library/Fonts",
+        # Windows
+        windir / "Fonts",
+        Path("C:/Windows/Fonts"),
+    ]
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for path in candidates:
+        try:
+            resolved = path.resolve()
+        except OSError:
+            continue
+        if resolved in seen or not path.is_dir():
+            continue
+        seen.add(resolved)
+        out.append(path)
+    return out
+
+
+# Preferred TrueType/OpenType basenames for broad Unicode / symbol coverage.
+_SYMBOL_FONT_NAMES = (
+    "Arial Unicode.ttf",
+    "ArialUnicode.ttf",
+    "NotoSansSymbols2-Regular.ttf",
+    "NotoSansSymbols-Regular.ttf",
+    "NotoSans-Regular.ttf",
+    "DejaVuSans.ttf",
+    "FreeSans.ttf",
+    "FreeSerif.ttf",
+    "Symbola.ttf",
+    "seguisym.ttf",
+    "SegoeUISymbol.ttf",
+    "Apple Symbols.ttf",
+)
+
+# Optional exact paths checked first (fast path when present).
+_SYMBOL_FONT_HINTS = (
+    "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+    "/Library/Fonts/Arial Unicode.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+    "/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf",
+    "/usr/share/fonts/opentype/noto/NotoSansSymbols2-Regular.otf",
+    "/usr/local/share/fonts/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
+    "/usr/share/fonts/truetype/ancient-fonts/Symbola.ttf",
+    "C:/Windows/Fonts/seguisym.ttf",
+    "C:/Windows/Fonts/ARIALUNI.TTF",
+    "/System/Library/Fonts/Apple Symbols.ttf",
 )
 
 
+def discover_symbol_font_paths() -> list[Path]:
+    """Collect candidate symbol/Unicode fonts once (hints + directory scan)."""
+    found: list[Path] = []
+    seen: set[Path] = set()
+
+    def add(path: Path) -> None:
+        try:
+            key = path.resolve()
+        except OSError:
+            key = path
+        if key in seen or not path.is_file():
+            return
+        seen.add(key)
+        found.append(path)
+
+    for hint in _SYMBOL_FONT_HINTS:
+        add(Path(hint))
+
+    wanted = {name.lower() for name in _SYMBOL_FONT_NAMES}
+    remaining = set(wanted) - {p.name.lower() for p in found}
+    if remaining:
+        for root in font_search_dirs():
+            if not remaining:
+                break
+            try:
+                for path in root.rglob("*"):
+                    name = path.name.lower()
+                    if path.is_file() and name in remaining:
+                        add(path)
+                        remaining.discard(name)
+                        if not remaining:
+                            break
+            except OSError:
+                continue
+    return found
+
+
 def register_symbol_font(chars: set[str]) -> str | None:
-    """Embed the system font covering the most of `chars`, or None if unavailable."""
+    """Embed the best available system font covering `chars` (macOS/Linux/Windows)."""
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
 
+    if not chars:
+        return None
+
     best: tuple[int, str] | None = None
-    for name, path in SYMBOL_FONT_CANDIDATES:
-        if not Path(path).exists():
-            continue
+    for path in discover_symbol_font_paths():
+        font_name = re.sub(r"[^A-Za-z0-9]+", "", path.stem) or "SymbolFallback"
+        if font_name[0].isdigit():
+            font_name = "F" + font_name
         try:
-            pdfmetrics.registerFont(TTFont(name, path))
-            covered = pdfmetrics.getFont(name).face.charToGlyph
+            if font_name not in pdfmetrics.getRegisteredFontNames():
+                pdfmetrics.registerFont(TTFont(font_name, str(path)))
+            covered = pdfmetrics.getFont(font_name).face.charToGlyph
         except Exception:
             continue
         score = sum(1 for ch in chars if ord(ch) in covered)
         if best is None or score > best[0]:
-            best = (score, name)
+            best = (score, font_name)
         if score == len(chars):
             break
     if best is None or best[0] == 0:
@@ -179,6 +292,59 @@ def register_symbol_font(chars: set[str]) -> str | None:
     name = best[1]
     pdfmetrics.registerFontFamily(name, normal=name, bold=name, italic=name, boldItalic=name)
     return name
+
+
+def platform_docx_fonts(language: str) -> tuple[str, str]:
+    """Pick DOCX Latin + East Asian face names that usually exist on this OS.
+
+    OOXML only stores names; the viewer substitutes if missing. Prefer faces
+    commonly packaged on each platform so LibreOffice/Word look right locally.
+    """
+    family = language_family(language)
+    plat = platform_family()
+
+    if plat == "macos":
+        latin = "Helvetica Neue"
+        east = {
+            "zh": "PingFang SC",
+            "ja": "Hiragino Sans",
+            "ko": "Apple SD Gothic Neo",
+        }.get(family, "PingFang SC")
+    elif plat == "linux":
+        latin = "DejaVu Sans"
+        east = {
+            "zh": "Noto Sans CJK SC",
+            "ja": "Noto Sans CJK JP",
+            "ko": "Noto Sans CJK KR",
+        }.get(family, "Noto Sans CJK SC")
+    elif plat == "windows":
+        latin = "Calibri"
+        east = {
+            "zh": "Microsoft YaHei",
+            "ja": "Yu Gothic",
+            "ko": "Malgun Gothic",
+        }.get(family, "Microsoft YaHei")
+    else:
+        latin, east = "Calibri", "Microsoft YaHei"
+    return latin, east
+
+
+def apply_platform_font_defaults(spec: dict[str, Any], language: str) -> dict[str, Any]:
+    """Fill unset font fields with platform-appropriate defaults."""
+    latin, east = platform_docx_fonts(language)
+    fonts = spec.setdefault("fonts", {})
+    for role in ("body", "heading"):
+        slot = fonts.setdefault(role, {})
+        slot.setdefault("latin", latin)
+        slot.setdefault("eastasia", east)
+    fonts.setdefault("mono", {}).setdefault("latin", "Courier New" if platform_family() != "linux" else "DejaVu Sans Mono")
+    fonts.setdefault("pdf_latin", "Helvetica")
+    fonts.setdefault("pdf_cjk", {
+        "zh": "STSong-Light",
+        "ja": "HeiseiMin-W3",
+        "ko": "HYSMyeongJo-Medium",
+    }.get(language_family(language), "STSong-Light"))
+    return spec
 
 
 def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
@@ -1032,11 +1198,13 @@ def resolve_spec(root: Path, args: argparse.Namespace, combined: str) -> dict[st
         spec["author"] = args.author
     if spec.get("title") is None:
         spec["title"] = infer_title(combined)
+    apply_platform_font_defaults(spec, getattr(args, "language", None) or "en")
     return spec
 
 
 def emit_spec(root: Path, language: str, mode: str) -> Path:
     spec = copy.deepcopy(DEFAULT_SPEC)
+    apply_platform_font_defaults(spec, language)
     spec["title"] = None
     spec["_comment"] = (
         "LLM-authored document spec. Edit any field to control presentation. "

@@ -295,6 +295,16 @@ def system_timezone_name() -> str | None:
     if tz_env:
         return tz_env.strip()
 
+    # Debian/Ubuntu (and some other Linux distros) expose the zone name here.
+    etc_timezone = Path("/etc/timezone")
+    try:
+        if etc_timezone.is_file():
+            value = etc_timezone.read_text(encoding="utf-8", errors="ignore").strip()
+            if value and "\n" not in value:
+                return value
+    except OSError:
+        pass
+
     localtime = Path("/etc/localtime")
     try:
         if localtime.exists():

@@ -8,11 +8,11 @@
 
   "page": { "size": "A4", "margin_mm": 22 },
 
-  "_fonts_note": "Latin and East Asian faces are bound separately, so Latin words inside Chinese/Japanese/Korean text (Gödel, DeepSeek-R1, ·) keep correct glyphs and spacing. 'latin' covers ASCII/accented Latin; 'eastasia' covers CJK in DOCX; 'pdf_latin'/'pdf_cjk' do the same for PDF. Do not set a CJK font as 'latin' or 'pdf_latin'. Symbols outside both (→ ⇒ ✓ ✗ ★ ①) are routed automatically to a wide-coverage system font; no spec field is needed.",
+  "_fonts_note": "Font faces are filled per OS when omitted: macOS (Helvetica Neue + PingFang SC), Linux (DejaVu Sans + Noto Sans CJK SC), Windows (Calibri + Microsoft YaHei). PDF CJK uses reportlab CID fonts (no system install). Unicode symbols embed the best available system TTF (Arial Unicode / DejaVu / Noto / FreeFont). Override latin/eastasia/pdf_* here when you want fixed faces across machines.",
   "fonts": {
-    "body": { "latin": "Calibri", "eastasia": "Microsoft YaHei", "size": 10.5 },
-    "heading": { "latin": "Calibri", "eastasia": "Microsoft YaHei" },
-    "mono": { "latin": "Courier New", "size": 9 },
+    "body": { "size": 10.5 },
+    "heading": {},
+    "mono": { "size": 9 },
     "pdf_latin": "Helvetica",
     "pdf_cjk": "STSong-Light"
   },

@@ -14,6 +14,12 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.1.3] — 2026-08-18
+
+### Changed
+
+- Cross-platform scripts: OS font discovery for PDF symbols, platform DOCX font defaults (macOS/Linux/Windows), Linux /etc/timezone detection, skill_version works for installed skill packages without marketplace.json.
+
 ## [1.1.2] — 2026-08-18
 
 ### Changed
