@@ -5,6 +5,7 @@
 - [ ] Topic confirmed
 - [ ] `AGENTS.md` written
 - [ ] `.omr/tree-state.json` + `pattern.json` (Evidence-Deep default)
+- [ ] `.omr/locale.json` (preferred BCP-47 language from timezone/locale; see `LANGUAGE.md`)
 - [ ] No empty content dirs scaffolded (`materials/`, `docs/`, `wiki/`, …)
 - [ ] User shown `collect` next step
 

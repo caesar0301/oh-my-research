@@ -14,7 +14,7 @@ Also: new project, start research, initialize workspace, or first message with a
 
 **Never** create a directory unless you are about to write at least one file into it in the same step.
 
-- INIT creates only files that exist immediately (`AGENTS.md`, `.omr/tree-state.json`, `.omr/pattern.json`). `.omr/` appears because those JSON files are written — not as an empty shell.
+- INIT creates only files that exist immediately (`AGENTS.md`, `.omr/tree-state.json`, `.omr/pattern.json`, `.omr/locale.json`). `.omr/` appears because those JSON files are written — not as an empty shell.
 - Do **not** scaffold `materials/`, `docs/`, `wiki/`, `docs/plans/`, `docs/index/`, `docs/ideas/`, `docs/survey|report|…/`, `chapters/`, `deliverables/`, `.omr/quality-gates/`, `.omr/versions/`, `.omr/backups/`, etc.
 - Later modes create a path’s parent dirs **only when writing the first real artifact** there (e.g. first paper → `materials/papers/…`; first judgment → `docs/plans/…`).
 
@@ -28,13 +28,15 @@ Also: new project, start research, initialize workspace, or first message with a
 ├── AGENTS.md
 └── .omr/
     ├── tree-state.json
-    └── pattern.json
+    ├── pattern.json
+    └── locale.json      # preferred language from timezone/locale (BCP-47 tag)
 ```
 
 3. Fill `AGENTS.md` from `assets/templates/AGENTS.md.template` with this topic’s placeholders. Describe on-demand paths as documentation — do not mkdir them.
 4. Write `.omr/tree-state.json` appropriate to the start (typically unlock collect/idea/think; lock synth until analysis). Adjust if the user starts mid-stream (e.g. materials already present).
 5. Write `.omr/pattern.json` — default `{ "name": "Evidence-Deep" }` unless the user chose another pattern.
-6. Show next steps tailored to the topic.
+6. Detect preferred language from timezone/locale (`LANGUAGE.md` / `scripts/prefer_language.py --write-workspace <project>`) and write `.omr/locale.json`. Mention it in the INIT reply; user can override.
+7. Show next steps tailored to the topic.
 
 ## No coding dirs
 
@@ -42,4 +44,4 @@ Do not create `src/` or evaluation folders.
 
 ## Chat reply
 
-`[INIT] Project: … Pattern: Evidence-Deep. Next: collect <url|query>. Layout: files only until first content write.`
+`[INIT] Project: … Pattern: Evidence-Deep. Language: ja (timezone Asia/Tokyo). Next: collect <url|query>.`

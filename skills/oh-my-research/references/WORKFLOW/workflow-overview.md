@@ -20,7 +20,7 @@ Always show current phase in status lines, e.g. `[ANALYZE] Pattern: Evidence-Dee
 init "agent memory mechanisms"
 ```
 
-Creates **only** `AGENTS.md`, `.omr/tree-state.json`, `.omr/pattern.json` = Evidence-Deep. No empty content folders.
+Creates **only** `AGENTS.md`, `.omr/tree-state.json`, `.omr/pattern.json`, `.omr/locale.json` (language from timezone). No empty content folders.
 
 ### 2. COLLECT
 

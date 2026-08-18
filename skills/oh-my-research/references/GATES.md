@@ -132,7 +132,7 @@ Process: announce → findings table → user accept/reject → apply → contin
 - [ ] Cross-references valid
 - [ ] Self-contained for a reader without working files
 - [ ] No workflow terms, gate names, internal IDs, or private paths
-- [ ] Language consistent (`en` or `zh-CN`)
+- [ ] Language consistent (single primary BCP-47 tag)
 - [ ] All planned chapters complete in `.omr/report-state.json`
 - [ ] Final DOCX/PDF rendered (`export_report.py`) and visually inspected
 

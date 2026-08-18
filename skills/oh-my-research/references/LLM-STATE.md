@@ -46,6 +46,21 @@ Only when Loop is active. Agent sets fields from Gate L discussion:
 }
 ```
 
+### `.omr/locale.json`
+
+Preferred report/chat language from timezone (or user override):
+
+```json
+{
+  "language": "ja",
+  "source": "timezone",
+  "timezone": "Asia/Tokyo",
+  "detected_at": "2026-08-18T20:00:00+09:00"
+}
+```
+
+BCP-47 tags (`en`, `zh-CN`, `zh-TW`, `ja`, `de`, `pt-BR`, …). See `LANGUAGE.md`. Explicit `--language` always wins over this file.
+
 ### `.omr/pattern.json`
 
 ```json
@@ -65,7 +80,7 @@ Agent evaluates checklists in `GATES.md` and writes results with rationale — s
 ## INIT without a script
 
 1. Create `AGENTS.md` from `assets/templates/AGENTS.md.template` (fill placeholders for this topic).
-2. Create `.omr/tree-state.json` and `.omr/pattern.json` as above (writing those files creates `.omr/`).
+2. Create `.omr/tree-state.json`, `.omr/pattern.json`, and `.omr/locale.json` (timezone→language; see `LANGUAGE.md` / `prefer_language.py --write-workspace`).
 3. **Never** pre-create empty `materials/`, `docs/`, `wiki/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`).
 
 ## THINK without a registry script

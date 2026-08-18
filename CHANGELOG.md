@@ -14,6 +14,12 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.1.1] — 2026-08-18
+
+### Changed
+
+- Fixed: mixed-script rendering — Latin text inside CJK reports keeps a Latin face; DOCX bullets use a real Unicode bullet instead of a Symbol private-use codepoint; Unicode symbols (→ ⇒ ≥ ✓ ✗ ★ ①) route to a wide-coverage system font instead of being dropped or wrongly substituted.
+
 ## [1.1.0] — 2026-08-18
 
 ### Added

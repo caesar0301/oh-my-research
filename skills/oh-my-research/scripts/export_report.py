@@ -20,8 +20,10 @@ from __future__ import annotations
 import argparse
 import copy
 import html
+import itertools
 import json
 import re
+import sys
 from datetime import date
 from pathlib import Path
 from typing import Any, Iterable
@@ -73,7 +75,103 @@ DEFAULT_SPEC: dict[str, Any] = {
 LANG_STRINGS = {
     "en": {"toc": "Table of Contents", "subtitle": "Deep Research Report"},
     "zh-CN": {"toc": "目录", "subtitle": "深度研究报告"},
+    "zh-TW": {"toc": "目錄", "subtitle": "深度研究報告"},
+    "zh-HK": {"toc": "目錄", "subtitle": "深度研究報告"},
+    "ja": {"toc": "目次", "subtitle": "深度調査レポート"},
+    "ko": {"toc": "목차", "subtitle": "심층 연구 보고서"},
+    "de": {"toc": "Inhaltsverzeichnis", "subtitle": "Tiefgehender Forschungsbericht"},
+    "fr": {"toc": "Table des matières", "subtitle": "Rapport de recherche approfondi"},
+    "es": {"toc": "Índice", "subtitle": "Informe de investigación en profundidad"},
+    "pt-BR": {"toc": "Sumário", "subtitle": "Relatório de pesquisa aprofundada"},
+    "pt-PT": {"toc": "Índice", "subtitle": "Relatório de investigação aprofundada"},
+    "ru": {"toc": "Содержание", "subtitle": "Глубокий исследовательский отчёт"},
+    "ar": {"toc": "جدول المحتويات", "subtitle": "تقرير بحث معمق"},
+    "it": {"toc": "Indice", "subtitle": "Report di ricerca approfondita"},
+    "nl": {"toc": "Inhoudsopgave", "subtitle": "Diepgaand onderzoeksrapport"},
+    "pl": {"toc": "Spis treści", "subtitle": "Pogłębiony raport badawczy"},
+    "tr": {"toc": "İçindekiler", "subtitle": "Derin araştırma raporu"},
+    "vi": {"toc": "Mục lục", "subtitle": "Báo cáo nghiên cứu chuyên sâu"},
+    "th": {"toc": "สารบัญ", "subtitle": "รายงานวิจัยเชิงลึก"},
+    "id": {"toc": "Daftar Isi", "subtitle": "Laporan penelitian mendalam"},
+    "hi": {"toc": "विषय सूची", "subtitle": "गहन शोध रिपोर्ट"},
 }
+
+
+def language_family(language: str) -> str:
+    return (language or "en").split("-", 1)[0].lower()
+
+
+def is_cjk_language(language: str) -> bool:
+    return language_family(language) in {"zh", "ja", "ko"}
+
+
+# CJK ideographs, kana, hangul, and CJK punctuation. Latin/digits are excluded so
+# they keep a proper Latin face instead of the half-width forms a CID font gives.
+CJK_CHARS = (
+    r"\u1100-\u11FF\u2E80-\u2EFF\u3000-\u303F\u3040-\u30FF\u3130-\u318F"
+    r"\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uA960-\uA97F\uAC00-\uD7FF"
+    r"\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF"
+)
+CJK_RUN_RE = re.compile(f"[{CJK_CHARS}]+")
+
+# Characters the PDF standard Latin fonts can actually draw (WinAnsiEncoding).
+# Anything outside this set (arrows, ✓, ★, ①, CJK) must go to a broad-coverage
+# CID font, otherwise reportlab silently substitutes the wrong glyph.
+WINANSI_EXTRA = frozenset(
+    "\u20ac\u201a\u0192\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152"
+    "\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a"
+    "\u0153\u017e\u0178"
+)
+
+
+def latin_safe(char: str) -> bool:
+    point = ord(char)
+    if char in "\n\r\t":
+        return True
+    if 0x20 <= point <= 0x7E or 0xA0 <= point <= 0xFF:
+        return True
+    return char in WINANSI_EXTRA
+
+
+CJK_ONE_RE = re.compile(f"[{CJK_CHARS}]")
+
+# CID fonts cover CJK but drop symbols such as ⇒ ✓ ✗. A wide-coverage TrueType
+# font is embedded for those when the system provides one.
+SYMBOL_FONT_CANDIDATES = (
+    ("ArialUnicode", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"),
+    ("ArialUnicode", "/Library/Fonts/Arial Unicode.ttf"),
+    ("DejaVuSans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+    ("DejaVuSans", "/usr/local/share/fonts/DejaVuSans.ttf"),
+    ("FreeSerif", "/usr/share/fonts/truetype/freefont/FreeSerif.ttf"),
+    ("SegoeUISymbol", "C:/Windows/Fonts/seguisym.ttf"),
+    ("AppleSymbols", "/System/Library/Fonts/Apple Symbols.ttf"),
+)
+
+
+def register_symbol_font(chars: set[str]) -> str | None:
+    """Embed the system font covering the most of `chars`, or None if unavailable."""
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    best: tuple[int, str] | None = None
+    for name, path in SYMBOL_FONT_CANDIDATES:
+        if not Path(path).exists():
+            continue
+        try:
+            pdfmetrics.registerFont(TTFont(name, path))
+            covered = pdfmetrics.getFont(name).face.charToGlyph
+        except Exception:
+            continue
+        score = sum(1 for ch in chars if ord(ch) in covered)
+        if best is None or score > best[0]:
+            best = (score, name)
+        if score == len(chars):
+            break
+    if best is None or best[0] == 0:
+        return None
+    name = best[1]
+    pdfmetrics.registerFontFamily(name, normal=name, bold=name, italic=name, boldItalic=name)
+    return name
 
 
 def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
@@ -87,7 +185,7 @@ def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]
 
 
 def lang_string(spec: dict[str, Any], language: str, key: str) -> str:
-    table = LANG_STRINGS.get(language, LANG_STRINGS["en"])
+    table = LANG_STRINGS.get(language) or LANG_STRINGS.get(language_family(language)) or LANG_STRINGS["en"]
     return table.get(key, LANG_STRINGS["en"][key])
 
 
@@ -249,7 +347,13 @@ def markdown_blocks(text: str) -> Iterable[dict[str, object]]:
 # --------------------------------------------------------------------------- #
 # DOCX
 # --------------------------------------------------------------------------- #
-def _docx_inline(paragraph: object, text: str) -> None:
+def _docx_inline(
+    paragraph: object,
+    text: str,
+    latin: str | None = None,
+    eastasia: str | None = None,
+    mono: str = "Courier New",
+) -> None:
     token = re.compile(r"(\*\*[^*]+\*\*|(?<!\*)\*[^*]+\*(?!\*)|`[^`]+`|\[[^\]]+\]\([^)]+\))")
     position = 0
     for match in token.finditer(text):
@@ -261,7 +365,11 @@ def _docx_inline(paragraph: object, text: str) -> None:
         elif value.startswith("*"):
             paragraph.add_run(value[1:-1]).italic = True
         elif value.startswith("`"):
-            paragraph.add_run(value[1:-1]).font.name = "Courier New"
+            code_run = paragraph.add_run(value[1:-1])
+            if latin and eastasia:
+                _set_run_fonts(code_run, mono, eastasia)
+            else:
+                code_run.font.name = mono
         else:
             link = re.match(r"\[([^\]]+)\]\(([^)]+)\)", value)
             run = paragraph.add_run(link.group(1) if link else value)
@@ -270,18 +378,80 @@ def _docx_inline(paragraph: object, text: str) -> None:
         position = match.end()
     if position < len(text):
         paragraph.add_run(text[position:])
+    if latin and eastasia:
+        for run in paragraph.runs:
+            if not _rfonts(run._element).get(
+                "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}ascii"
+            ):
+                _set_run_fonts(run, latin, eastasia)
 
 
-def _set_eastasia(run: object, font_name: str) -> None:
+def _rfonts(element: object) -> object:
     from docx.oxml import OxmlElement
-    from docx.oxml.ns import qn
 
-    properties = run._element.get_or_add_rPr()
+    properties = element.get_or_add_rPr()
     fonts = properties.rFonts
     if fonts is None:
         fonts = OxmlElement("w:rFonts")
         properties.insert(0, fonts)
-    fonts.set(qn("w:eastAsia"), font_name)
+    return fonts
+
+
+def _set_fonts(element: object, latin: str, eastasia: str) -> None:
+    """Bind Latin (ascii/hAnsi/cs) and East Asian faces separately.
+
+    Without an explicit ascii/hAnsi face, Word renders Latin inside CJK text with
+    the East Asian font, which mangles accents and letter spacing.
+    """
+    from docx.oxml.ns import qn
+
+    fonts = _rfonts(element)
+    fonts.set(qn("w:ascii"), latin)
+    fonts.set(qn("w:hAnsi"), latin)
+    fonts.set(qn("w:cs"), latin)
+    fonts.set(qn("w:eastAsia"), eastasia)
+
+
+def _set_run_fonts(run: object, latin: str, eastasia: str) -> None:
+    _set_fonts(run._element, latin, eastasia)
+
+
+def _set_paragraph_fonts(paragraph: object, latin: str, eastasia: str) -> None:
+    for run in paragraph.runs:
+        _set_run_fonts(run, latin, eastasia)
+
+
+def _normalize_bullets(document: object, latin: str) -> None:
+    """Replace Symbol-font private-use bullets with a real Unicode bullet.
+
+    The default list template marks bullets as U+F0B7 in the Symbol font. When a
+    renderer substitutes an East Asian font for that private-use codepoint it
+    draws an arbitrary ideograph (e.g. 煉) instead of a bullet.
+    """
+    from docx.opc.exceptions import PackageNotFoundError
+    from docx.oxml.ns import qn
+
+    try:
+        numbering = document.part.numbering_part.element
+    except (AttributeError, KeyError, PackageNotFoundError, ValueError):
+        return
+
+    replacements = {"\uf0b7": "•", "\uf0a7": "▪", "\uf06c": "•", "\uf0d8": "‣"}
+    for level in numbering.iter(qn("w:lvl")):
+        text_el = level.find(qn("w:lvlText"))
+        if text_el is None:
+            continue
+        value = text_el.get(qn("w:val")) or ""
+        if not any(0xF000 <= ord(ch) <= 0xF0FF for ch in value):
+            continue
+        text_el.set(qn("w:val"), "".join(replacements.get(ch, "•") for ch in value))
+        properties = level.find(qn("w:rPr"))
+        if properties is not None:
+            fonts = properties.find(qn("w:rFonts"))
+            if fonts is not None:
+                for attribute in ("w:ascii", "w:hAnsi", "w:cs"):
+                    fonts.set(qn(attribute), latin)
+                fonts.attrib.pop(qn("w:hint"), None)
 
 
 def _field(paragraph: object, instruction: str, placeholder: str = "") -> None:
@@ -335,20 +505,22 @@ def export_docx(chapters: list[tuple[str, str]], output: Path, spec: dict[str, A
     body_ea = spec["fonts"]["body"].get("eastasia", body_font)
     heading_font = spec["fonts"]["heading"].get("latin", body_font)
     heading_ea = spec["fonts"]["heading"].get("eastasia", body_ea)
+    mono_font = spec["fonts"]["mono"]["latin"]
 
     normal = document.styles["Normal"]
     normal.font.name = body_font
     normal.font.size = Pt(spec["fonts"]["body"].get("size", 10.5))
-    normal._element.rPr.rFonts.set(qn("w:eastAsia"), body_ea)
+    _set_fonts(normal._element, body_font, body_ea)
     normal.paragraph_format.line_spacing = spec.get("line_spacing", 1.25)
     normal.paragraph_format.space_after = Pt(7)
+    _normalize_bullets(document, body_font)
 
     heading_colors = spec["colors"]["heading"]
     heading_sizes = spec["heading_sizes"]
     for level in range(1, 4):
         style = document.styles[f"Heading {level}"]
         style.font.name = heading_font
-        style._element.rPr.rFonts.set(qn("w:eastAsia"), heading_ea)
+        _set_fonts(style._element, heading_font, heading_ea)
         style.font.color.rgb = rgb(heading_colors[min(level - 1, len(heading_colors) - 1)])
         style.font.size = Pt(heading_sizes[min(level - 1, len(heading_sizes) - 1)])
         style.paragraph_format.space_before = Pt(14)
@@ -381,7 +553,7 @@ def export_docx(chapters: list[tuple[str, str]], output: Path, spec: dict[str, A
                 run.bold = True
                 run.font.size = Pt(28)
                 run.font.color.rgb = rgb(heading_colors[0])
-                _set_eastasia(run, heading_ea)
+                _set_run_fonts(run, heading_font, heading_ea)
             elif element == "subtitle":
                 text = spec.get("subtitle") or lang_string(spec, language, "subtitle")
                 para.add_run(text).italic = True
@@ -392,12 +564,14 @@ def export_docx(chapters: list[tuple[str, str]], output: Path, spec: dict[str, A
                 para.add_run(date_str)
             else:
                 para.add_run(str(element))
+            if element != "title":
+                _set_paragraph_fonts(para, body_font, body_ea)
         document.add_page_break()
 
     # TOC
     if spec["toc"].get("enabled", True):
         toc_title = spec["toc"].get("title") or lang_string(spec, language, "toc")
-        document.add_heading(toc_title, level=1)
+        _set_paragraph_fonts(document.add_heading(toc_title, level=1), heading_font, heading_ea)
         depth = spec["toc"].get("depth", 3)
         _field(document.add_paragraph(), f' TOC \\o "1-{depth}" \\h \\z \\u ', "Update field to build the table of contents.")
         document.add_page_break()
@@ -413,17 +587,23 @@ def export_docx(chapters: list[tuple[str, str]], output: Path, spec: dict[str, A
                 first_heading = False
                 continue
             first_heading = False
-            document.add_heading(text, level=level)
+            _set_paragraph_fonts(
+                document.add_heading(text, level=level), heading_font, heading_ea
+            )
         elif kind == "paragraph":
-            _docx_inline(document.add_paragraph(), str(block["text"]))
+            _docx_inline(document.add_paragraph(), str(block["text"]), body_font, body_ea, mono_font)
         elif kind == "list":
             style = "List Number" if block["ordered"] else "List Bullet"
-            _docx_inline(document.add_paragraph(style=style), str(block["text"]))
+            _docx_inline(
+                document.add_paragraph(style=style), str(block["text"]), body_font, body_ea, mono_font
+            )
         elif kind == "quote":
-            _docx_inline(document.add_paragraph(style="Quote"), str(block["text"]))
+            _docx_inline(
+                document.add_paragraph(style="Quote"), str(block["text"]), body_font, body_ea, mono_font
+            )
         elif kind == "code":
             run = document.add_paragraph().add_run(str(block["text"]))
-            run.font.name = spec["fonts"]["mono"]["latin"]
+            _set_run_fonts(run, mono_font, body_ea)
             run.font.size = Pt(spec["fonts"]["mono"].get("size", 9))
         elif kind == "table":
             rows = block["rows"]
@@ -438,7 +618,7 @@ def export_docx(chapters: list[tuple[str, str]], output: Path, spec: dict[str, A
                     cell.text = clean_inline(value)
                     for run in cell.paragraphs[0].runs:
                         run.bold = r_index == 0
-                        _set_eastasia(run, body_ea)
+                        _set_run_fonts(run, body_font, body_ea)
 
     header_spec = spec.get("header") or {}
     footer_spec = spec.get("footer") or {}
@@ -451,6 +631,7 @@ def export_docx(chapters: list[tuple[str, str]], output: Path, spec: dict[str, A
             para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
             if para.runs:
                 para.runs[0].font.size = Pt(8)
+            _set_paragraph_fonts(para, body_font, body_ea)
         if footer_spec.get("enabled", True) and footer_spec.get("page_numbers", True):
             para = section.footer.paragraphs[0]
             para.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -463,13 +644,50 @@ def export_docx(chapters: list[tuple[str, str]], output: Path, spec: dict[str, A
 # --------------------------------------------------------------------------- #
 # PDF
 # --------------------------------------------------------------------------- #
-def _pdf_inline(text: str) -> str:
+class FontRouter:
+    """Chooses a font per character class so mixed scripts render correctly.
+
+    Latin stays on the Latin face: drawing a whole mixed paragraph with a CID font
+    mangles accents ('ö') and letter spacing, while drawing symbols with a standard
+    Latin font substitutes the wrong glyph or drops it silently.
+    """
+
+    def __init__(self, cjk_font: str | None, symbol_font: str | None) -> None:
+        self.cjk_font = cjk_font
+        self.symbol_font = symbol_font
+
+    def __bool__(self) -> bool:
+        return bool(self.cjk_font or self.symbol_font)
+
+    def font_for(self, char: str) -> str | None:
+        if latin_safe(char):
+            return None
+        if CJK_ONE_RE.match(char):
+            return self.cjk_font or self.symbol_font
+        return self.symbol_font or self.cjk_font
+
+    def tag(self, markup: str) -> str:
+        """Wrap non-Latin runs in <font> tags, leaving existing markup untouched."""
+        if not self:
+            return markup
+        out: list[str] = []
+        for piece in re.split(r"(<[^>]+>)", markup):
+            if not piece or piece.startswith("<"):
+                out.append(piece)
+                continue
+            for font, group in itertools.groupby(piece, key=self.font_for):
+                span = "".join(group)
+                out.append(span if font is None else f'<font name="{font}">{span}</font>')
+        return "".join(out)
+
+
+def _pdf_inline(text: str, router: FontRouter | None = None) -> str:
     value = html.escape(text)
     value = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", value)
     value = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<i>\1</i>", value)
     value = re.sub(r"`([^`]+)`", r"<font name='Courier'>\1</font>", value)
     value = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"<a href='\2'>\1</a>", value)
-    return value
+    return router.tag(value) if router else value
 
 
 def export_pdf(chapters: list[tuple[str, str]], output: Path, spec: dict[str, Any], language: str) -> None:
@@ -506,10 +724,42 @@ def export_pdf(chapters: list[tuple[str, str]], output: Path, spec: dict[str, An
     }
     font = spec["fonts"].get("pdf_latin", "Helvetica")
     bold_font = standard_bold.get(font, font)
-    if language == "zh-CN":
-        cjk = spec["fonts"].get("pdf_cjk", "STSong-Light")
-        pdfmetrics.registerFont(UnicodeCIDFont(cjk))
-        font = bold_font = cjk
+
+    # Latin stays on a Latin face; CJK and symbol spans switch to a CID font.
+    document_text = "\n".join(
+        [str(title or ""), str(spec.get("subtitle") or ""), *(text for _, text in chapters)]
+    )
+    non_latin = {ch for ch in document_text if not latin_safe(ch)}
+    fallback_font: str | None = None
+    if is_cjk_language(language) or any(CJK_ONE_RE.match(ch) for ch in non_latin):
+        cjk_defaults = {
+            "zh": "STSong-Light",
+            "ja": "HeiseiMin-W3",
+            "ko": "HYSMyeongJo-Medium",
+        }
+        candidate = spec["fonts"].get("pdf_cjk") or cjk_defaults.get(
+            language_family(language), "STSong-Light"
+        )
+        for name in (candidate, "STSong-Light"):
+            try:
+                pdfmetrics.registerFont(UnicodeCIDFont(name))
+                fallback_font = name
+                break
+            except Exception:
+                continue
+        if fallback_font:
+            # CID fonts have no bold/italic face; map the family to itself so
+            # <b>/<i> inside those spans do not raise during layout.
+            pdfmetrics.registerFontFamily(
+                fallback_font,
+                normal=fallback_font,
+                bold=fallback_font,
+                italic=fallback_font,
+                boldItalic=fallback_font,
+            )
+
+    symbol_chars = {ch for ch in non_latin if not CJK_ONE_RE.match(ch)}
+    router = FontRouter(fallback_font, register_symbol_font(symbol_chars) if symbol_chars else None)
 
     heading_colors = spec["colors"]["heading"]
     heading_sizes = spec["heading_sizes"]
@@ -522,8 +772,13 @@ def export_pdf(chapters: list[tuple[str, str]], output: Path, spec: dict[str, An
         leading=spec["fonts"]["body"].get("size", 10.5) * 1.5,
         alignment=TA_JUSTIFY,
         spaceAfter=7,
-        wordWrap="CJK" if language == "zh-CN" else None,
+        wordWrap="CJK" if is_cjk_language(language) else None,
     )
+
+    def rich(text: str) -> str:
+        """Escaped plain text with non-Latin spans bound to a covering font."""
+        return router.tag(html.escape(text))
+
     headings = {
         level: ParagraphStyle(
             f"H{level}",
@@ -543,9 +798,12 @@ def export_pdf(chapters: list[tuple[str, str]], output: Path, spec: dict[str, An
             if isinstance(flowable, Paragraph) and flowable.style.name in ("H1", "H2", "H3"):
                 level = int(flowable.style.name[1]) - 1
                 key = f"h-{self.seq.nextf('h')}"
+                plain = flowable.getPlainText()
                 self.canv.bookmarkPage(key)
-                self.canv.addOutlineEntry(flowable.getPlainText(), key, level=level, closed=False)
-                self.notify("TOCEntry", (level, flowable.getPlainText(), self.page, key))
+                self.canv.addOutlineEntry(plain, key, level=level, closed=False)
+                # TOC entries render as their own paragraphs, so they need the
+                # same per-span font binding as the body.
+                self.notify("TOCEntry", (level, rich(plain), self.page, key))
 
     header_spec = spec.get("header") or {}
     footer_spec = spec.get("footer") or {}
@@ -554,10 +812,14 @@ def export_pdf(chapters: list[tuple[str, str]], output: Path, spec: dict[str, An
 
     def decorate(canvas: object, doc: object) -> None:
         canvas.saveState()
-        canvas.setFont(font, 8)
         canvas.setFillColor(colors.HexColor("#666666"))
         if header_spec.get("enabled", True) and header_text:
-            canvas.drawString(margin, page_size[1] - margin + 6 * mm, str(header_text)[:90])
+            text = str(header_text)[:90]
+            # drawString takes a single face, so pick one that covers the header.
+            needed = next((router.font_for(ch) for ch in text if not latin_safe(ch)), None)
+            canvas.setFont(needed or font, 8)
+            canvas.drawString(margin, page_size[1] - margin + 6 * mm, text)
+        canvas.setFont(font, 8)
         if footer_spec.get("enabled", True) and footer_spec.get("page_numbers", True):
             canvas.drawRightString(page_size[0] - margin, margin - 8 * mm, str(doc.page))
         canvas.restoreState()
@@ -585,20 +847,25 @@ def export_pdf(chapters: list[tuple[str, str]], output: Path, spec: dict[str, An
         story.append(Spacer(1, 58 * mm))
         for element in cover.get("elements") or ["title"]:
             if element == "title" and title:
-                story.append(Paragraph(html.escape(title), cover_style))
+                story.append(Paragraph(rich(title), cover_style))
                 story.append(Spacer(1, 12 * mm))
             elif element == "subtitle":
-                story.append(Paragraph(html.escape(spec.get("subtitle") or lang_string(spec, language, "subtitle")), center))
+                story.append(
+                    Paragraph(
+                        rich(spec.get("subtitle") or lang_string(spec, language, "subtitle")),
+                        center,
+                    )
+                )
                 story.append(Spacer(1, 30 * mm))
             elif element == "author" and spec.get("author"):
-                story.append(Paragraph(html.escape(spec["author"]), center))
+                story.append(Paragraph(rich(spec["author"]), center))
             elif element == "date":
                 story.append(Paragraph(date_str, center))
         story.append(PageBreak())
 
     if spec["toc"].get("enabled", True):
         toc_title = spec["toc"].get("title") or lang_string(spec, language, "toc")
-        story.append(Paragraph(html.escape(toc_title), headings[1]))
+        story.append(Paragraph(rich(toc_title), headings[1]))
         toc = TableOfContents()
         depth = spec["toc"].get("depth", 3)
         toc.levelStyles = [
@@ -618,19 +885,38 @@ def export_pdf(chapters: list[tuple[str, str]], output: Path, spec: dict[str, An
                 first_heading = False
                 continue
             first_heading = False
-            story.append(Paragraph(html.escape(text), headings[level]))
+            story.append(Paragraph(rich(text), headings[level]))
         elif kind == "paragraph":
-            story.append(Paragraph(_pdf_inline(str(block["text"])), body))
+            story.append(Paragraph(_pdf_inline(str(block["text"]), router), body))
         elif kind == "list":
             bullet = "1. " if block["ordered"] else "• "
-            story.append(Paragraph(bullet + _pdf_inline(str(block["text"])), ParagraphStyle("List", parent=body, leftIndent=14, firstLineIndent=-10)))
+            story.append(
+                Paragraph(
+                    router.tag(bullet) + _pdf_inline(str(block["text"]), router),
+                    ParagraphStyle("List", parent=body, leftIndent=14, firstLineIndent=-10),
+                )
+            )
         elif kind == "quote":
-            story.append(Paragraph(_pdf_inline(str(block["text"])), ParagraphStyle("Quote", parent=body, leftIndent=14, rightIndent=14, textColor=colors.HexColor("#555555"))))
+            story.append(
+                Paragraph(
+                    _pdf_inline(str(block["text"]), router),
+                    ParagraphStyle(
+                        "Quote",
+                        parent=body,
+                        leftIndent=14,
+                        rightIndent=14,
+                        textColor=colors.HexColor("#555555"),
+                    ),
+                )
+            )
         elif kind == "code":
             code_html = html.escape(str(block["text"])).replace("\n", "<br/>")
             story.append(Paragraph(code_html, ParagraphStyle("Code", parent=body, fontName="Courier", fontSize=8.5, leading=11, backColor=colors.HexColor("#F3F3F3"), borderPadding=6)))
         elif kind == "table":
-            rows = [[Paragraph(_pdf_inline(cell), body) for cell in row] for row in block["rows"]]
+            rows = [
+                [Paragraph(_pdf_inline(cell, router), body) for cell in row]
+                for row in block["rows"]
+            ]
             if not rows:
                 continue
             widths = [doc.width / max(len(rows[0]), 1)] * len(rows[0])
@@ -687,12 +973,29 @@ def emit_spec(root: Path, language: str, mode: str) -> Path:
     return out
 
 
+def default_language(workspace: Path | None = None) -> str:
+    """Timezone/locale-aware default; see references/LANGUAGE.md."""
+    try:
+        scripts_dir = Path(__file__).resolve().parent
+        if str(scripts_dir) not in sys.path:
+            sys.path.insert(0, str(scripts_dir))
+        from prefer_language import resolve_language
+
+        return resolve_language(workspace=workspace)["language"]
+    except Exception:
+        return "en"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Spec-driven publication-safe report renderer")
     parser.add_argument("--workspace", type=Path, default=Path.cwd())
     parser.add_argument("--mode", default="survey", choices=MODES)
     parser.add_argument("--format", default="docx", choices=["docx", "pdf"])
-    parser.add_argument("--language", default="en")
+    parser.add_argument(
+        "--language",
+        default=None,
+        help="Report language BCP-47 tag (default: timezone/workspace via prefer_language.py)",
+    )
     parser.add_argument("--spec", type=Path, default=None, help="Path to document spec JSON")
     parser.add_argument("--emit-spec", action="store_true", help="Write a starter _document.json and exit")
     parser.add_argument("--title", default=None, help="Override spec title")
@@ -701,9 +1004,10 @@ def main() -> None:
     args = parser.parse_args()
 
     workspace = args.workspace.resolve()
+    language = args.language or default_language(workspace)
     root = workspace / "docs" / args.mode
     if args.emit_spec:
-        print(emit_spec(root, args.language, args.mode))
+        print(emit_spec(root, language, args.mode))
         return
     if not root.is_dir():
         raise SystemExit(f"Missing docs/{args.mode}/")
@@ -717,6 +1021,8 @@ def main() -> None:
             f"terminology before export:\n{details}"
         )
 
+    # Temporarily attach language onto args for resolve_spec consumers
+    args.language = language
     spec = resolve_spec(root, args, combined)
     # Re-assemble honoring spec chapter order/include/exclude
     combined, chapters = assemble(root, spec)
@@ -726,14 +1032,14 @@ def main() -> None:
     output = args.output
     if output is None:
         topic = slugify(spec.get("title") or args.mode)
-        output = root / "deliverables" / f"{topic}-{args.mode}-{args.language}.{args.format}"
+        output = root / "deliverables" / f"{topic}-{args.mode}-{language}.{args.format}"
     elif not output.is_absolute():
         output = workspace / output
 
     if args.format == "docx":
-        export_docx(chapters, output, spec, args.language)
+        export_docx(chapters, output, spec, language)
     else:
-        export_pdf(chapters, output, spec, args.language)
+        export_pdf(chapters, output, spec, language)
     print(output)
 
 

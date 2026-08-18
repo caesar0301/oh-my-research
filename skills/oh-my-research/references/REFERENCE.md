@@ -18,7 +18,7 @@ Detailed operation guide for the unified OMR skill.
 | VERSION | `version tag\|history\|diff\|backup\|list` (workspace); `skill-version show\|check\|sync\|set\|bump` (package) | `VERSION/version.md` |
 | WORKFLOW | `workflow [--phase N] [--pattern P]` | `WORKFLOW/workflow-overview.md` |
 
-Cross-cutting: `GATES.md`, `GRAPH.md`, `LLM-STATE.md`.
+Cross-cutting: `GATES.md`, `GRAPH.md`, `LLM-STATE.md`, `LANGUAGE.md`.
 
 ---
 
@@ -146,8 +146,8 @@ Templates use `{{PLACEHOLDER}}` syntax:
 
 ## Reference Map
 
-- `GATES.md` — A / B / D / L / QA1 / QA2 / lenses (LLM-evaluated)
-- `LLM-STATE.md` — agent-owned state JSON; scripts only for render/backup/optional collect
+- `LLM-STATE.md` — agent-owned state JSON; scripts only for render/backup/language detect/optional collect
+- `LANGUAGE.md` — timezone/locale → preferred BCP-47 language tag
 - `GRAPH.md` — pattern graphs and next-step routing
 - `THINK/` — elicitation behavior + method catalog
 - `ANALYZE/` — deep analysis pipeline

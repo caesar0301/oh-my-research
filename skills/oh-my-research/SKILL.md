@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -68,7 +68,7 @@ Default pattern: **Evidence-Deep**. See `references/GRAPH.md` and `patterns/`.
 ## Operation Modes
 
 ### INIT Mode
-Bootstrap workspace. Op: `init "<topic>"`. Creates **only** `AGENTS.md` + `.omr/tree-state.json` + `.omr/pattern.json`. **No empty folders** — every other path is created on first content write. → `references/INIT/init.md`
+Bootstrap workspace. Op: `init "<topic>"`. Creates **only** `AGENTS.md` + `.omr/tree-state.json` + `.omr/pattern.json` + `.omr/locale.json` (language from timezone). **No empty folders** — every other path is created on first content write. → `references/INIT/init.md`
 
 ### COLLECT Mode
 Passive reception of sources → materials + indexes. Op: `collect <url|query|…>`. → `references/COLLECT/collect.md`
@@ -80,7 +80,7 @@ Deep analysis centerpiece: brief, evidence-map, judgment, optional plan; Gate A 
 Structured elicitation on research artifacts (never code). Op: `think [method]`. → `references/THINK/think.md`
 
 ### SYNTH Mode
-Primary deliverable: long, publication-quality English or Chinese Word/PDF reports written **incrementally** (outline → one chapter per turn → continuity brief → assemble). Ops: `synth [--mode] [--format docx|pdf] [--language en|zh-CN] [--resume] [--chapter <id>] [--no-wiki]`. Never generate an entire deep report in one turn. Public deliverables must be self-contained and must not expose workflow terms, internal material IDs, evidence-grade labels, or artifact paths. → `references/SYNTH/synth.md` and `references/SYNTH/long-report.md`
+Primary deliverable: long, publication-quality reports in the preferred language (auto-detected from timezone/locale — `en`, `zh-CN`, `ja`, `de`, … — or explicit `--language`) as Word/PDF, written **incrementally** (outline → one chapter per turn → continuity brief → assemble). Ops: `synth [--mode] [--format docx|pdf] [--language <tag>] [--resume] [--chapter <id>] [--no-wiki]`. Never generate an entire deep report in one turn. Public deliverables must be self-contained and must not expose workflow terms, internal material IDs, evidence-grade labels, or artifact paths. → `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md`
 
 ### IDEA Mode (optional)
 Capture speculative notes. Op: `idea "…"`. → `references/IDEA/idea.md`
@@ -133,7 +133,7 @@ Paths below are **logical destinations**. Create a folder only when writing the 
 
 | Artifact | Path (when content exists) |
 |----------|------|
-| State | `.omr/` (tree-state, pattern; other JSON as needed) |
+| State | `.omr/` (tree-state, pattern, locale; other JSON as needed) |
 | Materials | `materials/{papers,web,github,datasets,search,failed}/` — only buckets that receive files |
 | Indexes | `docs/index/` |
 | Plans | `docs/plans/` |
@@ -151,7 +151,7 @@ Templates: `assets/`. Patterns: `patterns/`. Detailed ops: `references/REFERENCE
 3. Never upgrade `suggests` → `proven` without stronger source language
 4. Use THINK (first principles / triangulation) before Gate A when confidence is low
 5. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
-6. Prefer a professionally formatted DOCX or PDF in the user's requested English or Chinese; drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
+6. Prefer a professionally formatted DOCX or PDF in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
 7. Keep internal traceability private; translate it into standard citations and natural prose
 8. Make the final report self-contained, professional, and accessible to its intended reader
 9. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
@@ -162,5 +162,5 @@ Templates: `assets/`. Patterns: `patterns/`. Detailed ops: `references/REFERENCE
 
 - Read/write project workspace
 - Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `version_control.py` (workspace tags/backups), `skill_version.py` (package semver sync), optional `collect_cli.py`
+- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `skill_version.py` (package semver sync), optional `collect_cli.py`
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export

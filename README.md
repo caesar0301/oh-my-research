@@ -55,7 +55,7 @@ npx skills add <owner>/oh-my-research
 | `collect` | COLLECT | `materials/**`, indexes |
 | `analyze` | ANALYZE | brief, evidence-map, judgment, plan |
 | `think [method]` | THINK | refined artifact |
-| `synth [--mode] [--format docx\|pdf] [--language en\|zh-CN]` | SYNTH | Professional, self-contained Word/PDF report |
+| `synth [--mode] [--format docx\|pdf] [--language <tag>]` | SYNTH | Professional, self-contained Word/PDF report |
 | `decide` | DECIDE | optional stance (Gate B) |
 | `idea` | IDEA | idea note |
 | `reconcile` | RECONCILE | repaired state / archive |
@@ -71,6 +71,8 @@ collect → analyze ⟲ think → synth (survey or report)
 ```
 
 Final reports are reader-facing publications: internal material IDs, evidence-grade labels, gate names, and OMR workflow terms remain in private working artifacts and are converted to conventional citations and natural professional language.
+
+Default report language is auto-detected from timezone/locale (e.g. `Asia/Shanghai` → `zh-CN`, `Asia/Tokyo` → `ja`, `Europe/Berlin` → `de`) unless the user overrides — see [skills/oh-my-research/references/LANGUAGE.md](skills/oh-my-research/references/LANGUAGE.md).
 
 See [skills/oh-my-research/SKILL.md](skills/oh-my-research/SKILL.md) and [references/REFERENCE.md](skills/oh-my-research/references/REFERENCE.md).
 

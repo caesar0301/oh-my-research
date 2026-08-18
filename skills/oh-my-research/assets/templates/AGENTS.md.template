@@ -23,9 +23,13 @@ INIT creates **only** the files below. Every other path appears when the first r
 ├── AGENTS.md
 └── .omr/
     ├── tree-state.json
-    └── pattern.json
+    ├── pattern.json
+    └── locale.json
 ```
 
+**Preferred language**: {{PREFERRED_LANGUAGE}} (source: {{LANGUAGE_SOURCE}}; timezone: {{TIMEZONE}})
+
+Override anytime with `synth --language <tag>` (e.g. `en`, `zh-CN`, `ja`, `de`) or by editing `.omr/locale.json`. Policy: `references/LANGUAGE.md`.
 ### Created on first write (examples)
 
 | When | Path created |

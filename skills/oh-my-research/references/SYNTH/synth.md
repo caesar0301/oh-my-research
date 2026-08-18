@@ -1,6 +1,6 @@
 # SYNTH Mode — Deep Research Report
 
-**Primary deliverable.** Write a self-contained, publication-quality survey/report (or manuscript/brief) from private research artifacts. Preferred output: professionally formatted **Word (`.docx`) or PDF**, in English or Simplified Chinese.
+**Primary deliverable.** Write a self-contained, publication-quality survey/report (or manuscript/brief) from private research artifacts. Preferred output: professionally formatted **Word (`.docx`) or PDF**, in the auto-detected or user-selected language (see `LANGUAGE.md`).
 
 Long deep reports **must not** be generated in a single model turn. Write **incrementally to disk**, one chapter (or chapter section) at a time, then assemble the final document.
 
@@ -16,7 +16,7 @@ synth --mode manuscript
 synth --mode brief
 synth --no-wiki
 synth --format docx|pdf
-synth --language en|zh-CN
+synth --language <tag>   # e.g. en, zh-CN, zh-TW, ja, ko, de, fr, es, pt-BR, …
 synth --resume
 synth --chapter <id>
 ```
@@ -33,7 +33,7 @@ Keywords: report, survey, write up, synthesize, manuscript, brief.
 | Stance-First | `report` |
 | Idea-First / Rapid | `brief` |
 
-Default `--format`: `docx`. Default language: user request, else research-question language.
+Default `--format`: `docx`. Default language: timezone / `.omr/locale.json` (see `LANGUAGE.md`); explicit `--language` always wins.
 
 ## Hard constraint: context-safe writing
 
@@ -63,10 +63,18 @@ Translate to conventional citations and natural professional prose. See `long-re
 
 ## Language
 
-- `en` — idiomatic professional English
-- `zh-CN` — professional Simplified Chinese
-- One primary language per report unless the user requests bilingual
+Resolve once per report (then keep stable) — full policy: `LANGUAGE.md`.
 
+1. Explicit `--language` / user request  
+2. `.omr/locale.json` or in-progress `report-state.language`  
+3. Research-question / user-message language  
+4. **Timezone** → BCP-47 tag (`zh-CN`, `ja`, `de`, `pt-BR`, …; see `LANGUAGE.md`)  
+5. OS `LANG` / `LC_*` locale tag  
+6. Fallback `en`
+
+Write the full report body in that language. For non-`en` / non-Chinese chrome, set TOC/subtitle in `_document.json`. CJK family (`zh-*`, `ja`, `ko`) needs matching fonts.
+
+Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default when `--language` is omitted.
 ## Quality bar (before Gate D)
 
 1. All planned chapters on disk; report-state shows complete
@@ -102,6 +110,10 @@ The exporter is a **thin, spec-driven renderer**. All presentation decisions liv
 - The script never invents structure or styling — it renders exactly what the spec + chapters say, then runs the publication-safety scan.
 
 Tune the spec to the report: e.g. a Chinese report sets `fonts.body.eastasia` + `fonts.pdf_cjk` and `--language zh-CN`; a brief may set `cover.enabled=false` and `toc.enabled=false`; a manuscript may reorder chapters via `chapters.order`.
+
+**Mixed-script text:** Latin and East Asian faces are bound separately (`latin`/`eastasia`, `pdf_latin`/`pdf_cjk`). Keep a Latin font in `latin`/`pdf_latin` so terms like `Gödel Agent`, `DeepSeek-R1`, and `·` inside Chinese prose render with correct glyphs and spacing.
+
+**Unicode symbols:** characters outside both faces (`→ ⇒ ≥ ✓ ✗ ★ ① …`) are routed to a wide-coverage system font automatically, in any language. Nothing to configure — write symbols in Markdown as usual.
 
 ## Default deep-survey layout
 
