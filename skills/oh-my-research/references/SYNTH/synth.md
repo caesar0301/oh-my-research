@@ -36,7 +36,7 @@ Before starting SYNTH, the agent **must** verify:
 
 If any prerequisite is missing, **do not silently proceed**. Show the `[PHASE-GUARD]` notice and offer to run the prerequisite stages. If user explicitly insists ("I know, just write the report"), proceed but record `scenario_note: "SYNTH prerequisite skipped by user override"` in the next gate JSON.
 
-### Incremental Writing Enforcement (v1.3+)
+### Incremental Writing Enforcement (v1.4 — Gate D check)
 
 **SYNTH must not generate the entire report body in a single model turn.** This is a hard constraint. The agent must:
 
@@ -48,6 +48,25 @@ If any prerequisite is missing, **do not silently proceed**. Show the `[PHASE-GU
 6. Run lenses, then Gate D
 
 If the agent detects that it is about to write more than ~2,500 words of report body in a single response, it must **stop and split** the content into chapters. A single-turn full report is a **process violation** — the report may still be usable, but the agent should note the violation and offer to restructure.
+
+**Post-SYNTH structural check (v1.4 — enforced at Gate D):**
+
+Gate D now includes a mandatory `incremental_writing_compliance` check:
+
+| Check | Requirement | If missing |
+|---|---|---|
+| `chapters_dir` | `docs/<mode>/chapters/` directory exists with ≥1 `.md` file | Gate D **fails** |
+| `report_state` | `.omr/report-state.json` exists with `chapters[]` array | Gate D **fails** |
+| `outline` | `docs/<mode>/_outline.md` exists | Gate D **warns** |
+| `chapter_word_limit` | No single chapter file > 5,000 words | Gate D **warns** (suggest split) |
+| `single_file_report` | Report is a single `.md` file with no `chapters/` dir | Gate D **fails** (unless `--mode brief` and < 3,000 words) |
+
+**Exception:** `brief` mode reports under 3,000 words may be written as a single file without `chapters/` — record `scenario_note: "brief mode, single-file under 3K words"` in `gate-d.json`.
+
+If Gate D fails on `incremental_writing_compliance`, the agent must:
+1. Split the single-file report into `chapters/*.md` files
+2. Create `_outline.md` and `report-state.json` retroactively
+3. Re-run Gate D
 
 ## Mode defaults
 

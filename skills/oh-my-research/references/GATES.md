@@ -19,7 +19,7 @@ Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists b
 
 **Removed:** Gate C and experiment-design checks. **No quality-gate Python runner** — judgment is agent-side.
 
-## Gate Chain Enforcement (v1.3+)
+## Gate Chain Enforcement (v1.4 — self-enforcing chain)
 
 Gates form a **chain** — each gate depends on the previous one. The agent must not skip gates in the chain, even when the user gives a task-oriented instruction that seems to bypass the workflow.
 
@@ -36,6 +36,29 @@ Gate M → [ANALYZE] → THINK pass → Gate T → Gate A/QA1 → Gate P → [SY
 3. **Gate P checks for Gate A**: Gate P verifies that `gate-a.json` exists and has `status: "pass"`. If not, Gate P refuses to proceed.
 4. **SYNTH checks for Gate P**: SYNTH verifies that `gate-p.json` exists before starting the outline. If not, SYNTH runs Gate P first.
 5. **Gate D checks for Gate P + Lenses**: Gate D verifies that `gate-p.json` exists and lenses were run. If not, Gate D fails.
+
+**Gate chain completeness check (v1.4 — self-enforcing):**
+
+Before recording any gate X, the agent must verify that all prerequisite gates in the chain have been recorded. This makes the chain self-enforcing: a missing prerequisite gate blocks the current gate from being recorded.
+
+**Prerequisite matrix (gate-level):**
+
+| Gate being recorded | Required prerequisite gate JSONs | If missing |
+|---|---|---|
+| `gate-t.json` | `gate-m.json` (or retroactively recorded) | **Refuse** — run Gate M first |
+| `gate-a.json` | `gate-m.json` + `gate-t.json` | **Refuse** — run Gate T first (or record retroactively if THINK was done) |
+| `gate-p.json` | `gate-a.json` with `status: "pass"` | **Refuse** — Gate A must pass first |
+| `gate-d.json` | `gate-p.json` + evidence of lenses run | **Refuse** — run Gate P + lenses first |
+
+**Enforcement protocol:**
+
+1. Before writing a gate JSON, check that all prerequisite gate JSONs exist under `.omr/quality-gates/`
+2. If a prerequisite is missing:
+   - If the corresponding work was actually done (e.g. THINK was run but Gate T wasn't recorded) → record the missing gate retroactively with `scenario_note: "retroactively recorded"`, then proceed
+   - If the work was genuinely not done → **refuse to record the current gate** and direct the agent to run the missing gate first
+3. If the user explicitly overrides (override language required) → record `scenario_note: "gate chain prerequisite skipped by user override"` in the current gate JSON, but the chain gap must be acknowledged
+
+This prevents the common failure mode where an agent skips multiple gates and then tries to record only the final gate, leaving the chain broken.
 
 **Cross-stage jump detection:**
 
@@ -84,6 +107,7 @@ Position: after COLLECT has ≥1 usable source and `analyze` is marked ready; be
 - [ ] Material set matches the intended scope (narrow single-paper deep dive vs broad survey)
 - [ ] At least one primary source, or an explicit plan to analyze a deliberately small corpus
 - [ ] Missing buckets / source types that the scope clearly needs are flagged (e.g. broad survey with only one paper)
+- [ ] **Full-text Markdown availability**: for each paper/web material, check `markdown_status` in the index. If `"converted"` → full-text available for ANALYZE. If `"failed"` or missing → warn the user that ANALYZE will run in **degraded (abstract-only) mode** for that material. If all materials failed conversion, recommend re-running `collect` or manually converting before proceeding.
 
 **Outcomes:** **proceed** → ANALYZE | **collect more** → return to COLLECT.
 
@@ -121,6 +145,25 @@ Position: after judgment (+ mandatory THINK in Evidence-Deep), before unlocking 
 - [ ] **THINK pass recorded** (Evidence-Deep only): at least one THINK pass in judgment's THINK ledger. If pattern is Evidence-Deep and no THINK pass exists, Gate A **fails** with `checks: [{id: "think_pass", status: "fail"}]`.
 - [ ] **Gate M was recorded**: `gate-m.json` exists under `.omr/quality-gates/`. If not, record it retroactively.
 
+**THINK ledger validation (v1.4 — machine-checkable):**
+
+Gate A must verify the THINK ledger by checking for a literal table in `judgment-*.md` matching this template:
+
+```markdown
+## THINK Ledger
+
+| Pass | Method | Date | Outcome |
+|------|--------|------|---------|
+| 1 | source-triangulation | 2026-08-19 | refined |
+```
+
+Validation rules:
+- The heading `## THINK Ledger` (or `## THINK Passes Applied`) must exist in `judgment-*.md`
+- At least one data row must be present (header-only = fail)
+- Each row must have 4 non-empty cells: pass number, method name, date, outcome stamp
+- Outcome stamp must be one of: `hardened`, `refined`, `unchanged`, `killed`
+- If any rule fails → Gate A fails with `checks: [{id: "think_pass", status: "fail", details: "..."}]`
+
 **Failure:** collect more or `think`; do not unlock SYNTH.
 
 On pass: set `synth` ready in `.omr/tree-state.json`, move `analyze` to `completed`.
@@ -138,6 +181,7 @@ Position: after judgment, typically with Gate A. Op: `qa qa1`.
 | `gap-detection` | Open gaps present with severity |
 | `contradiction` | Conflicts handled or “None detected” stated |
 | `traceability` | Findings link to material IDs in private plans/indexes |
+| `full-text-usage` | Verify that ANALYZE read the full-text Markdown (`materials/<bucket>/<ID>.md`) for each material where it exists. Any material analyzed abstract-only (conversion failed or `.md` missing) must be explicitly flagged in the evidence map's traceability notes with reduced confidence. If a material has a converted `.md` but ANALYZE only used the abstract, this is a **fail** — re-run the materials scan. |
 
 Write `.omr/quality-gates/QA1-evidence-analysis.json` with rationale per check.
 
@@ -204,6 +248,8 @@ Process: announce → findings table → user accept/reject → apply → contin
 
 ## Gate D — Before Publication
 
+**Pre-check (v1.4):** Verify that `gate-p.json` exists under `.omr/quality-gates/`. If Gate P was not run, **do not proceed to Gate D** — route back to Gate P first. Show `[PHASE-GUARD]` notice if missing.
+
 **Checks:**
 - [ ] Claims privately traceable to judgment / evidence-map
 - [ ] Public claims use conventional citations only
@@ -216,6 +262,13 @@ Process: announce → findings table → user accept/reject → apply → contin
 - [ ] Language consistent (single primary BCP-47 tag)
 - [ ] All planned chapters complete in `.omr/report-state.json`
 - [ ] Final DOCX/PDF rendered (`export_report.py`) and visually inspected
+- [ ] **Incremental writing compliance (v1.4)**:
+  - `docs/<mode>/chapters/` directory exists with ≥1 `.md` file (unless brief mode < 3K words)
+  - `.omr/report-state.json` exists with `chapters[]` array
+  - `docs/<mode>/_outline.md` exists
+  - No single chapter file > 5,000 words (warn)
+  - Report is not a single un-split `.md` file (fail, unless brief mode exception)
+- [ ] **Publication-safety lint passed (v1.4)**: `scripts/report_lint.py` run on all chapter files; no violations (or violations explicitly accepted in `scenario_note`)
 
 ---
 

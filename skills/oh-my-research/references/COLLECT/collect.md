@@ -1,6 +1,6 @@
 # COLLECT Mode
 
-Passive reception of research materials. User provides sources or search queries; skill delivers files + indexes. Minimal parsing (format/metadata only) — no deep semantic analysis (that is ANALYZE).
+Passive reception of research materials. User provides sources or search queries; skill delivers files + indexes. After recording a source, **download + convert it to full-text Markdown** so ANALYZE can read the entire paper — not just the abstract.
 
 ## Trigger
 
@@ -8,26 +8,66 @@ Passive reception of research materials. User provides sources or search queries
 collect <url|doi|arxiv|github|hf|path|"search query">
 ```
 
-Also: paste of URLs; “search for …”; auto-route from intent detection.
+Also: paste of URLs; "search for …"; auto-route from intent detection.
 
 **Init-on-demand:** if no `AGENTS.md` / `.omr/`, run INIT first with inferred topic, then collect.
 
+## Full-Text Conversion (Non-negotiable)
+
+Every convertible source **must** be downloaded and converted to `materials/<bucket>/<ID>.md` (GitHub-Flavored Markdown full text). The `.source.txt` placeholder alone is insufficient — ANALYZE depends on reading the full paper content.
+
+**Conversion chain (try in order, stop at first success):**
+
+| Step | Tool | Handles | When |
+|------|------|---------|------|
+| 1 (preferred) | **anydoc** (`npx -y @firecrawl/anydoc`) | `.pdf`, `.doc/.docx`, `.ppt/.pptx`, `.xls/.xlsx`, `.odt/.ods/.odp`, `.rtf`, `.epub`, `.csv` | Always try first — best structural fidelity |
+| 2 (fallback) | `pymupdf` → `pdfplumber` | `.pdf` text extraction | anydoc unavailable or fails |
+| 3 (fallback) | `markdownify` + `beautifulsoup4` | `.html` web pages | anydoc doesn't handle raw HTML |
+| 4 (passthrough) | copy | `.md`, `.markdown`, `.txt` | Already Markdown — no conversion needed |
+
+**anydoc availability:** if `npx` is missing or anydoc fails to install, the fallback libraries are used. If all converters fail, record `materials/failed/<ID>.failed.txt` with the reason and continue — do not block other sources.
+
+**Install anydoc if missing:**
+
+```bash
+# anydoc needs Node 20+; it is fetched on first run, no install step
+npx -y @firecrawl/anydoc --version   # verify
+```
+
+**Fallback libraries (optional, install only if anydoc is unavailable):**
+
+```bash
+pip install pymupdf pdfplumber markdownify beautifulsoup4
+```
+
+Script: `scripts/material_to_markdown.py` — downloads the source (arxiv SDK / DOI redirect / direct URL / local file), converts via the chain above, writes `materials/<bucket>/<ID>.md`, and records failures to `materials/failed/`.
+
+**Batch conversion of pre-downloaded files (v1.4):** If the user has already downloaded a batch of PDFs (e.g. via `curl`/`wget`) into `materials/papers/` without corresponding `.md` files, use:
+
+```bash
+python3 scripts/material_to_markdown.py --convert-dir materials/papers --workspace .
+```
+
+This scans the directory for convertible files (`.pdf`, `.docx`, `.html`, etc.) that lack a corresponding `.md` file, and converts them in place. The material ID is derived from the filename stem (e.g. `2506.23852.pdf` → ID `2506.23852`). This avoids the need for custom conversion scripts when the user has already batch-downloaded sources.
+
 ## Handlers
 
-| Input | Handler | Dest (create only when writing) |
-|-------|---------|------|
-| arxiv / DOI / PDF paper URL | paper | `materials/papers/<file>` |
-| Generic http(s) page | web | `materials/web/<file>` |
-| github.com/… | github | `materials/github/<file>` |
-| huggingface.co/… | huggingface | `materials/datasets/<file>` or models note in index |
-| Free-text query | search | prioritize downloads into papers/web; log in `materials/search/<file>` |
-| Failures | — | `materials/failed/<file>` with reason |
+| Input | Handler | Dest (create only when writing) | Convert to `.md`? |
+|-------|---------|------|------|
+| arxiv / DOI / PDF paper URL | paper | `materials/papers/<ID>.md` | **Yes** — download PDF, convert via anydoc |
+| Generic http(s) page | web | `materials/web/<ID>.md` | **Yes** — fetch HTML, convert via markdownify |
+| github.com/… | github | `materials/github/<ID>.source.txt` | No (repo, not a document) |
+| huggingface.co/… | huggingface | `materials/datasets/<ID>.source.txt` | No (dataset/model card) |
+| Local file (`.pdf`, `.docx`, …) | paper/web | `materials/<bucket>/<ID>.md` | **Yes** — convert via anydoc |
+| Local `.md` / `.txt` | paper/web | `materials/<bucket>/<ID>.md` | Passthrough (already text) |
+| Free-text query | search | `materials/search/<ID>.query.txt` | No (query, not a document) |
+| Failures | — | `materials/failed/<ID>.failed.txt` | — |
 
 **Do not** pre-create the full `materials/{papers,web,…}` tree. Create only the bucket that receives this source. Index files under `docs/index/` appear when the first index entry is written.
 
 Prefer arxiv SDK / direct PDF when available. Optional Chrome MCP for screenshots of web pages.
 
-Scripts: optional `scripts/collect_cli.py` for recording a URL into `materials/` + index (creates parent dirs only for files it writes). Routing, naming, depth, and search prioritization are **LLM-driven** per this doc — adapt handlers and destinations to the source type.
+Scripts: `scripts/collect_cli.py` (records source + invokes converter) and `scripts/material_to_markdown.py` (download + convert). Routing, naming, depth, and search prioritization are **LLM-driven** per this doc — adapt handlers and destinations to the source type.
 
 ## Indexes
 
@@ -39,12 +79,30 @@ Update `docs/index/`:
 
 Assign stable IDs: `P-001`, `W-001`, `G-001`, …
 
+**Index entry fields for converted materials:**
+
+```json
+{
+  "id": "P-001",
+  "source": "https://arxiv.org/abs/1706.03762",
+  "title": "Attention Is All You Need",
+  "path": "materials/papers/P-001.source.txt",
+  "markdown_path": "materials/papers/P-001.md",
+  "markdown_status": "converted",
+  "markdown_method": "anydoc"
+}
+```
+
+If conversion failed, `markdown_status: "failed"` and `markdown_failure_reason` is set; `markdown_path` is empty.
+
 ## Philosophy
 
-- Deliver materials; do not over-interpret
+- Deliver materials **with full-text Markdown** — do not over-extract, but do not under-extract either
 - Graceful fallback: record failure, continue other inputs
-- After successful collect with ≥1 paper → mark `analyze` **ready** in tree-state
+- After successful collect with ≥1 paper (converted or not) → mark `analyze` **ready** in tree-state
+- If a paper conversion failed, warn the user that ANALYZE will run on abstract-only for that paper (degraded mode)
+- **Post-collect validation (v1.4):** after COLLECT, verify that for every `.pdf` / `.docx` / `.html` in `materials/<bucket>/`, a corresponding `.md` file exists. If not, offer to run `material_to_markdown.py --convert-dir` to batch-convert the missing files. This prevents the common failure mode where sources are downloaded but never converted, and ANALYZE silently runs in degraded (abstract-only) mode.
 
 ## Chat reply
 
-List saved paths, new IDs, failures, recommended next: `analyze`.
+List saved paths, new IDs, conversion status (method used / failures), recommended next: `analyze`.

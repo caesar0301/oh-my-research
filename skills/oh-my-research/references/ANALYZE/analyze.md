@@ -44,7 +44,10 @@ Before the deep scan, run **Gate M** (see `GATES.md`): is the material set suffi
 ### 2. Materials scan → graded findings
 
 For each material:
-- Extract contributions, methods, limitations (from abstract/metadata; PDF text when needed)
+- **Read the full-text Markdown file** (`materials/<bucket>/<ID>.md`) — this is the primary source for analysis. The full paper body (introduction, methods, results, discussion, tables, figures captions) must be read, not just the abstract.
+- If `markdown_path` exists in the index entry and the `.md` file is present → **read it in full**. For long papers, read in sections (offset/limit pagination) but cover the entire document.
+- If `markdown_status` is `"failed"` or the `.md` file is missing → **degraded mode**: fall back to abstract/metadata only, but record this explicitly in the evidence map as a traceability note (`[P-001: abstract-only — full-text conversion failed]`) and flag the finding's confidence as reduced.
+- Extract contributions, methods, limitations from the **full paper body**, not the abstract alone.
 - Map author language → evidence grade:
 
 | Author language | Grade |
@@ -64,7 +67,7 @@ Sections:
 - Supporting evidence
 - Contradictions
 - Open gaps (with severity: High / Medium / Low)
-- Traceability notes
+- Traceability notes (including **full-text vs abstract-only** status per material — any material analyzed in degraded mode must be flagged here)
 
 ### 4. Research brief → `docs/plans/brief-{id}.md`
 
@@ -77,6 +80,18 @@ Question, scope, material inventory, themes, out-of-scope.
 - Contradictions handling
 - Open questions
 - Implications for the report narrative
+- **THINK Ledger** section (see template below) — must exist even before first THINK pass (starts empty, filled after each pass)
+
+**THINK Ledger template (v1.4 — mandatory section in judgment):**
+
+```markdown
+## THINK Ledger
+
+| Pass | Method | Date | Outcome |
+|------|--------|------|---------|
+```
+
+The ledger starts as an empty table (header only). After each THINK pass, add a row. Gate A validates this table has ≥1 data row in Evidence-Deep pattern. See `GATES.md` § Gate A — THINK ledger validation.
 
 ### 6. THINK checkpoint (Evidence-Deep default — mandatory)
 
@@ -94,7 +109,7 @@ Question, scope, material inventory, themes, out-of-scope.
 4. Apply its procedure: trigger questions → analysis → revelations (≥1 required, never default-agree).
 5. Produce proposed edits + outcome stamp (`hardened`/`refined`/`unchanged`/`killed`).
 6. Ask user: **y / n / other** — never mutate without yes.
-7. Record the pass in the judgment's THINK ledger (table with method, outcome, date).
+7. Record the pass in the judgment's THINK ledger — append a row to the `## THINK Ledger` table (see template in §5). The row must have: pass number, method name, date (ISO-8601), outcome stamp (`hardened`/`refined`/`unchanged`/`killed`). Gate A will validate this table exists and has ≥1 row.
 8. Re-save judgment / evidence-map if edits accepted.
 
 **Gate A cannot pass without at least one THINK pass recorded in the judgment's THINK ledger.** If the user explicitly skips THINK (quick-pass or "just proceed"), record `scenario_note: "THINK skipped by user override"` in `gate-a.json` — but the agent must still ask, not silently skip.

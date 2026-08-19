@@ -1,3 +1,33 @@
+## [1.4.0] — 2026-08-19
+
+### Added
+
+- **Phase-Guard blocking by default**: cross-stage jump protection is now **blocking** rather than advisory. The agent must not proceed past a missing prerequisite without an explicit user override (override language required — "I know, skip to SYNTH" or "override phase-guard"). A general task instruction like "write the report" does not count as an override. Prevents the common real-world failure mode where task-oriented user instructions bypass the entire workflow.
+- **Startup reconciliation**: at the beginning of every op, the agent performs a disk-vs-state reconciliation — scanning disk for actual artifacts (brief/evidence/judgment files, gate JSONs, chapter files, report-state) and auto-correcting stale `.omr/tree-state.json`. The disk is ground truth; tree-state is a cache that must be reconciled against it. Prevents stale state from causing stage re-skipping across sessions.
+- **`qa state-check` command**: new QA sub-command that runs full disk-vs-tree-state reconciliation, proposes a corrected tree-state, and lists missing gates/artifacts. Use when resuming an interrupted workspace or auditing workflow compliance.
+- **THINK ledger validator**: Gate A now validates the THINK ledger by checking for a literal table in `judgment-*.md` matching a machine-checkable template (`## THINK Ledger` heading + ≥1 data row with pass/method/date/outcome). Empty or absent ledger = Gate A fails. The judgment template now includes the empty ledger section by default.
+- **SYNTH incremental writing compliance check at Gate D**: Gate D now includes a mandatory `incremental_writing_compliance` check — verifies `chapters/` directory exists, `report-state.json` exists, `_outline.md` exists, no single chapter > 5,000 words, and report is not a single un-split file. Brief mode < 3K words is exempted.
+- **Gate chain completeness check**: gates now form a self-enforcing chain — before recording any gate X, the agent must verify all prerequisite gate JSONs exist. Missing prerequisites block the current gate from being recorded. Prevents the failure mode where an agent skips multiple gates and records only the final one.
+- **`report_lint.py` script**: new publication-safety linter that scans report chapters for internal material IDs (`P-001`, `W-002`), raw arXiv IDs, evidence-grade labels (`proven`/`suggests`/`inferred`), workflow jargon (`OMR`, `THINK mode`, `Gate A`), private paths, THINK ledger references, and outcome stamps. Exit 0 = clean, 1 = violations. Integrated into Gate D checklist.
+- **Batch conversion mode (`--convert-dir`)**: `material_to_markdown.py` now supports `--convert-dir <directory>` to batch-convert pre-downloaded files (PDFs, DOCX, HTML) that lack corresponding `.md` files. Material ID is derived from the filename stem. Eliminates the need for custom conversion scripts when users have already batch-downloaded sources.
+- **Post-collect validation**: COLLECT now verifies that for every convertible source file in `materials/<bucket>/`, a corresponding `.md` file exists. If not, offers to run batch conversion. Prevents silent degraded (abstract-only) mode in ANALYZE.
+
+### Changed
+
+- **SKILL.md** Phase-Guard section updated to blocking-by-default with explicit override language requirement; Best Practices updated; Dependencies section now includes `report_lint.py`; QA section now includes `state-check` sub-command.
+- **LLM-STATE.md** Tree-state pre-flight check updated to v1.4 blocking behavior; new Startup reconciliation section added; `qa state-check` command documented.
+- **GRAPH.md** Cross-Stage Jump Protection updated to v1.4 blocking-by-default.
+- **GATES.md** Gate A now includes THINK ledger validation template and rules; Gate D now includes incremental writing compliance check and report lint check; Gate Chain Enforcement now self-enforcing with prerequisite matrix.
+- **ANALYZE/analyze.md** Judgment artifact spec now includes mandatory THINK Ledger section template; THINK pass recording step updated to reference the table format.
+- **SYNTH/synth.md** Incremental Writing Enforcement section updated to v1.4 with Gate D structural check details and brief mode exception.
+- **COLLECT/collect.md** Batch conversion mode documented; post-collect validation added.
+- **scripts/README.md** `report_lint.py` and `--convert-dir` mode documented with examples.
+- **marketplace.json** version bumped to 1.4.0.
+
+### Fixed
+
+- Real-world audit findings from `xpark-use-scenarios` project: Phase-Guard was advisory and got skipped; THINK was never triggered; SYNTH wrote 768 lines in one turn; tree-state was never updated; 4/5 gates were never recorded; internal material IDs leaked into the public report. All seven issues now have enforcement mechanisms.
+
 ## [1.3.0] — 2026-08-19
 
 ### Added

@@ -60,9 +60,11 @@ ready decide: when judgment exists (optional path)
 ready reconcile: when any plans or synth exist
 ```
 
-## Cross-Stage Jump Protection (v1.3+)
+## Cross-Stage Jump Protection (v1.4 — blocking by default)
 
 The graph edges are **recommended** paths, but the agent must enforce **prerequisite artifact checks** before allowing a stage to execute. This prevents the common failure mode where a user says "write the report" and the agent jumps from COLLECT to SYNTH, skipping ANALYZE + THINK + Gate A.
+
+**v1.4 change — blocking by default:** The guard is now **blocking**. The agent must not proceed past a missing prerequisite without an explicit user override (override language required — see `LLM-STATE.md` § Tree-state pre-flight check). A general task instruction like "write the report" does **not** count as an override.
 
 **Prerequisite matrix:**
 

@@ -8,7 +8,7 @@ Judgment, structure, and progress tracking are **agent-owned**. Do not rely on P
 |---------|--------|
 | Research judgment, outlines, gates, method choice, continuity | **LLM** following reference docs |
 | Report content **and presentation** (title, fonts, colors, cover, TOC, header/footer, chapter order) — via `_document.json` | **LLM** authoring the spec |
-| Bytes on disk: DOCX/PDF render from spec, version backups, skill semver sync, optional URL indexing | **Scripts** (`export_report.py`, `version_control.py`, `skill_version.py`, optional `collect_cli.py`) |
+| Bytes on disk: DOCX/PDF render from spec, version backups, skill semver sync, URL indexing + full-text Markdown conversion (anydoc + fallbacks) | **Scripts** (`export_report.py`, `version_control.py`, `skill_version.py`, `collect_cli.py`, `material_to_markdown.py`) |
 
 `export_report.py` is a **thin renderer**: it applies the LLM-authored `docs/<mode>/_document.json`, not hardcoded styling. It never invents structure or layout — it renders exactly what the spec + chapters describe.
 
@@ -31,17 +31,22 @@ Update after each op using unlock rules in `GRAPH.md`. Example shape:
 
 Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if unused.
 
-### Tree-state pre-flight check (v1.3+)
+### Tree-state pre-flight check (v1.4 — blocking by default)
 
 **Before executing any op, the agent must read `.omr/tree-state.json` and verify the target stage is permitted.** This is a mandatory pre-flight check, not optional.
 
 **Check procedure:**
 
 1. Read `.omr/tree-state.json` (create defaults if file missing)
-2. Check if the target stage is in `unlocked`, `ready`, or `completed`
-3. If `locked`, check if required prerequisite artifacts exist on disk (see `GRAPH.md` § Cross-Stage Jump Protection)
-4. If prerequisites are met, update tree-state to unlock the stage, then proceed
-5. If prerequisites are missing, show `[PHASE-GUARD]` notice and offer to run the prerequisite stage
+2. **Startup reconciliation** (v1.4): scan disk for actual artifacts and auto-correct stale tree-state (see § Startup reconciliation below)
+3. Check if the target stage is in `unlocked`, `ready`, or `completed`
+4. If `locked`, check if required prerequisite artifacts exist on disk (see `GRAPH.md` § Cross-Stage Jump Protection)
+5. If prerequisites are met, update tree-state to unlock the stage, then proceed
+6. If prerequisites are missing, show `[PHASE-GUARD]` notice and **block** — do not proceed unless the user explicitly overrides
+
+**v1.4 change — blocking by default:** The Phase-Guard is now **blocking by default**. The agent must not proceed past a missing prerequisite without an explicit user override. An override is only recognized when the user uses explicit language such as "I know, skip to SYNTH" or "override phase-guard" — a general task instruction like "write the report" does **not** count as an override.
+
+When the user explicitly overrides, record `scenario_note: "prerequisite skipped by user override"` in the next gate JSON, and proceed — but the guard must have been shown first.
 
 **Common failure modes this prevents:**
 
@@ -64,6 +69,29 @@ Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if un
 ```
 
 **Never leave tree-state stale** — if the agent runs an op but forgets to update tree-state, the next op's pre-flight check will detect the inconsistency (artifacts exist but tree-state doesn't reflect them) and auto-correct.
+
+**Startup reconciliation (v1.4 new):** At the beginning of **every** op — before any other logic — the agent must perform a disk-vs-state reconciliation:
+
+1. Read `.omr/tree-state.json`
+2. Scan disk for actual artifacts:
+   - `docs/plans/brief-*.md`, `evidence-*.md`, `judgment-*.md` → ANALYZE completed
+   - `.omr/quality-gates/gate-*.json` → corresponding gates passed
+   - `docs/{survey,report,manuscript,brief}/chapters/` or report files → SYNTH in progress/completed
+   - `.omr/report-state.json` → SYNTH resume state
+3. Compare disk reality against tree-state:
+   - If disk has artifacts that tree-state doesn't reflect → **auto-correct** tree-state (mark stages completed, unlock next stages)
+   - If tree-state claims a stage is completed but disk lacks artifacts → **flag inconsistency** in `notes` and downgrade to `ready` or `locked`
+4. If the target op's prerequisites are still missing after reconciliation → show `[PHASE-GUARD]` (blocking — see `SKILL.md` § Phase-Guard)
+
+This reconciliation prevents the common failure mode where an agent runs an op but forgets to update tree-state, and a subsequent session starts from stale state and re-skips stages. The disk is the ground truth; tree-state is a cache that must be reconciled against it.
+
+**Manual reconciliation command (v1.4 new):** The agent or user can trigger reconciliation explicitly:
+
+```
+qa state-check
+```
+
+This runs the full disk-vs-state reconciliation, proposes a corrected `tree-state.json`, and lists missing gates/artifacts. Use this when resuming an interrupted workspace or auditing workflow compliance.
 
 ### `.omr/loop-state.json`
 

@@ -2,8 +2,10 @@
 """Lightweight collect CLI: record sources into materials/ + papers-index.json.
 
 Creates only the directories needed for the files being written — never a full
-empty materials/ tree. Full download handlers (arxiv SDK, git clone, etc.) can
-be layered later; this CLI records index IDs for the report-first workflow.
+empty materials/ tree. After recording a source, optionally invokes
+`material_to_markdown.py` to download + convert the source into a full-text
+Markdown file (`materials/<bucket>/<ID>.md`) so ANALYZE can read the entire
+paper, not just the abstract.
 """
 
 from __future__ import annotations
@@ -11,10 +13,15 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_CONVERTER = _SCRIPT_DIR / "material_to_markdown.py"
 
 
 def write_text(path: Path, text: str) -> None:
@@ -76,7 +83,36 @@ def classify(source: str) -> str:
     return "search"
 
 
-def record(workspace: Path, source: str, title: str | None = None) -> dict[str, Any]:
+def convert_source(
+    workspace: Path, source: str, material_id: str, bucket: str, title: str | None
+) -> dict[str, Any]:
+    """Invoke material_to_markdown.py to download + convert one source.
+
+    Returns the converter's result dict (status / method / path / ...). On
+    any invocation error, returns a failed record with the reason."""
+    if not _CONVERTER.exists():
+        return {"id": material_id, "status": "failed", "reason": "converter script not found"}
+    try:
+        result = subprocess.run(
+            [sys.executable, str(_CONVERTER), source,
+             "--id", material_id, "--bucket", bucket,
+             "--workspace", str(workspace), "--title", title or ""],
+            capture_output=True, text=True, timeout=600,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return json.loads(result.stdout)
+        return {"id": material_id, "status": "failed",
+                "reason": result.stderr.strip() or f"converter exit {result.returncode}"}
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as e:
+        return {"id": material_id, "status": "failed", "reason": f"{type(e).__name__}: {e}"}
+
+
+def record(
+    workspace: Path,
+    source: str,
+    title: str | None = None,
+    convert: bool = True,
+) -> dict[str, Any]:
     data = load_index(workspace)
     kind = classify(source)
     now = datetime.now(timezone.utc).isoformat()
@@ -91,6 +127,13 @@ def record(workspace: Path, source: str, title: str | None = None) -> dict[str, 
         note = workspace / "materials" / "papers" / f"{item['id']}.source.txt"
         write_text(note, f"source: {source}\ntitle: {item['title']}\n")
         item["path"] = str(note.relative_to(workspace))
+        if convert:
+            conv = convert_source(workspace, source, item["id"], "papers", item["title"])
+            item["markdown_path"] = conv.get("path", "")
+            item["markdown_status"] = conv.get("status", "")
+            item["markdown_method"] = conv.get("method", "")
+            if conv.get("reason"):
+                item["markdown_failure_reason"] = conv["reason"]
         data["papers"].append(item)
     elif kind == "github":
         item = {
@@ -115,6 +158,13 @@ def record(workspace: Path, source: str, title: str | None = None) -> dict[str, 
         note = workspace / "materials" / dest / f"{item['id']}.source.txt"
         write_text(note, f"source: {source}\n")
         item["path"] = str(note.relative_to(workspace))
+        if convert:
+            conv = convert_source(workspace, source, item["id"], dest, item["title"])
+            item["markdown_path"] = conv.get("path", "")
+            item["markdown_status"] = conv.get("status", "")
+            item["markdown_method"] = conv.get("method", "")
+            if conv.get("reason"):
+                item["markdown_failure_reason"] = conv["reason"]
         data["web"].append(item)
     else:
         item = {
@@ -138,9 +188,11 @@ def main() -> None:
     p.add_argument("sources", nargs="+", help="URLs, DOIs, or search queries")
     p.add_argument("--workspace", type=Path, default=Path.cwd())
     p.add_argument("--title", default=None)
+    p.add_argument("--convert", action=argparse.BooleanOptionalAction, default=True,
+                   help="download + convert each source to full-text Markdown via anydoc (default: on)")
     args = p.parse_args()
     ws = args.workspace.resolve()
-    results = [record(ws, s, args.title) for s in args.sources]
+    results = [record(ws, s, args.title, convert=args.convert) for s in args.sources]
     print(json.dumps({"recorded": results}, indent=2))
 
 

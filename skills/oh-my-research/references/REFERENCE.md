@@ -11,7 +11,7 @@ Detailed operation guide for the unified OMR skill.
 | ANALYZE | `analyze` | `ANALYZE/analyze.md` |
 | THINK | `think [method]` | `THINK/think.md`, `THINK/methods.md`, `THINK/methods/` (playbooks) |
 | SYNTH | `synth [--mode] [--format] [--language] [--resume] [--chapter] [--no-wiki]` | `SYNTH/synth.md`, `SYNTH/long-report.md` |
-| QA | `qa qa1\|qa2\|all` | `GATES.md`, `LLM-STATE.md` |
+| QA | `qa qa1\|qa2\|all\|state-check` | `GATES.md`, `LLM-STATE.md` |
 | IDEA | `idea` | `IDEA/idea.md` |
 | DECIDE | `decide` | `DECIDE/decide.md` |
 | RECONCILE | `reconcile`, `archive`, `rollback`, `list` | `RECONCILE/reconcile.md` |
@@ -87,6 +87,7 @@ Ambiguous ?
 | Papers index | `papers-index.json` (+ `.md`) | `docs/index/` |
 | Synthesis | chapters under mode dir | `docs/{survey,report,manuscript,brief}/` |
 | Material IDs | `P-xxx` papers, `W-xxx` web, `G-xxx` github | indexes |
+| Full-text Markdown | `materials/<bucket>/<ID>.md` | `materials/{papers,web,github}/` |
 
 `{id}` default: `R-001` for first research thread (increment if multiple threads).
 
