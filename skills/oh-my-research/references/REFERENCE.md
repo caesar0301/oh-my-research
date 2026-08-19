@@ -9,7 +9,7 @@ Detailed operation guide for the unified OMR skill.
 | INIT | `init` | `INIT/init.md` |
 | COLLECT | `collect` | `COLLECT/collect.md` |
 | ANALYZE | `analyze` | `ANALYZE/analyze.md` |
-| THINK | `think [method]` | `THINK/think.md`, `THINK/methods.md` |
+| THINK | `think [method]` | `THINK/think.md`, `THINK/methods.md`, `THINK/methods/` (playbooks) |
 | SYNTH | `synth [--mode] [--format] [--language] [--resume] [--chapter] [--no-wiki]` | `SYNTH/synth.md`, `SYNTH/long-report.md` |
 | QA | `qa qa1\|qa2\|all` | `GATES.md`, `LLM-STATE.md` |
 | IDEA | `idea` | `IDEA/idea.md` |
@@ -149,7 +149,7 @@ Templates use `{{PLACEHOLDER}}` syntax:
 - `LLM-STATE.md` — agent-owned state JSON; scripts only for render/backup/language detect/optional collect
 - `LANGUAGE.md` — timezone/locale → preferred BCP-47 language tag
 - `GRAPH.md` — pattern graphs and next-step routing
-- `THINK/` — elicitation behavior + method catalog
+- `THINK/` — elicitation behavior + method catalog + per-method playbooks (`THINK/methods/`)
 - `ANALYZE/` — deep analysis pipeline
 - `SYNTH/` — incremental long-report protocol + export
 - `WORKFLOW/` — end-to-end Evidence-Deep

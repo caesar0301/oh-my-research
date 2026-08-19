@@ -87,7 +87,9 @@ Agent evaluates checklists in `GATES.md` and writes results with rationale — s
 
 1. Read `THINK/methods.md` (and optionally `assets/think/methods.csv` as a catalog).
 2. Choose 5 best-fit methods for **this** artifact and user intent.
-3. Apply with user confirmation.
+3. Load the method's playbook from `THINK/methods/<slug>.md` (index in `methods/README.md`) and apply its procedure.
+4. Produce revelations (≥1, never default-agree) + proposed edits + outcome stamp; confirm before mutating.
+5. Record the pass in the judgment's THINK ledger.
 
 ## QA (LLM checklist)
 

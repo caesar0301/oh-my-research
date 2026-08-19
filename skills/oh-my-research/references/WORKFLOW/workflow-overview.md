@@ -37,6 +37,8 @@ Materials land under `materials/<bucket>/` only for buckets that receive files; 
 analyze
 ```
 
+**Gate M** first: enough materials for the intended scope? If not, ask to `collect` more.
+
 Produces brief, evidence-map, judgment (id `R-001`).  
 Depth checkpoint: offer `think first-principles` or Source Triangulation when confidence/gaps warrant.
 
@@ -44,7 +46,7 @@ Depth checkpoint: offer `think first-principles` or Source Triangulation when co
 think first-principles
 ```
 
-User confirms edits → refresh judgment.
+User confirms edits → refresh judgment. Then **Gate T**: did THINK surface load-bearing gaps? If so, ask to `collect` more or proceed.
 
 Present **Gate A / QA1**. On pass → unlock SYNTH.
 
@@ -53,6 +55,8 @@ Present **Gate A / QA1**. On pass → unlock SYNTH.
 ```
 synth --mode survey --format docx --language en
 ```
+
+**Gate P** first: confirm language / format / mode / audience / citations before outlining.
 
 **Long-report path (required for deep surveys):**
 
@@ -95,10 +99,11 @@ Runs recommended next steps along the active graph, pausing at gates unless user
 ## When to ask the user
 
 - Research question wording (ANALYZE)
-- Synth mode if ambiguous (survey vs report)
-- Gate confirmations (unless quick-pass)
+- **Gate M**: enough materials before analyzing (collect more?)
+- **Gate T**: after THINK, collect more from surfaced gaps?
+- **Gate P**: language / format / mode / audience / citations before synth
+- Other gate confirmations (unless quick-pass)
 - THINK method choice when menu shown
-- Wiki yes/no if not specified
 
 ## Phase files
 

@@ -6,10 +6,13 @@ Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists b
 
 | Gate | Position | Purpose | Required artifacts |
 |------|----------|---------|-------------------|
+| **M** | After COLLECT, before ANALYZE | Enough materials to start analysis? | materials + index |
 | **L** | IDEA / ANALYZE when Loop active | Iterate deeper or advance? | `.omr/loop-state.json` |
 | **A** | After ANALYZE judgment, before unlock SYNTH | Evidence sufficient for report? | brief, evidence-map, judgment |
 | **QA1** | After judgment (auto or `qa qa1`) | Coverage, gaps, traceability | papers-index, evidence, judgment |
+| **T** | After a THINK pass | Material gaps surfaced by THINK → collect more? | think revelations / collect-targets |
 | **B** | Only if DECIDE runs | Stance sound? | decision draft (≥3 alts, risks, refs) |
+| **P** | After Gate A, before SYNTH outline | Language, format, mode, audience, citations | judgment + preferences |
 | **Lenses** | Before Gate D on SYNTH draft | Structure / Prose / Adversarial | `docs/<mode>/chapters/` |
 | **D** | Before publishing SYNTH | Traceable, no over-claiming? | judgment (+ optional decision) |
 | **QA2** | Pre-export (`qa qa2`) | Structure, citations, coherence, safety | chapters + deliverable |
@@ -45,6 +48,21 @@ Write JSON (not a fixed script schema beyond this shape):
 ```
 
 Paths: `.omr/quality-gates/QA1-evidence-analysis.json`, `QA2-pre-export.json`, or `gate-a.json`, etc.
+
+---
+
+## Gate M — Materials Sufficiency (before ANALYZE)
+
+Position: after COLLECT has ≥1 usable source and `analyze` is marked ready; before ANALYZE's deep pipeline begins.
+
+**Checks (interpret for the intended scope — not a fixed quota):**
+- [ ] Material set matches the intended scope (narrow single-paper deep dive vs broad survey)
+- [ ] At least one primary source, or an explicit plan to analyze a deliberately small corpus
+- [ ] Missing buckets / source types that the scope clearly needs are flagged (e.g. broad survey with only one paper)
+
+**Outcomes:** **proceed** → ANALYZE | **collect more** → return to COLLECT.
+
+A 1-paper deep dive passes with an explicit "narrow corpus" note; a broad survey with one paper fails and asks the user to collect more. Quick-pass skips the pause but still records the check.
 
 ---
 
@@ -97,6 +115,21 @@ Write `.omr/quality-gates/QA1-evidence-analysis.json` with rationale per check.
 
 ---
 
+## Gate T — Collect-Decision (after THINK)
+
+Position: after a THINK pass (and after a Gate A failure branch), before re-running Gate A or proceeding.
+
+**Checks:**
+- [ ] THINK revelations / collect-targets collected from the playbook's Output contract
+- [ ] Determine which surfaced gaps are **load-bearing** for the report vs ignorable
+- [ ] If load-bearing gaps exist → ask the user to `collect` more (name the missing source type) **or** explicitly accept proceeding with the gaps documented
+
+**Outcomes:** **collect more** → COLLECT (then re-ANALYZE) | **proceed** → re-run Gate A / continue to SYNTH.
+
+This is the explicit "THINK revealed we need more materials — collect?" decision. A pass that surfaces no load-bearing gaps records `proceed`; one that does, but the user chooses to document-and-continue, records `proceed` with the gaps noted.
+
+---
+
 ## Gate B — Before finishing DECIDE (optional)
 
 **Checks:**
@@ -104,6 +137,24 @@ Write `.omr/quality-gates/QA1-evidence-analysis.json` with rationale per check.
 - [ ] Risks stated
 - [ ] Evidence refs valid
 - [ ] Selection rationale clear
+
+---
+
+## Gate P — Synthesis Preferences (before SYNTH)
+
+Position: after Gate A unlocks SYNTH; before SYNTH Phase A (outline).
+
+**Checks (confirm or adjust — record once per report, then keep stable):**
+- [ ] Mode: `survey` / `report` / `manuscript` / `brief` (pattern default or user choice)
+- [ ] Language: single BCP-47 tag (per `LANGUAGE.md` resolution order)
+- [ ] Format: `docx` / `pdf`
+- [ ] Audience + intended length/depth
+- [ ] Citation style: author–date vs numbered (consistent throughout)
+- [ ] Wiki yes/no (if not already specified)
+
+**Outcomes:** **confirm** → SYNTH outline | **adjust** → re-collect preferences.
+
+Consolidates the previously scattered "synth mode if ambiguous" ask and the `--language/--format/--mode` flags into one checkpoint. Quick-pass uses defaults (pattern mode, auto-detected language, `docx`) and records them.
 
 ---
 

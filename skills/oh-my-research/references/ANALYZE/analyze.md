@@ -14,6 +14,10 @@ Also: “analyze these papers”, “map evidence”, “now what” after colle
 
 ## Pipeline
 
+### 0. Gate M — enough materials?
+
+Before the deep scan, run **Gate M** (see `GATES.md`): is the material set sufficient for the intended scope? If a broad survey has only one paper (or the scope clearly needs a missing source type), pause and ask the user to `collect` more. A deliberate narrow corpus (e.g. single-paper deep dive) passes with a "narrow corpus" note.
+
 ### 1. Scope and research questions
 
 1. Scan indexes (`papers-index`, blogs/web, github).
@@ -61,9 +65,13 @@ Question, scope, material inventory, themes, out-of-scope.
 ### 6. THINK checkpoint (Evidence-Deep default)
 
 If confidence is low/medium **or** High gaps exist **or** pattern is Evidence-Deep:
-- Offer 1–2 methods (recommend **First Principles** or **Source Triangulation**)
-- Follow `THINK/think.md` (confirm before edit)
-- Re-save judgment / evidence-map if accepted
+- Offer 1–2 methods (recommend **First Principles** or **Source Triangulation**) and name their playbooks (`THINK/methods/first-principles.md`, `THINK/methods/source-triangulation.md`)
+- Follow `THINK/think.md`: load the playbook, apply its procedure, never default-agree, produce revelations + proposed edits + outcome stamp, confirm before edit
+- Record the pass in the judgment's THINK ledger; re-save judgment / evidence-map if accepted
+
+### 6a. Gate T — collect more?
+
+After each THINK pass, run **Gate T** (see `GATES.md`): did the pass surface load-bearing material gaps (e.g. a missing source type from Source Triangulation, an unreplicated anchor from Pre-mortem)? If so, ask the user to `collect` the missing type, or explicitly accept proceeding with the gap documented. Collecting more loops back to COLLECT → re-ANALYZE.
 
 ### 7. Gate L (Loop only)
 

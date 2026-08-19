@@ -26,12 +26,15 @@ Runtime:
 ## Evidence-Deep (default)
 
 ```
-collect → analyze ⟲ think → synth
+collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [Gate P] → synth
 ```
 
 - Entry: `collect`
+- After collect: Gate M (enough materials to analyze?)
 - After analyze judgment: offer THINK if confidence low / gaps high
+- After THINK: Gate T (collect more from surfaced gaps?)
 - Gate A / QA1 unlock `synth`
+- Gate P confirms language / format / mode / audience before outline
 - Synth: lenses → Gate D / QA2 → optional wiki
 
 ## Node ↔ Artifact Contracts
@@ -51,8 +54,8 @@ collect → analyze ⟲ think → synth
 
 ```
 unlocked always: init, collect, idea, think
-ready analyze: when materials/index exist
-unlock synth: after Gate A pass (judgment exists + gate recorded)
+ready analyze: when materials/index exist, then Gate M passes (enough materials)
+unlock synth: after Gate A pass (judgment exists + gate recorded) + Gate P prefs confirmed
 ready decide: when judgment exists (optional path)
 ready reconcile: when any plans or synth exist
 ```
@@ -78,7 +81,7 @@ Only **Loop** pattern declares `graph.cycles[]`:
 ]
 ```
 
-THINK side-cycle is **not** a graph cycle; it is an elicitation checkpoint attached to analyze/synth.
+THINK side-cycle is **not** a graph cycle; it is a methodology-driven elicitation checkpoint attached to analyze/synth. Each pass loads a playbook (`THINK/methods/<slug>.md`), must surface ≥1 revelation (never default-agree), and stamps an outcome (`hardened`/`refined`/`unchanged`/`killed`).
 
 ## Pattern Selection
 

@@ -25,6 +25,8 @@ Research-curated elicitation methods. Agents pick best-fit; users may name a met
 | Feynman Technique | Explain simply; find gaps | complex → simple → gaps → mastery | Dense chapters |
 | Reframe the Question | Is the stated question the real one? | stated → reframe → true problem | Start of ANALYZE |
 
+**Playbooks** — one file per core method under `methods/` (e.g. `first-principles.md`), with full procedure + worked example for the five deep methods. Index + anatomy in `methods/README.md`. THINK loads the playbook when it runs the method.
+
 ## Reshuffle pool (advanced / collaboration / risk)
 
 | Method | Category | Pattern |
@@ -41,6 +43,8 @@ Research-curated elicitation methods. Agents pick best-fit; users may name a met
 | What If Scenarios | creative | scenarios → implications → insights |
 | Failure Mode Analysis | risk | components → failures → prevention |
 | Challenge from Critical Perspective | risk | assumptions → challenges → strengthening |
+
+Reshuffle methods mostly use their `output_pattern` directly. Two are promoted to playbooks: Red Team vs Blue Team (`methods/red-team-vs-blue-team.md`) and Second-Order Thinking (`methods/second-order-thinking.md`). Promote more by writing `methods/<slug>.md` (anatomy in `methods/README.md`).
 
 ## Omitted (code-centric; do not offer for OMR research)
 

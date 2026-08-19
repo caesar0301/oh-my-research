@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.1.5"
+  version: "1.2.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -74,13 +74,13 @@ Bootstrap workspace. Op: `init "<topic>"`. Creates **only** `AGENTS.md` + `.omr/
 Passive reception of sources → materials + indexes. Op: `collect <url|query|…>`. → `references/COLLECT/collect.md`
 
 ### ANALYZE Mode
-Deep analysis centerpiece: brief, evidence-map, judgment, optional plan; Gate A / QA1; THINK checkpoint. Op: `analyze`. → `references/ANALYZE/analyze.md`
+Deep analysis centerpiece: brief, evidence-map, judgment, optional plan. Guarded by **Gate M** (enough materials?) before, **Gate A / QA1** after, and **Gate T** (collect more?) after a THINK pass. Op: `analyze`. → `references/ANALYZE/analyze.md`
 
 ### THINK Mode
-Structured elicitation on research artifacts (never code). Op: `think [method]`. → `references/THINK/think.md`
+Methodology-driven elicitation on research artifacts (never code). Each pass loads a playbook (`references/THINK/methods/<slug>.md`), never default-agrees, and stamps an outcome (`hardened`/`refined`/`unchanged`/`killed`). Op: `think [method]`. → `references/THINK/think.md`, `references/THINK/methods/`
 
 ### SYNTH Mode
-Primary deliverable: long, publication-quality reports in the preferred language (auto-detected from timezone/locale — `en`, `zh-CN`, `ja`, `de`, … — or explicit `--language`) as Word/PDF, written **incrementally** (outline → one chapter per turn → continuity brief → assemble). Ops: `synth [--mode] [--format docx|pdf] [--language <tag>] [--resume] [--chapter <id>] [--no-wiki]`. Never generate an entire deep report in one turn. Public deliverables must be self-contained and must not expose workflow terms, internal material IDs, evidence-grade labels, or artifact paths. → `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md`
+Primary deliverable: long, publication-quality reports in the preferred language (auto-detected from timezone/locale — `en`, `zh-CN`, `ja`, `de`, … — or explicit `--language`) as Word/PDF, written **incrementally** (outline → one chapter per turn → continuity brief → assemble). **Gate P** confirms language / format / mode / audience / citations before writing. Ops: `synth [--mode] [--format docx|pdf] [--language <tag>] [--resume] [--chapter <id>] [--no-wiki]`. Never generate an entire deep report in one turn. Public deliverables must be self-contained and must not expose workflow terms, internal material IDs, evidence-grade labels, or artifact paths. → `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md`
 
 ### IDEA Mode (optional)
 Capture speculative notes. Op: `idea "…"`. → `references/IDEA/idea.md`
@@ -108,9 +108,12 @@ Default **semi-automated** (pause for confirm). Support “no confirmations” /
 
 | Gate | When |
 |------|------|
+| M | After COLLECT: enough materials to analyze? |
 | L | Loop pattern: iterate vs advance |
 | A / QA1 | After ANALYZE judgment, before unlock SYNTH |
+| T | After THINK: collect more from surfaced gaps? |
 | B | Only if DECIDE runs |
+| P | Before SYNTH: language / format / mode / audience |
 | Lenses | Structure → Prose → Adversarial before Gate D |
 | D / QA2 | Before publishing SYNTH |
 

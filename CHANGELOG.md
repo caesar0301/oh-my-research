@@ -13,6 +13,19 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.2.0] — 2026-08-19
+
+### Added
+
+- Per-method THINK playbooks under `references/THINK/methods/`: 5 deep (First Principles, Source Triangulation, Pre-mortem, Steelmanning, Assumption Audit), 13 lean (remaining core methods), plus Red Team vs Blue Team and Second-Order Thinking promoted from the reshuffle pool. Index + shared anatomy in `methods/README.md`.
+- Three essential gates: **M** (enough materials before ANALYZE), **T** (collect more after THINK), **P** (language/format/mode/audience before SYNTH).
+
+### Changed
+
+- `think` now loads a method's playbook (trigger questions, procedure, output contract) instead of a one-line output pattern.
+- Added **never-default-agree** rule and per-pass **outcome stamps** (`hardened` / `refined` / `unchanged` / `killed`) to the analyze ⟲ think loop; passes are recorded in the judgment's THINK ledger.
+- `methods.csv` gained a `playbook` column mapping core methods to their playbooks.
+
 ## [1.1.5] — 2026-08-18
 
 ### Changed

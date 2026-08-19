@@ -19,11 +19,11 @@ Intent keywords: `first principles`, `socratic`, `pre-mortem`, `red team`, `stee
 
 1. **Target** = most recent research artifact in the session, or path the user names.
 2. If user named a method → use it. Else **choose** 5 best-fit methods for this artifact from `methods.md` / `assets/think/methods.csv` (LLM selection — no registry script). Prefer research-core methods; reshuffle excludes already offered.
-3. Apply method using its `output_pattern` as a flexible flow. Scale depth to target size.
-4. Show: what the method revealed + proposed edits (diff-style summary).
-5. Ask **y / n / other** — **never mutate without yes**. On no, drop proposal. Other text = revise instruction.
+3. **Load the method's playbook** from `methods/<slug>.md` (index + anatomy in `methods/README.md`). Apply its **Trigger questions** and **Procedure**; scale depth per the playbook's Depth scaling (or target size for lean playbooks).
+4. Produce the playbook's **Output contract**: revelations (≥1 required), proposed edits (diff-style), and an **outcome stamp** (`hardened` | `refined` | `unchanged` | `killed`).
+5. Show revelations + proposed edits + outcome stamp. Ask **y / n / other** — **never mutate without yes**. On no, drop proposal and record `unchanged` with a note. Other text = revise instruction.
 6. Compound passes on the enhanced version until user says **proceed**.
-7. Return to ANALYZE or SYNTH (caller resumes).
+7. Record each pass in the artifact's THINK ledger (judgment: "THINK Passes Applied" table with outcome). Return to ANALYZE or SYNTH (caller resumes).
 
 ## Recommended defaults by artifact
 
@@ -41,10 +41,21 @@ Intent keywords: `first principles`, `socratic`, `pre-mortem`, `red team`, `stee
 
 ## Hard rules
 
+- **Never default-agree**: a pass must surface ≥1 concrete challenge/revelation. An empty revelation list is a *failed* pass, not a clean one — re-run with a different method or state plainly why none applies.
 - Preserve evidence grades; THINK may **downgrade** over-claims, never silently upgrade `suggests` → `proven`
 - Keep citation IDs intact; if a claim cannot be cited, mark as gap or inferred with boundary
 - Do not invent sources
+- Every pass ends with an **outcome stamp** (`hardened` / `refined` / `unchanged` / `killed`) and is recorded in the artifact's THINK ledger
+
+## Outcome stamps
+
+| Stamp | Meaning |
+|-------|---------|
+| `hardened` | Artifact survived challenge; confidence increased |
+| `refined` | Edits accepted; artifact changed |
+| `unchanged` | No edits accepted — note why (method found nothing, or user rejected) |
+| `killed` | A claim/conclusion was downgraded or removed (over-claim found) |
 
 ## Catalog
 
-Full method list and patterns: `methods.md` + `assets/think/methods.csv`.
+Method list and patterns: `methods.md` + `assets/think/methods.csv`. Per-method playbooks: `methods/*.md` (index in `methods/README.md`).

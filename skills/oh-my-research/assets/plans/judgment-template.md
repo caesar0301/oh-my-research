@@ -37,6 +37,6 @@ Evidence boundary: proven | suggests | inferred
 
 ## THINK Passes Applied
 
-| Method | Accepted | Notes |
-|--------|----------|-------|
-| | y/n | |
+| Method | Outcome | Accepted | Notes |
+|--------|---------|----------|-------|
+| | hardened\|refined\|unchanged\|killed | y/n | |

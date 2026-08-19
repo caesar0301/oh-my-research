@@ -90,6 +90,8 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 
 ## Process (summary)
 
+**Gate P first** — confirm language / format / mode / audience / citations before outlining (see `GATES.md`); record once and keep stable.
+
 1. Load judgment + evidence-map + brief + indexes (slim — not wholesale every turn).
 2. LLM: outline + citation map + `.omr/report-state.json` adapted to the topic (`long-report.md`, `LLM-STATE.md`).
 3. Confirm outline (or quick-pass).

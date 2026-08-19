@@ -15,14 +15,16 @@
 - [ ] Only destination buckets with real files exist under `materials/`
 - [ ] Indexes updated with stable IDs (`docs/index/` created on first write)
 - [ ] Failures logged
-- [ ] `analyze` marked ready when ≥1 usable source
+- [ ] `analyze` marked ready when ≥1 usable source (Gate M confirms sufficiency before the deep scan)
 
 ## [ANALYZE]
 
+- [ ] **Gate M** passed (enough materials for the intended scope)
 - [ ] Question confirmed
 - [ ] Findings graded (`proven` / `suggests` / `inferred`)
 - [ ] `brief-*`, `evidence-*`, `judgment-*` written
 - [ ] THINK offered/run when Evidence-Deep or low confidence
+- [ ] **Gate T** run after THINK (collect more from surfaced gaps?)
 - [ ] Gate L if Loop
 - [ ] QA1 + Gate A passed
 - [ ] Optional `plan-*` for further collection / chapter outline
@@ -31,8 +33,11 @@
 
 - [ ] Target artifact identified
 - [ ] Method selected (named or menu of 5)
-- [ ] Revelations + proposals shown
+- [ ] Playbook loaded (`THINK/methods/<slug>.md`) and procedure applied
+- [ ] Revelations (≥1) + proposals + outcome stamp shown (never default-agree)
 - [ ] User y/n before mutation
+- [ ] Pass recorded in judgment's THINK ledger
+- [ ] **Gate T** — load-bearing gaps surfaced? ask user to `collect` or proceed
 - [ ] Return to ANALYZE or SYNTH
 
 ## [DECIDE] (optional)
@@ -43,6 +48,7 @@
 
 ## [SYNTH]
 
+- [ ] **Gate P** passed — language / format / mode / audience / citations confirmed
 - [ ] Outline + citation map + topic-specific `.omr/report-state.json` (LLM-authored)
 - [ ] Chapters written one-at-a-time under `docs/<mode>/chapters/`
 - [ ] Continuity brief updated and pruned after each chapter
