@@ -71,7 +71,7 @@ def classify(source: str) -> str:
         return "github"
     if "huggingface.co" in s:
         return "datasets"
-    if s.startswith("http://") or s.startswith("https://"):
+    if s.startswith(("http://", "https://")):
         return "web"
     return "search"
 

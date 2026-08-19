@@ -156,42 +156,51 @@ TIMEZONE_LANGUAGE: dict[str, str] = {
 
 # City / country name hints inside a tz string (order matters: first match wins).
 TZ_NAME_HINTS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"(Shanghai|Chongqing|Harbin|Urumqi|Beijing|China)", re.I), "zh-CN"),
-    (re.compile(r"Taipei", re.I), "zh-TW"),
-    (re.compile(r"(Hong.?Kong|Macau|Macao)", re.I), "zh-HK"),
-    (re.compile(r"(Tokyo|Japan)", re.I), "ja"),
-    (re.compile(r"(Seoul|Pyongyang)", re.I), "ko"),
-    (re.compile(r"(Bangkok)", re.I), "th"),
-    (re.compile(r"(Ho_Chi_Minh|Saigon|Hanoi)", re.I), "vi"),
-    (re.compile(r"(Jakarta|Makassar|Jayapura)", re.I), "id"),
-    (re.compile(r"(Kuala_Lumpur|Kuching)", re.I), "ms"),
-    (re.compile(r"(Kolkata|Calcutta|Mumbai|Delhi)", re.I), "hi"),
-    (re.compile(r"(Dubai|Riyadh|Qatar|Kuwait|Cairo|Casablanca|Baghdad)", re.I), "ar"),
-    (re.compile(r"(Berlin|Vienna|Zurich)", re.I), "de"),
-    (re.compile(r"(Paris|Brussels|Monaco)", re.I), "fr"),
+    (
+        re.compile(r"(Shanghai|Chongqing|Harbin|Urumqi|Beijing|China)", re.IGNORECASE),
+        "zh-CN",
+    ),
+    (re.compile(r"Taipei", re.IGNORECASE), "zh-TW"),
+    (re.compile(r"(Hong.?Kong|Macau|Macao)", re.IGNORECASE), "zh-HK"),
+    (re.compile(r"(Tokyo|Japan)", re.IGNORECASE), "ja"),
+    (re.compile(r"(Seoul|Pyongyang)", re.IGNORECASE), "ko"),
+    (re.compile(r"(Bangkok)", re.IGNORECASE), "th"),
+    (re.compile(r"(Ho_Chi_Minh|Saigon|Hanoi)", re.IGNORECASE), "vi"),
+    (re.compile(r"(Jakarta|Makassar|Jayapura)", re.IGNORECASE), "id"),
+    (re.compile(r"(Kuala_Lumpur|Kuching)", re.IGNORECASE), "ms"),
+    (re.compile(r"(Kolkata|Calcutta|Mumbai|Delhi)", re.IGNORECASE), "hi"),
     (
         re.compile(
-            r"(Madrid|Canary|Buenos_Aires|Santiago|Lima|Bogota|Mexico_City)", re.I
+            r"(Dubai|Riyadh|Qatar|Kuwait|Cairo|Casablanca|Baghdad)", re.IGNORECASE
+        ),
+        "ar",
+    ),
+    (re.compile(r"(Berlin|Vienna|Zurich)", re.IGNORECASE), "de"),
+    (re.compile(r"(Paris|Brussels|Monaco)", re.IGNORECASE), "fr"),
+    (
+        re.compile(
+            r"(Madrid|Canary|Buenos_Aires|Santiago|Lima|Bogota|Mexico_City)",
+            re.IGNORECASE,
         ),
         "es",
     ),
-    (re.compile(r"(Sao_Paulo|Fortaleza|Recife|Bahia|Manaus)", re.I), "pt-BR"),
-    (re.compile(r"(Lisbon|Azores|Madeira)", re.I), "pt-PT"),
-    (re.compile(r"(Rome)", re.I), "it"),
-    (re.compile(r"(Amsterdam)", re.I), "nl"),
-    (re.compile(r"(Warsaw)", re.I), "pl"),
-    (re.compile(r"(Moscow|Kaliningrad|Samara)", re.I), "ru"),
-    (re.compile(r"(Kyiv|Kiev)", re.I), "uk"),
-    (re.compile(r"(Istanbul)", re.I), "tr"),
-    (re.compile(r"(Stockholm)", re.I), "sv"),
-    (re.compile(r"(Oslo)", re.I), "nb"),
-    (re.compile(r"(Copenhagen)", re.I), "da"),
-    (re.compile(r"(Helsinki)", re.I), "fi"),
-    (re.compile(r"(Athens)", re.I), "el"),
+    (re.compile(r"(Sao_Paulo|Fortaleza|Recife|Bahia|Manaus)", re.IGNORECASE), "pt-BR"),
+    (re.compile(r"(Lisbon|Azores|Madeira)", re.IGNORECASE), "pt-PT"),
+    (re.compile(r"(Rome)", re.IGNORECASE), "it"),
+    (re.compile(r"(Amsterdam)", re.IGNORECASE), "nl"),
+    (re.compile(r"(Warsaw)", re.IGNORECASE), "pl"),
+    (re.compile(r"(Moscow|Kaliningrad|Samara)", re.IGNORECASE), "ru"),
+    (re.compile(r"(Kyiv|Kiev)", re.IGNORECASE), "uk"),
+    (re.compile(r"(Istanbul)", re.IGNORECASE), "tr"),
+    (re.compile(r"(Stockholm)", re.IGNORECASE), "sv"),
+    (re.compile(r"(Oslo)", re.IGNORECASE), "nb"),
+    (re.compile(r"(Copenhagen)", re.IGNORECASE), "da"),
+    (re.compile(r"(Helsinki)", re.IGNORECASE), "fi"),
+    (re.compile(r"(Athens)", re.IGNORECASE), "el"),
     (
         re.compile(
             r"(London|Dublin|New_York|Chicago|Los_Angeles|Toronto|Sydney|Singapore|Manila)",
-            re.I,
+            re.IGNORECASE,
         ),
         "en",
     ),
@@ -331,12 +340,12 @@ def system_timezone_name() -> str | None:
         key = datetime.now().astimezone().tzinfo.key  # type: ignore[union-attr]
         if isinstance(key, str) and key:
             return key
-    except Exception:
+    except AttributeError:
         pass
 
     try:
         return datetime.now().astimezone().tzname()
-    except Exception:
+    except (AttributeError, OSError):
         return None
 
 

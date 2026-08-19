@@ -23,13 +23,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from datetime import date
+from datetime import datetime, timezone
 from pathlib import Path
 
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?$")
 SKILL_VERSION_RE = re.compile(
     r'(^metadata:\s*\n(?:^[ \t]+.*\n)*?[ \t]+version:\s*)(["\']?)([^"\'\n]+)(["\']?)',
-    re.M,
+    re.MULTILINE,
 )
 
 
@@ -203,13 +203,13 @@ def prepend_changelog(
         )
         return
     text = path.read_text(encoding="utf-8")
-    match = re.search(r"^## \[", text, re.M)
+    match = re.search(r"^## \[", text, re.MULTILINE)
     if match:
         text = text[: match.start()] + entry + text[match.start() :]
     else:
         text = text.rstrip() + "\n\n" + entry
     if text.count(f"## [{version}]") > 1:
-        parts = re.split(rf"(?=^## \[{re.escape(version)}\])", text, flags=re.M)
+        parts = re.split(rf"(?=^## \[{re.escape(version)}\])", text, flags=re.MULTILINE)
         kept = [parts[0]]
         version_blocks = [b for b in parts[1:] if b.startswith(f"## [{version}]")]
         other = [b for b in parts[1:] if not b.startswith(f"## [{version}]")]
@@ -279,7 +279,9 @@ def main() -> None:
     args = parser.parse_args()
     p = paths(args.root)
     when = (
-        args.date if hasattr(args, "date") and args.date else date.today().isoformat()
+        args.date
+        if hasattr(args, "date") and args.date
+        else datetime.now(timezone.utc).date().isoformat()
     )
 
     if args.cmd == "show":
