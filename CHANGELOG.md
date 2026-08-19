@@ -1,3 +1,24 @@
+## [1.3.0] — 2026-08-19
+
+### Added
+
+- **Phase-Guard**: cross-stage jump protection system. Before executing any stage, the agent reads `.omr/tree-state.json` and checks if prerequisite artifacts exist on disk. If missing, shows `[PHASE-GUARD]` notice and offers to run the prerequisite stage. Prevents silent stage-skipping (e.g. user says "write report" → SYNTH detected → but no `judgment-*.md` exists).
+- **Gate Chain Enforcement**: gates form a mandatory chain (Gate M → THINK → Gate T → Gate A → Gate P → SYNTH → Lenses → Gate D). Each gate must be recorded as JSON before the next stage starts. Gate A now checks for THINK pass in Evidence-Deep pattern. Gate P checks for Gate A pass. SYNTH checks for Gate P.
+- **THINK mandatory in Evidence-Deep**: THINK is no longer optional after ANALYZE judgment in Evidence-Deep pattern. The agent must present a method selection menu with 5 best-fit methods. Gate A fails if no THINK pass is recorded in the judgment's THINK ledger.
+- **Mandatory artifact separation**: ANALYZE must produce three separate files (`brief-*.md`, `evidence-*.md`, `judgment-*.md`), not a single combined file. Gate A checks for artifact separation.
+- **Tree-state pre-flight check**: before every op, the agent reads `.omr/tree-state.json` and verifies the target stage is permitted. Stale tree-state is auto-corrected by checking artifact existence on disk.
+- **SYNTH incremental writing enforcement**: SYNTH must not generate the entire report body in a single model turn. Pre-flight check verifies Gate A + Gate P JSON files exist before starting.
+
+### Changed
+
+- ANALYZE now has a Pre-flight Phase-Guard Check section and Mandatory Output Artifacts section.
+- THINK now has Pattern-driven enforcement section with per-pattern THINK requirements and method selection menu format.
+- GATES.md now has Gate Chain Enforcement section and Gate A checks for artifact separation + THINK pass.
+- GRAPH.md now has Cross-Stage Jump Protection section with prerequisite matrix.
+- LLM-STATE.md now has Tree-state pre-flight check section with common failure modes table.
+- REFERENCE.md auto-detection decision tree now includes PHASE-GUARD checks for SYNTH routing.
+- SKILL.md Best Practices updated with Phase-Guard rule and tree-state update rule.
+
 # Changelog
 
 All notable changes to the **oh-my-research** skill package are documented here.

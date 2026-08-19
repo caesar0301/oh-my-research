@@ -31,6 +31,40 @@ Update after each op using unlock rules in `GRAPH.md`. Example shape:
 
 Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if unused.
 
+### Tree-state pre-flight check (v1.3+)
+
+**Before executing any op, the agent must read `.omr/tree-state.json` and verify the target stage is permitted.** This is a mandatory pre-flight check, not optional.
+
+**Check procedure:**
+
+1. Read `.omr/tree-state.json` (create defaults if file missing)
+2. Check if the target stage is in `unlocked`, `ready`, or `completed`
+3. If `locked`, check if required prerequisite artifacts exist on disk (see `GRAPH.md` § Cross-Stage Jump Protection)
+4. If prerequisites are met, update tree-state to unlock the stage, then proceed
+5. If prerequisites are missing, show `[PHASE-GUARD]` notice and offer to run the prerequisite stage
+
+**Common failure modes this prevents:**
+
+| Failure | Example | Prevention |
+|---|---|---|
+| Stage skip | User says "write report" → agent jumps to SYNTH without ANALYZE | SYNTH pre-flight checks for `judgment-*.md` + `gate-a.json` |
+| Stale state | tree-state says `completed: ["init", "collect"]` but ANALYZE was run | Agent checks artifact existence, not just tree-state |
+| Silent THINK skip | Evidence-Deep pattern, but THINK never offered after judgment | Gate A checks for THINK ledger entry |
+
+**After every op, update tree-state:**
+
+```json
+{
+  "unlocked": ["init", "collect", "idea", "think"],
+  "ready": ["synth"],
+  "locked": ["decide", "reconcile"],
+  "completed": ["init", "collect", "analyze"],
+  "notes": "Gate A passed. THINK: 1 pass (first-principles, hardened). synth ready for Gate P."
+}
+```
+
+**Never leave tree-state stale** — if the agent runs an op but forgets to update tree-state, the next op's pre-flight check will detect the inconsistency (artifacts exist but tree-state doesn't reflect them) and auto-correct.
+
 ### `.omr/loop-state.json`
 
 Only when Loop is active. Agent sets fields from Gate L discussion:

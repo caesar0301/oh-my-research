@@ -60,6 +60,37 @@ ready decide: when judgment exists (optional path)
 ready reconcile: when any plans or synth exist
 ```
 
+## Cross-Stage Jump Protection (v1.3+)
+
+The graph edges are **recommended** paths, but the agent must enforce **prerequisite artifact checks** before allowing a stage to execute. This prevents the common failure mode where a user says "write the report" and the agent jumps from COLLECT to SYNTH, skipping ANALYZE + THINK + Gate A.
+
+**Prerequisite matrix:**
+
+| Target stage | Required artifacts on disk | Required gate JSON | If missing |
+|---|---|---|---|
+| ANALYZE | `materials/` ≥1 source + `docs/index/` entry | `gate-m.json` (run during ANALYZE) | Route to COLLECT |
+| THINK | `docs/plans/judgment-*.md` | (none) | Route to ANALYZE |
+| SYNTH | `docs/plans/judgment-*.md` | `gate-a.json` (pass) + `gate-p.json` | Route to ANALYZE → THINK → Gate A → Gate P |
+| DECIDE | `docs/plans/judgment-*.md` | (none) | Route to ANALYZE |
+| RECONCILE | `docs/{survey,report,manuscript,brief}/` content | (none) | Nothing to reconcile |
+
+**Enforcement protocol:**
+
+1. Before executing a stage, read `.omr/tree-state.json` and check if the stage is in `unlocked`, `ready`, or `completed`.
+2. If the stage is `locked`, check if the required artifacts exist on disk.
+3. If artifacts exist but tree-state is stale, update tree-state and proceed.
+4. If artifacts are missing, show `[PHASE-GUARD]` notice and offer to run the prerequisite stage.
+5. If user explicitly overrides, proceed but record `scenario_note` in the next gate JSON.
+
+**Tree-state staleness check:**
+
+After every op, the agent **must** update `.omr/tree-state.json`:
+- Move completed stages to `completed`
+- Unlock next stages per the unlock rules
+- Update `notes` field with a brief summary
+
+A stale tree-state (not updated after the last op) is a signal that the workflow may have been interrupted or the agent forgot to update state. The agent should check and update it at the start of any new op.
+
 ## Cycles
 
 Only **Loop** pattern declares `graph.cycles[]`:

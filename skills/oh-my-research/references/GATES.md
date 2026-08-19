@@ -19,6 +19,31 @@ Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists b
 
 **Removed:** Gate C and experiment-design checks. **No quality-gate Python runner** — judgment is agent-side.
 
+## Gate Chain Enforcement (v1.3+)
+
+Gates form a **chain** — each gate depends on the previous one. The agent must not skip gates in the chain, even when the user gives a task-oriented instruction that seems to bypass the workflow.
+
+**Evidence-Deep gate chain (mandatory order):**
+
+```
+Gate M → [ANALYZE] → THINK pass → Gate T → Gate A/QA1 → Gate P → [SYNTH] → Lenses → Gate D/QA2
+```
+
+**Rules:**
+
+1. **Each gate must be recorded as JSON** under `.omr/quality-gates/` before the next stage starts. A missing gate JSON file means the gate was not run.
+2. **Gate A checks for THINK**: if pattern is Evidence-Deep, Gate A verifies that at least one THINK pass is recorded in the judgment's THINK ledger. If not, Gate A fails.
+3. **Gate P checks for Gate A**: Gate P verifies that `gate-a.json` exists and has `status: "pass"`. If not, Gate P refuses to proceed.
+4. **SYNTH checks for Gate P**: SYNTH verifies that `gate-p.json` exists before starting the outline. If not, SYNTH runs Gate P first.
+5. **Gate D checks for Gate P + Lenses**: Gate D verifies that `gate-p.json` exists and lenses were run. If not, Gate D fails.
+
+**Cross-stage jump detection:**
+
+If the agent detects that the user wants to jump from COLLECT directly to SYNTH (e.g. "write the report"), it must:
+1. Show a `[PHASE-GUARD]` notice: "ANALYZE + THINK + Gate A have not been run. Proceeding to SYNTH without these stages may produce a report with insufficient evidence depth."
+2. Offer to run the prerequisite stages automatically
+3. If user insists, proceed but record `scenario_note: "cross-stage jump: collect → synth (prerequisites skipped by user override)"` in `gate-p.json`
+
 ## Enforcement Modes
 
 | Mode | Behavior |
@@ -84,7 +109,7 @@ Gate L asks “keep digging?”; Gate A asks “good enough to write the report?
 
 ## Gate A — Within ANALYZE
 
-Position: after judgment (+ optional THINK), before unlocking SYNTH.
+Position: after judgment (+ mandatory THINK in Evidence-Deep), before unlocking SYNTH.
 
 **Checks (interpret for this question — not universal quotas):**
 - [ ] Evidence coverage adequate **for the stated scope**
@@ -92,10 +117,13 @@ Position: after judgment (+ optional THINK), before unlocking SYNTH.
 - [ ] Scope defined
 - [ ] Judgment confidence reasonable and explained
 - [ ] Open gaps listed (not hidden)
+- [ ] **Three separate artifacts exist**: `brief-*.md`, `evidence-*.md`, `judgment-*.md` (not a single combined file)
+- [ ] **THINK pass recorded** (Evidence-Deep only): at least one THINK pass in judgment's THINK ledger. If pattern is Evidence-Deep and no THINK pass exists, Gate A **fails** with `checks: [{id: "think_pass", status: "fail"}]`.
+- [ ] **Gate M was recorded**: `gate-m.json` exists under `.omr/quality-gates/`. If not, record it retroactively.
 
 **Failure:** collect more or `think`; do not unlock SYNTH.
 
-On pass: set `synth` ready in `.omr/tree-state.json`.
+On pass: set `synth` ready in `.omr/tree-state.json`, move `analyze` to `completed`.
 
 ---
 
@@ -143,6 +171,8 @@ This is the explicit "THINK revealed we need more materials — collect?" decisi
 ## Gate P — Synthesis Preferences (before SYNTH)
 
 Position: after Gate A unlocks SYNTH; before SYNTH Phase A (outline).
+
+**Pre-check (v1.3+):** Verify that `gate-a.json` exists under `.omr/quality-gates/` and has `status: "pass"`. If Gate A was not run, **do not proceed to Gate P** — route back to ANALYZE + THINK + Gate A first. Show `[PHASE-GUARD]` notice if missing.
 
 **Checks (confirm or adjust — record once per report, then keep stable):**
 - [ ] Mode: `survey` / `report` / `manuscript` / `brief` (pattern default or user choice)

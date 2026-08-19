@@ -45,6 +45,8 @@ COLLECT signals? (URL, DOI, arxiv, github.com, huggingface, "search …", collec
   → COLLECT (init-on-demand if no AGENTS.md / .omr/)
 
 SYNTH keywords? (report, survey, write up, synthesize, manuscript, brief)
+  → **PHASE-GUARD**: check for judgment-*.md + gate-a.json before routing to SYNTH
+  → If prerequisites missing: show [PHASE-GUARD], offer to run ANALYZE first
   → SYNTH mode
 
 Else inspect workspace:
@@ -56,6 +58,8 @@ Materials or papers-index, no judgment-* ?
   → ANALYZE (default) — unless user clearly still adding sources → COLLECT
 
 Judgment present, no docs/{survey,report,manuscript,brief}/ content ?
+  → **PHASE-GUARD**: check for gate-a.json + gate-p.json
+  → If missing: run Gate A (check THINK ledger) → Gate P first
   → SYNTH
 
 loop-state active ?

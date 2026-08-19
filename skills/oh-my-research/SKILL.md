@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -54,6 +54,26 @@ Before inspecting workspace state, scan the request:
 **Override** with canonical operations at any time.
 
 Always show a phase label: `[INIT]`, `[COLLECT]`, `[ANALYZE]`, `[THINK]`, `[SYNTH]`, `[RECONCILE]`, `[FINISHED]` (plus `[DECIDE]` / `[IDEA]` when used).
+
+### Phase-Guard: Cross-Stage Jump Protection (v1.3+)
+
+When auto-detection routes to a stage, **first** read `.omr/tree-state.json` and check whether the target stage is in `unlocked`, `ready`, or `completed`. If the stage is `locked`, the agent must check whether required **prerequisite artifacts** exist on disk before proceeding. This prevents silent stage-skipping (e.g. user says "write report" → SYNTH keyword detected → but no `judgment-*.md` exists).
+
+**Prerequisite artifact checks (Evidence-Deep pattern):**
+
+| Target stage | Required prerequisite artifacts | If missing |
+|---|---|---|
+| ANALYZE | `materials/` with ≥1 source + `docs/index/` entry | Route to COLLECT first |
+| THINK | `docs/plans/judgment-*.md` or `docs/plans/evidence-*.md` | Route to ANALYZE first |
+| SYNTH | `docs/plans/judgment-*.md` + `.omr/quality-gates/gate-a.json` (Gate A pass) | Route to ANALYZE → THINK → Gate A first |
+| DECIDE | `docs/plans/judgment-*.md` | Route to ANALYZE first |
+
+When a prerequisite is missing, **do not silently proceed**. Instead:
+1. Show a `[PHASE-GUARD]` notice explaining what is missing
+2. Offer to run the prerequisite stage automatically
+3. If user explicitly insists (e.g. "I know, just write the report"), proceed but record `scenario_note: "prerequisite skipped by user override"` in the next gate JSON
+
+This guard is **advisory, not blocking** — the user can always override. But it ensures the agent **never silently skips** a stage without acknowledging the gap.
 
 ## Core Pipeline (Evidence-Deep)
 
@@ -150,16 +170,18 @@ Templates: `assets/`. Patterns: `patterns/`. Detailed ops: `references/REFERENCE
 ## Best Practices
 
 1. Trust auto-detection; override with canonical ops when needed
-2. Never create empty directories — mkdir only as the parent of a real file write
-3. Never upgrade `suggests` → `proven` without stronger source language
-4. Use THINK (first principles / triangulation) before Gate A when confidence is low
-5. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
-6. Prefer a professionally formatted DOCX or PDF in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
-7. Keep internal traceability private; translate it into standard citations and natural prose
-8. Make the final report self-contained, professional, and accessible to its intended reader
-9. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
-10. Write full reports to disk; reply in chat with summary only
-11. Run document lenses and visually inspect the rendered file before Gate D
+2. **Phase-Guard before every stage**: read `.omr/tree-state.json`, check prerequisites, show `[PHASE-GUARD]` if missing — never silently skip a stage
+3. Never create empty directories — mkdir only as the parent of a real file write
+4. Never upgrade `suggests` → `proven` without stronger source language
+5. Use THINK (first principles / triangulation) before Gate A when confidence is low — **in Evidence-Deep pattern, THINK is offered by default after judgment, not only when confidence is low**
+6. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
+7. Prefer a professionally formatted DOCX or PDF in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
+8. Keep internal traceability private; translate it into standard citations and natural prose
+9. Make the final report self-contained, professional, and accessible to its intended reader
+10. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
+11. Write full reports to disk; reply in chat with summary only
+12. Run document lenses and visually inspect the rendered file before Gate D
+13. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
 
 ## Dependencies
 

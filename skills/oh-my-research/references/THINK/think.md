@@ -39,6 +39,39 @@ Intent keywords: `first principles`, `socratic`, `pre-mortem`, `red team`, `stee
 - After ANALYZE judgment draft if confidence low or gaps high → offer First Principles **or** Source Triangulation
 - After SYNTH chapter draft before document lenses → offer Critique and Refine (optional; lenses still run)
 
+## Pattern-driven enforcement (v1.3+)
+
+**In Evidence-Deep pattern, THINK is mandatory after ANALYZE judgment — not optional.** The agent must present a method selection menu before Gate A can be evaluated. This is the most common failure mode: ANALYZE produces a judgment and immediately proceeds to SYNTH without any depth elicitation.
+
+**Enforcement rules:**
+
+| Pattern | THINK requirement | Gate A behavior if THINK skipped |
+|---|---|---|
+| Evidence-Deep | **Mandatory** — at least 1 pass before Gate A | Gate A fails with `checks: [{id: "think_pass", status: "fail", details: "No THINK pass recorded in judgment"}]` |
+| Evidence-First | Recommended — offer if confidence < high | Gate A warns but can pass |
+| Loop | Mandatory per iteration | Gate L checks THINK ledger |
+| Rapid | Optional | Gate A passes without THINK |
+| Idea-First | Optional | Gate A passes without THINK |
+| Stance-First | Mandatory before DECIDE | Gate B checks THINK ledger |
+
+**Method selection menu format (must be shown to user):**
+
+```
+[THINK] Method selection (Evidence-Deep — mandatory)
+
+Select a thinking method to deepen the judgment:
+
+  1. First Principles Analysis  — strip assumptions, rebuild from fundamental truths
+  2. Source Triangulation       — require ≥3 independent source types before accepting
+  3. Steelmanning               — strongest opposing reading before rebuttal
+  4. Pre-mortem Analysis        — imagine peer-review failure, work backward
+  5. Thesis Defense Simulation  — committee stress-tests conclusions
+
+Enter 1-5, or type a method name. (quick-pass: agent selects best-fit)
+```
+
+The agent must **show this menu** — not silently skip to Gate A. If the user types "skip" or "proceed", record `scenario_note: "THINK skipped by user override"` in the gate JSON, but the menu must have been presented.
+
 ## Hard rules
 
 - **Never default-agree**: a pass must surface ≥1 concrete challenge/revelation. An empty revelation list is a *failed* pass, not a clean one — re-run with a different method or state plainly why none applies.

@@ -23,7 +23,31 @@ synth --chapter <id>
 
 Keywords: report, survey, write up, synthesize, manuscript, brief.
 
-**Requires:** `docs/plans/judgment-*.md`. Decision optional.
+**Requires:** `docs/plans/judgment-*.md` **+ `.omr/quality-gates/gate-a.json` (Gate A pass) + `.omr/quality-gates/gate-p.json` (Gate P pass)**. Decision optional.
+
+### Pre-flight: Phase-Guard Check (v1.3+)
+
+Before starting SYNTH, the agent **must** verify:
+
+1. **`docs/plans/judgment-*.md` exists** — if not, route to ANALYZE first. Show `[PHASE-GUARD]` notice.
+2. **`.omr/quality-gates/gate-a.json` exists with `status: "pass"`** — if not, route to ANALYZE → THINK → Gate A first.
+3. **`.omr/quality-gates/gate-p.json` exists** — if not, run Gate P first (confirm language/format/mode/audience).
+4. **`.omr/tree-state.json` has `synth` in `ready` or `unlocked`** — if `locked`, show `[PHASE-GUARD]` and offer to run prerequisites.
+
+If any prerequisite is missing, **do not silently proceed**. Show the `[PHASE-GUARD]` notice and offer to run the prerequisite stages. If user explicitly insists ("I know, just write the report"), proceed but record `scenario_note: "SYNTH prerequisite skipped by user override"` in the next gate JSON.
+
+### Incremental Writing Enforcement (v1.3+)
+
+**SYNTH must not generate the entire report body in a single model turn.** This is a hard constraint. The agent must:
+
+1. Write `_outline.md` first (one turn)
+2. Write `.omr/report-state.json` (same turn as outline)
+3. Write **one chapter per turn** under `docs/<mode>/chapters/`
+4. Update `report-state.json` after each chapter (mark as `done`)
+5. Write executive summary / abstract **last**
+6. Run lenses, then Gate D
+
+If the agent detects that it is about to write more than ~2,500 words of report body in a single response, it must **stop and split** the content into chapters. A single-turn full report is a **process violation** — the report may still be usable, but the agent should note the violation and offer to restructure.
 
 ## Mode defaults
 
