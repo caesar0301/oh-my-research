@@ -1876,15 +1876,20 @@ def export_pdf(
             canvas.drawString(x, y, span)
             x += canvas.stringWidth(span, face, size)
 
+    cover_enabled = bool((spec.get("cover") or {}).get("enabled", True))
+
     def decorate(canvas: object, doc: object) -> None:
         canvas.saveState()
         canvas.setFillColor(colors.HexColor("#666666"))
-        if header_spec.get("enabled", True) and header_text:
+        # Skip header/footer chrome on the cover page (page 1) when a cover
+        # is enabled — the cover is a clean title page, not a content page.
+        is_cover = cover_enabled and doc.page == 1
+        if not is_cover and header_spec.get("enabled", True) and header_text:
             draw_mixed(
                 canvas, margin, page_size[1] - margin + 6 * mm, str(header_text)[:90], 8
             )
         y = margin - 8 * mm
-        if footer_spec.get("enabled", True):
+        if footer_spec.get("enabled", True) and not is_cover:
             if credit:
                 draw_mixed(canvas, margin, y, credit[:80], 7)
             if footer_spec.get("page_numbers", True):

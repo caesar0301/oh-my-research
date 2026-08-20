@@ -13,6 +13,12 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.4.6] — 2026-08-20
+
+### Fixed
+
+- **PDF cover page no longer shows header/footer chrome**: the `decorate` callback drew the running header, footer attribution, and page number on every page — including the cover (page 1). Now the cover page is skipped when `cover.enabled` is true, so the cover stays clean (title, subtitle, author, date only). DOCX already had separate cover/footer sections and was unaffected.
+
 ## [1.4.5] — 2026-08-20
 
 ### Changed
