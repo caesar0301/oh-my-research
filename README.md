@@ -43,6 +43,22 @@ Optional paths: capture ideas, take a stance (`decide`), or **reconcile** when n
 
 Default workflow pattern: **Evidence-Deep** (best for literature surveys and structured research reports). Other patterns (rapid brief, idea-first, stance-first, loop) are available when you need them.
 
+## Recommended companion: FlowJet
+
+OMR covers the research lifecycle. Pair it with **[FlowJet](https://github.com/caesar0301/flowjet-agent)** (`git@github.com:caesar0301/flowjet-agent.git`) for the document and diagram skills that reports actually need:
+
+- **Docs writing** — structure and polish long-form Markdown
+- **draw.io** — figures and architecture diagrams
+- **anydoc** — convert PDFs and office files to Markdown (the same conversion path COLLECT uses)
+- Other **collaborative skills** shipped with FlowJet (planning, MCP, and related tooling)
+
+Install both; use OMR for collect → analyze → think → synth, and FlowJet when you need figures, conversion, or extra writing help around the same workspace.
+
+```bash
+git clone git@github.com:caesar0301/flowjet-agent.git
+pip install flowjet-agent   # or: uv tool install flowjet-agent
+```
+
 ## Quick start
 
 ### Install
