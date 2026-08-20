@@ -16,6 +16,10 @@ When a scenario differs (short brief, Chinese industry report, 20-theme survey, 
 
 ## Files the agent writes directly
 
+### `.omr/collect-batch.json`
+
+Written at the start of a parallel COLLECT wave: topic, per-bucket caps, reserved IDs, user source assignments. Workers read it; they do not rewrite it. Safe to delete after `--merge-inbox`.
+
 ### `.omr/tree-state.json`
 
 Update after each op using unlock rules in `GRAPH.md`. Example shape:

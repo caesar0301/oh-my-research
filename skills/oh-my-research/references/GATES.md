@@ -107,10 +107,12 @@ Position: after COLLECT has ≥1 usable source and `analyze` is marked ready; be
 
 **Checks (interpret for the intended scope — not a fixed quota):**
 - [ ] **Minimum count**: ≥3 materials collected (or explicit narrow-scope note accepted)
+- [ ] **Default four-bucket mix**: unless the user opted out (`papers only`, `skip github`, …), COLLECT should have attempted papers, web, github, and search. An empty default bucket **without** opt-out is a **warn** (not a silent pass).
 - [ ] **Source-type diversity**: at least 2 distinct buckets populated among:
   - `papers/` (Markdown) and `papers-raw/` (PDF/DOCX binaries — primary sources)
   - `web/` (blog posts, survey articles, documentation)
   - `github/` (source repos, code samples)
+  - `search/` (query logs — default mix)
   - `datasets/` or HuggingFace models (benchmarks, weights, datasets)
   - Platform-specific models (DashScope, OpenAI, Anthropic — if relevant to topic)
 - [ ] **Topic coverage**: collected materials touch ≥2 of the research sub-questions (from `AGENTS.md` or inferred)
@@ -126,11 +128,12 @@ Position: after COLLECT has ≥1 usable source and `analyze` is marked ready; be
 
 ```
 Source Type Inventory:
-  papers/    : N items  ✓/⚠/✗
-  web/       : N items  ✓/⚠/✗
-  github/    : N items  ✓/⚠/✗
-  datasets/  : N items  ✓/⚠/✗
-  models/    : N items  ✓/⚠/✗
+  papers/    : N items  ✓/⚠/✗   (default)
+  web/       : N items  ✓/⚠/✗   (default)
+  github/    : N items  ✓/⚠/✗   (default)
+  search/    : N items  ✓/⚠/✗   (default)
+  datasets/  : N items  ✓/⚠/✗   (opt-in)
+  models/    : N items  ✓/⚠/✗   (opt-in)
 Sub-question coverage: Q1 ✓  Q2 ⚠  Q3 ✗  Q4 ✓
 Suggested missing types: [list relevant to topic]
 ```

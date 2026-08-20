@@ -5,23 +5,21 @@
     "url": "https://xiaming.site/"
   },
   "metadata": {
-    "version": "1.4.2",
+    "version": "1.4.3",
     "description": "Unified orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, runs collect → deep analyze (+ THINK paradigms) → survey/report synthesis with confirmation gates and graph-guided patterns."
   },
   "plugins": [
     {
       "name": "oh-my-research",
       "description": "Unified research orchestrator. Collect materials, deep-analyze with evidence boundaries and thinking paradigms, synthesize publication-quality survey/report as Word or PDF in English or Chinese. Single entry point for the report-first research lifecycle.",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "author": {
         "name": "Xiaming Chen",
         "url": "https://xiaming.site/"
       },
       "source": "./",
       "strict": false,
-      "skills": [
-        "./skills/oh-my-research"
-      ],
+      "skills": ["./skills/oh-my-research"],
       "category": "workflow",
       "tags": [
         "research",

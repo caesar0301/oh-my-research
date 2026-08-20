@@ -1,6 +1,6 @@
 # COLLECT Mode
 
-Passive reception of research materials. User provides sources or search queries; skill delivers files + indexes. After recording a source, **download + convert it to full-text Markdown** so ANALYZE can read the entire paper — not just the abstract.
+User URLs plus **default four-bucket discovery**. After each source is recorded, **download + convert it to full-text Markdown** so ANALYZE can read the entire paper — not just the abstract.
 
 ## Trigger
 
@@ -8,9 +8,52 @@ Passive reception of research materials. User provides sources or search queries
 collect <url|doi|arxiv|github|hf|path|"search query">
 ```
 
-Also: paste of URLs; "search for …"; auto-route from intent detection.
+Also: paste of URLs; "search for …"; auto-route from intent detection; a topic with no URLs.
 
 **Init-on-demand:** if no `AGENTS.md` / `.omr/`, run INIT first with inferred topic, then collect.
+
+## Default mix (always four buckets)
+
+By default COLLECT **always** fills **papers, web, github, and search** — even if the user only pasted arXiv/DOI/PDF links. Assign user URLs to their bucket; **seed the other default buckets** from the research topic (`AGENTS.md` question, or inferred from pasted sources).
+
+**Always spawn unless opted out:** papers, web, github, search.
+
+**Opt-in only:** datasets / HuggingFace / models — when the topic clearly needs them or the user asked.
+
+**Opt-out** (explicit): `papers only`, `skip github`, `no web`, `don't search`, etc. Then run only the remaining default buckets.
+
+A single pasted URL is **not** a reason to skip the other three default buckets.
+
+Modest per-bucket targets (adapt to scope; do not harvest unbounded):
+
+| Bucket | Default target |
+|--------|----------------|
+| papers | User paper URLs **plus** arXiv/OpenAlex (or similar) until about **5** papers, or a deliberately narrow corpus |
+| web | User pages **plus** about **3–5** topic-relevant articles/docs |
+| github | User repos **plus** about **2–3** relevant repos |
+| search | Record queries used (`S-xxx.query.txt`); leftover URLs go to wave 2 |
+
+Workers **discover in parallel** and do not wait for each other. Search leftovers that are papers/repos/pages may be collected in a **short wave 2** after merge — do not steal IDs mid-wave.
+
+## Parallel collection (one agent per bucket)
+
+Workers must **not** write `docs/index/papers-index.json` concurrently. Coordinator protocol:
+
+1. Infer topic; dedupe user sources; classify; seed empty default buckets with discovery tasks + caps.
+2. Read `docs/index/papers-index.json` and **pre-assign** IDs for known items **and** reserved slots per bucket. Do **not** write the index yet. Unused reserved IDs are dropped at merge.
+3. Write `.omr/collect-batch.json` (topic, caps, assignments).
+4. Launch **four subagents in one parallel tool turn** (plus datasets only if opted in). Each follows `references/COLLECT/agents/bucket-worker.md`.
+5. Merge: `python3 scripts/collect_cli.py --merge-inbox --workspace .`
+6. Optional wave 2 for leftover URLs (new reserved IDs, same inbox/merge).
+7. Post-collect validation + **Gate M**.
+
+Each worker records with:
+
+```bash
+python3 scripts/collect_cli.py "<source>" --workspace . --id P-001 --bucket papers --inbox
+```
+
+**Fallback:** if the runtime cannot spawn subagents, still cover all four default buckets, sequentially. Never leave a half-merged index.
 
 ## Full-Text Conversion (Non-negotiable)
 
@@ -69,7 +112,7 @@ This scans the directory for convertible files (`.pdf`, `.docx`, `.html`, etc.) 
 
 Prefer arxiv SDK / direct PDF when available. Optional Chrome MCP for screenshots of web pages.
 
-Scripts: `scripts/collect_cli.py` (records source + invokes converter) and `scripts/material_to_markdown.py` (download + convert). Routing, naming, depth, and search prioritization are **LLM-driven** per this doc — adapt handlers and destinations to the source type.
+Scripts: `scripts/collect_cli.py` (records source + invokes converter; `--inbox` / `--merge-inbox` for parallel workers) and `scripts/material_to_markdown.py` (download + convert). Routing, naming, depth, and search prioritization are **LLM-driven** per this doc — adapt handlers and destinations to the source type. Parallel workers: `references/COLLECT/agents/bucket-worker.md`.
 
 ## Indexes
 
@@ -101,6 +144,7 @@ If conversion failed, `markdown_status: "failed"` and `markdown_failure_reason` 
 ## Philosophy
 
 - Deliver materials **with full-text Markdown** — do not over-extract, but do not under-extract either
+- By default collect **papers + web + github + search** in parallel (topic discovery), even when the user only pasted one type — unless they explicitly opt out
 - Graceful fallback: record failure, continue other inputs
 - After successful collect with ≥1 material → run **Gate M** (Materials Sufficiency & Source Diversity) before marking `analyze` ready
 - Gate M checks: minimum count, source-type diversity (papers/web/github/datasets/models), topic coverage, recency, obvious gaps, full-text availability
@@ -113,7 +157,7 @@ If conversion failed, `markdown_status: "failed"` and `markdown_failure_reason` 
 After saving materials and updating indexes, run Gate M (see `GATES.md` for full checklist). The gate checks:
 
 1. **Minimum count**: ≥3 materials (or narrow-scope note)
-2. **Source-type diversity**: ≥2 distinct buckets (papers, web, github, datasets, models)
+2. **Source-type diversity**: default buckets papers, web, github, search should be populated unless the user opted out; also datasets/models when the topic needs them
 3. **Topic coverage**: materials touch ≥2 research sub-questions
 4. **Recency**: ≥1 source from last 2 years
 5. **Obvious gaps**: no entire sub-question area empty
@@ -126,6 +170,7 @@ Source Type Inventory:
   papers/    : N items  ✓/⚠/✗
   web/       : N items  ✓/⚠/✗
   github/    : N items  ✓/⚠/✗
+  search/    : N items  ✓/⚠/✗
   datasets/  : N items  ✓/⚠/✗
   models/    : N items  ✓/⚠/✗
 Sub-question coverage: Q1 ✓  Q2 ⚠  Q3 ✗  Q4 ✓

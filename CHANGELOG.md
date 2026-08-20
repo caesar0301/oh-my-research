@@ -13,6 +13,14 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.4.3] — 2026-08-20
+
+### Added
+
+- **Parallel COLLECT by bucket agents:** default mix is always **papers, web, github, and search** (even if the user only pasted arXiv links). Coordinator pre-assigns IDs, launches one worker per bucket, workers write `docs/index/inbox/<ID>.json`, then `--merge-inbox` updates `papers-index.json`. Opt-out: `papers only`, `skip github`, `no web`, `don't search`. Datasets/HF remain opt-in. Playbook: `references/COLLECT/agents/bucket-worker.md`.
+  - `collect_cli.py`: `--id`, `--bucket`, `--inbox`, `--merge-inbox`
+  - Gate M warns if a default bucket is empty without opt-out
+
 ## [1.4.2] — 2026-08-20
 
 ### Changed

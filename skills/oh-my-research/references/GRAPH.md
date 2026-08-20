@@ -30,7 +30,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 ```
 
 - Entry: `collect`
-- After collect: Gate M (source diversity & enough materials to analyze?) — shows diversity report, asks user: collect more types or proceed?
+- After collect: Gate M (source diversity & enough materials to analyze?) — default mix is papers+web+github+search via parallel bucket agents; shows diversity report; warn if a default bucket is empty without opt-out
 - After analyze judgment: offer THINK if confidence low / gaps high
 - After THINK: Gate T (collect more from surfaced gaps?)
 - Gate A / QA1 unlock `synth`
@@ -42,7 +42,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 | Node | Requires | Produces |
 |------|----------|----------|
 | `init` | — | `AGENTS.md`, `.omr/tree-state.json` |
-| `collect` | workspace | `materials/**`, `docs/index/*`, Gate M result (with diversity report) |
+| `collect` | workspace | `materials/**`, `docs/index/*` (inbox merge), `.omr/collect-batch.json`, Gate M result (with diversity report) |
 | `idea` | workspace | `docs/ideas/*` |
 | `analyze` | materials + index | brief, evidence-map, judgment, optional plan |
 | `think` | target artifact | refined target (in place after confirm) |

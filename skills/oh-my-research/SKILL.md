@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.4.2"
+  version: "1.4.3"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -97,7 +97,7 @@ Before routing to a stage, **read `.omr/tree-state.json`** and check whether the
 | Mode | Op | One-line | Detail |
 |------|----|----------|--------|
 | INIT | `init "<topic>"` | Bootstrap workspace (only `AGENTS.md` + `.omr/*.json`; no empty folders) | `references/INIT/init.md` |
-| COLLECT | `collect <url\|query\|…>` | Sources → materials + indexes + **full-text Markdown** (via anydoc) | `references/COLLECT/collect.md` |
+| COLLECT | `collect <url\|query\|…>` | Default **papers+web+github+search** (parallel bucket agents) → materials + indexes + full-text Markdown | `references/COLLECT/collect.md` |
 | ANALYZE | `analyze` | Brief, evidence-map, judgment; reads full-text Markdown; Gate M before, Gate A / QA1 after, Gate T after THINK | `references/ANALYZE/analyze.md` |
 | THINK | `think [method]` | Methodology-driven elicitation on research artifacts (never code); stamps `hardened`/`refined`/`unchanged`/`killed` | `references/THINK/think.md`, `references/THINK/methods/` |
 | SYNTH | `synth [--mode] [--format docx\|pdf] [--language] [--resume] [--chapter] [--no-wiki]` | Incremental long reports in preferred language; Gate P confirms prefs; never one-shot a deep report | `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md` |
@@ -133,7 +133,7 @@ Paths below are **logical destinations**. Create a folder only when writing the 
 |----------|------|
 | State | `.omr/` (tree-state, pattern, locale; other JSON as needed) |
 | Materials | `materials/{papers-raw,papers,web,github,datasets,search,failed}/` — papers: raw binaries in `papers-raw/`, Markdown in `papers/` (same stem); other buckets only when they receive files |
-| Indexes | `docs/index/` |
+| Indexes | `docs/index/` (`papers-index.json`; workers use `docs/index/inbox/` then merge) |
 | Plans | `docs/plans/` |
 | Ideas | `docs/ideas/` |
 | Reports | `docs/{survey,report,manuscript,brief}/` |
@@ -149,7 +149,7 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 3. Never create empty directories — mkdir only as the parent of a real file write
 4. Never upgrade `suggests` → `proven` without stronger source language
 5. Use THINK (first principles / triangulation) before Gate A when confidence is low — in Evidence-Deep, THINK is offered by default after judgment, not only when confidence is low
-6. **Run Gate M after every collect batch** — show the source-type diversity report (papers, web, github, datasets, models), let the user decide whether to collect more source types before proceeding to analyze. Prevents premature analysis on narrow or single-type corpora
+6. **Run Gate M after every collect batch** — default collect fills papers, web, github, and search (parallel bucket agents). Show the diversity report; warn if a default bucket is empty **without** an explicit opt-out. Prevents premature analysis on narrow or single-type corpora
 7. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
 8. Prefer a professionally formatted DOCX or PDF in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
 9. Keep internal traceability private; translate it into standard citations and natural prose
@@ -163,7 +163,7 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 
 - Read/write project workspace
 - Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py` to download + convert to full-text Markdown), `material_to_markdown.py` (downloads source via arxiv/DOI/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths)
+- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py`; `--id`/`--bucket`/`--inbox` for parallel workers, `--merge-inbox` for the coordinator), `material_to_markdown.py` (downloads source via arxiv/DOI/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths)
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export; **anydoc** (`npx -y @firecrawl/anydoc`, Node 20+) for material → Markdown conversion; optional `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` as fallbacks if anydoc is unavailable
 
 ## Deep Dive
@@ -173,4 +173,5 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 - `references/GATES.md` — gate definitions and QA checklists
 - `references/LLM-STATE.md` — agent-owned state JSON schemas
 - `references/LANGUAGE.md` — timezone/locale → preferred BCP-47 language tag
-- `references/THINK/methods/` — per-method elicitation playbooks
+- `references/COLLECT/collect.md` — default four-bucket mix + parallel workers
+- `references/COLLECT/agents/bucket-worker.md` — per-bucket collect agent
