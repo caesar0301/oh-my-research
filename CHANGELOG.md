@@ -13,6 +13,30 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.4.4] — 2026-08-20
+
+### Added
+
+- **`register_cjk_font()`**: discovers and embeds a real CJK TrueType font (SimSun/Songti on macOS, Noto Sans CJK on Linux, Microsoft YaHei on Windows) as a subsetted TTF in the PDF, so CJK text renders correctly on any viewer — even those without the Adobe CJK font pack. Previously the PDF used the non-embedded `STSong-Light` CID font, which showed blank/tofu boxes on most viewers.
+- **`_ttc_subfont_index(path, prefer_weight)`**: scans a TrueType Collection (.ttc) file and selects the correct subfont by OS/2 weight class (Regular=400, Bold=700), instead of blindly taking subfontIndex=0 which was Black/Heavy weight on macOS Songti.ttc.
+- **`discover_cjk_font_paths()`**: collects CJK TTF/OTF font candidates across macOS, Linux, and Windows with priority order: 雅黑 (YaHei) > 宋体 (SimSun/Songti) > PingFang > Noto Sans CJK.
+- **`_fix_theme_fonts()`**: patches the DOCX theme's `<a:latin>`, `<a:ea>`, `<a:cs>` typefaces for both `majorFont` and `minorFont`, so styles referencing `majorEastAsia`/`minorEastAsia` get the correct CJK face. Previously the theme East Asian font was empty (`<a:ea typeface=""/>`).
+- **`FontRouter.bold_cjk_font`**: the PDF font router now tracks `<b>` context and routes bold CJK spans to a real bold variant (`<font name="Songti-Bold">`) instead of mapping bold→normal. Bold CJK text now renders with the proper Bold weight (700) instead of the same Regular face.
+
+### Changed
+
+- **`platform_docx_fonts()`**: macOS zh-CN East Asian face changed from PingFang SC to **SimSun (宋体)** per user preference (雅黑 first on Windows, 宋体 on macOS). Linux and Windows defaults unchanged.
+- **`_CJK_FONT_NAMES` / `_CJK_FONT_HINTS`**: reordered to prioritize YaHei (msyh) > SimSun/Songti > PingFang, with SimSong.ttc (macOS SimSun equivalent) as the first hint.
+- **PDF code block rendering**: `export_pdf()` now applies `router.tag()` to code block content so non-Latin characters (CJK, box-drawing ┌─├└│, arrows →) inside code blocks switch to a covering font instead of rendering as ■■■■.
+
+### Fixed
+
+- **PDF CJK font not embedded**: the PDF used `STSong-Light` (a reportlab CID font) which is never embedded — CJK showed as blank/tofu on viewers without the Adobe Asian font pack. Now embeds a real TTF CJK font subset.
+- **PDF CJK bold rendered as Black weight**: `register_cjk_font` used `subfontIndex=0` which selected the Black (weight=900) subfont from Songti.ttc, and mapped `bold=normal` to itself, making all CJK text — including bold — render in heavy Black weight. Now selects Regular (400) for normal and Bold (700) for bold.
+- **PDF code blocks dropped non-Latin glyphs**: the `FontRouter` was not applied to code blocks, so CJK characters, box-drawing characters, and arrows inside code rendered as blank boxes (■■■■).
+- **DOCX theme East Asian font empty**: python-docx ships a default theme with `<a:ea typeface=""/>`, so the 71+ styles referencing `majorEastAsia`/`minorEastAsia` had no CJK face and fell back to the viewer's default — often the wrong face or blank boxes.
+- **SKILL.md missing `metadata.version`**: the `metadata` block in `SKILL.md` was missing the `version` field, causing `skill_version.py` to fail with "metadata.version missing in SKILL.md". Added `version` field to the metadata block.
+
 ## [1.4.3] — 2026-08-20
 
 ### Added
@@ -20,12 +44,6 @@ Workspace research tags/backups are separate — see `references/VERSION/version
 - **Parallel COLLECT by bucket agents:** default mix is always **papers, web, github, and search** (even if the user only pasted arXiv links). Coordinator pre-assigns IDs, launches one worker per bucket, workers write `docs/index/inbox/<ID>.json`, then `--merge-inbox` updates `papers-index.json`. Opt-out: `papers only`, `skip github`, `no web`, `don't search`. Datasets/HF remain opt-in. Playbook: `references/COLLECT/agents/bucket-worker.md`.
   - `collect_cli.py`: `--id`, `--bucket`, `--inbox`, `--merge-inbox`
   - Gate M warns if a default bucket is empty without opt-out
-
-## [1.4.2] — 2026-08-20
-
-### Changed
-
-- Version set to 1.4.2
 
 ## [1.5.0] — 2026-08-20
 

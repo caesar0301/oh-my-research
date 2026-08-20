@@ -312,6 +312,66 @@ _SYMBOL_FONT_HINTS = (
 )
 
 
+# CJK TrueType/OpenType font basenames for PDF embedding (broad Unicode coverage).
+# Order matters: prefer YaHei (雅黑) and SimSun (宋体) per zh-CN convention,
+# then PingFang/Songti on macOS, Noto/Source Han on Linux.
+_CJK_FONT_NAMES = (
+    # Windows-first (雅黑 / 宋体) — best for zh-CN readers
+    "msyh.ttc",
+    "msyh.ttf",
+    "MSYH.TTC",
+    "MSYH.TTF",
+    "simsun.ttc",
+    "SIMSUN.TTC",
+    "simhei.ttf",
+    "SIMHEI.TTF",
+    # macOS — SimSong (≈SimSun), Songti, PingFang, Heiti
+    "SimSong.ttc",
+    "Songti.ttc",
+    "PingFang.ttc",
+    "PingFang SC.ttf",
+    "STHeiti Medium.ttc",
+    "STHeiti Light.ttc",
+    "Hiragino Sans GB.ttc",
+    # Linux — Noto / Source Han
+    "NotoSansCJKsc-Regular.otf",
+    "NotoSansCJKsc-Regular.ttf",
+    "NotoSansSC-Regular.ttf",
+    "NotoSansSC-Regular.otf",
+    "SourceHanSansSC-Regular.otf",
+    "SourceHanSansSC-Regular.otf",
+    "wqy-zenhei.ttc",
+    "wqy-microhei.ttc",
+)
+
+# Optional exact CJK font paths checked first (fast path when present).
+_CJK_FONT_HINTS = (
+    # Windows
+    "C:/Windows/Fonts/msyh.ttc",
+    "C:/Windows/Fonts/MSYH.TTC",
+    "C:/Windows/Fonts/msyh.ttf",
+    "C:/Windows/Fonts/simsun.ttc",
+    "C:/Windows/Fonts/SIMSUN.TTC",
+    "C:/Windows/Fonts/simhei.ttf",
+    "C:/Windows/Fonts/SIMHEI.TTF",
+    # macOS — SimSong first (≈SimSun, has Bold variant)
+    "/System/Library/AssetsV2/com_apple_MobileAsset_Font7/857d6c90171c328a4892c1492291d34e401d7f25.asset/AssetData/SimSong.ttc",
+    "/System/Library/Fonts/Supplemental/Songti.ttc",
+    "/System/Library/Fonts/STHeiti Medium.ttc",
+    "/System/Library/Fonts/STHeiti Light.ttc",
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    "/System/Library/AssetsV2/com_apple_MobileAsset_Font7/3419f2a427639ad8c8e139149a287865a90fa17e.asset/AssetData/PingFang.ttc",
+    # Linux
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJKsc-Regular.otf",
+    "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+    "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf",
+    "/usr/share/fonts/opentype/noto/NotoSansSC-Regular.otf",
+    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+)
+
+
 def discover_symbol_font_paths() -> list[Path]:
     """Collect candidate symbol/Unicode fonts once (hints + directory scan)."""
     found: list[Path] = []
@@ -382,22 +442,157 @@ def register_symbol_font(chars: set[str]) -> str | None:
     return name
 
 
+def discover_cjk_font_paths() -> list[Path]:
+    """Collect candidate CJK TrueType/OpenType fonts (hints + directory scan)."""
+    found: list[Path] = []
+    seen: set[Path] = set()
+
+    def add(path: Path) -> None:
+        try:
+            key = path.resolve()
+        except OSError:
+            key = path
+        if key in seen or not path.is_file():
+            return
+        seen.add(key)
+        found.append(path)
+
+    for hint in _CJK_FONT_HINTS:
+        add(Path(hint))
+
+    wanted = {name.lower() for name in _CJK_FONT_NAMES}
+    remaining = set(wanted) - {p.name.lower() for p in found}
+    if remaining:
+        for root in font_search_dirs():
+            if not remaining:
+                break
+            try:
+                for path in root.rglob("*"):
+                    name = path.name.lower()
+                    if path.is_file() and name in remaining:
+                        add(path)
+                        remaining.discard(name)
+                        if not remaining:
+                            break
+            except OSError:
+                continue
+    return found
+
+
+def _ttc_subfont_index(path: Path, prefer_weight: int = 400) -> int:
+    """Pick the TTC subfont closest to `prefer_weight` (OS/2 usWeightClass).
+
+    Songti.ttc subfont 0 is Black (900); blindly using index 0 embeds a heavy
+    face and makes every CJK glyph look bold. This scans subfont metadata to
+    find the Regular (400) or nearest-lighter face, with a Bold (700) lookup
+    done separately by the caller.
+    """
+    try:
+        from fontTools.ttLib import TTCollection
+
+        tc = TTCollection(str(path))
+        best_idx, best_dist = 0, 10_000
+        for i, f in enumerate(tc.fonts):
+            weight = f["OS/2"].usWeightClass if "OS/2" in f else 400
+            dist = abs(weight - prefer_weight)
+            if dist < best_dist:
+                best_idx, best_dist = i, dist
+        return best_idx
+    except (KeyError, ValueError, OSError, RuntimeError):
+        return 0
+
+
+def register_cjk_font(chars: set[str] | None = None) -> str | None:
+    """Embed the best available CJK TTF font for PDF (covers chars if given).
+
+    A real embedded TTF font is preferred over a non-embedded CID font
+    (STSong-Light) because the latter renders as blank/tofu on viewers
+    that lack the Adobe CJK pack. On macOS/Linux/Windows we pick a system
+    CJK face and embed its glyphs so the PDF is self-contained.
+
+    Returns the *normal* face name; a matching bold face (if the same TTC
+    has a Bold/Heavy subfont) is registered under ``<name>-Bold`` so that
+    ``<b>`` spans render with a real bold weight instead of fake-bold.
+    """
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFError, TTFont
+
+    best: tuple[int, str, Path, int] | None = None  # (score, name, path, subfont)
+    for path in discover_cjk_font_paths():
+        # Pick the Regular (400) subfont, not blindly index 0.
+        sub_idx = _ttc_subfont_index(path, prefer_weight=400)
+        font_name = re.sub(r"[^A-Za-z0-9]+", "", path.stem) or "CjkFallback"
+        if font_name[0].isdigit():
+            font_name = "F" + font_name
+        try:
+            if font_name not in pdfmetrics.getRegisteredFontNames():
+                pdfmetrics.registerFont(
+                    TTFont(font_name, str(path), subfontIndex=sub_idx)
+                )
+            covered = pdfmetrics.getFont(font_name).face.charToGlyph
+        except (TTFError, KeyError, ValueError):
+            continue
+        # Score by coverage of requested chars (if any), else by CJK coverage.
+        if chars:
+            score = sum(1 for ch in chars if ord(ch) in covered)
+        else:
+            score = sum(1 for cp in range(0x4E00, 0x9FFF, 64) if cp in covered)
+        if best is None or score > best[0]:
+            best = (score, font_name, path, sub_idx)
+        if chars and score == len(chars):
+            break
+        if not chars and score > 0:
+            break
+    if best is None or best[0] == 0:
+        return None
+    name = best[1]
+    path = best[2]
+
+    # Try to register a genuine bold subfont (weight 600-800) from the same TTC.
+    bold_name = f"{name}-Bold"
+    if bold_name not in pdfmetrics.getRegisteredFontNames():
+        bold_idx = _ttc_subfont_index(path, prefer_weight=700)
+        if bold_idx != best[3]:  # different subfont exists
+            try:
+                pdfmetrics.registerFont(
+                    TTFont(bold_name, str(path), subfontIndex=bold_idx)
+                )
+                pdfmetrics.registerFontFamily(
+                    name,
+                    normal=name,
+                    bold=bold_name,
+                    italic=name,
+                    boldItalic=bold_name,
+                )
+                return name
+            except (TTFError, KeyError, ValueError):
+                pass
+    # No bold subfont found: map bold to normal (fake-bold, but at least not
+    # the wrong heavy weight).
+    pdfmetrics.registerFontFamily(
+        name, normal=name, bold=name, italic=name, boldItalic=name
+    )
+    return name
+
+
 def platform_docx_fonts(language: str) -> tuple[str, str]:
     """Pick DOCX Latin + East Asian face names that usually exist on this OS.
 
     OOXML only stores names; the viewer substitutes if missing. Prefer faces
     commonly packaged on each platform so LibreOffice/Word look right locally.
+    For zh-CN, prefer 雅黑 (YaHei) > 宋体 (SimSun/Songti) per convention.
     """
     family = language_family(language)
     plat = platform_family()
 
     if plat == "macos":
         latin = "Helvetica Neue"
+        # macOS has no Microsoft YaHei; use SimSun (宋体) > Songti > PingFang
         east = {
-            "zh": "PingFang SC",
+            "zh": "SimSun",
             "ja": "Hiragino Sans",
             "ko": "Apple SD Gothic Neo",
-        }.get(family, "PingFang SC")
+        }.get(family, "SimSun")
     elif plat == "linux":
         latin = "DejaVu Sans"
         east = {
@@ -407,6 +602,7 @@ def platform_docx_fonts(language: str) -> tuple[str, str]:
         }.get(family, "Noto Sans CJK SC")
     elif plat == "windows":
         latin = "Calibri"
+        # Windows: 雅黑 first, fallback 宋体
         east = {
             "zh": "Microsoft YaHei",
             "ja": "Yu Gothic",
@@ -1039,6 +1235,47 @@ def _normalize_bullets(document: object, latin: str) -> None:
                 fonts.attrib.pop(qn("w:hint"), None)
 
 
+def _fix_theme_fonts(document: object, latin: str, eastasia: str) -> None:
+    """Set the theme's major/minor East Asian (and Latin) typefaces.
+
+    python-docx ships a default theme whose <a:ea typeface=""/> is empty, so any
+    style that references majorEastAsia/minorEastAsia (the built-in heading and
+    Normal styles do) falls back to a viewer default — often the wrong CJK face
+    or a blank box. Pinning the theme makes CJK render consistently everywhere.
+    """
+    from lxml import etree
+
+    theme_part = None
+    try:
+        for part in document.part.package.iter_parts():
+            if part.partname.endswith("/theme/theme1.xml"):
+                theme_part = part
+                break
+    except (AttributeError, KeyError, ValueError):
+        return
+    if theme_part is None:
+        return
+
+    # The theme part is a plain Part (blob-based, not an XmlPart with _element).
+    # Parse, patch, and write back to _blob so the change persists on save.
+    try:
+        root = etree.fromstring(theme_part.blob)
+    except etree.XMLSyntaxError:
+        return
+    ns = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+    for font_tag in (f"{ns}majorFont", f"{ns}minorFont"):
+        # majorFont/minorFont are nested under themeElements; use descendant search.
+        for font_el in root.iter(font_tag):
+            for child_tag in (f"{ns}latin", f"{ns}ea", f"{ns}cs"):
+                child = font_el.find(child_tag)
+                if child is None:
+                    continue
+                child.set("typeface", latin if child_tag != f"{ns}ea" else eastasia)
+    theme_part._blob = etree.tostring(
+        root, xml_declaration=True, encoding="UTF-8", standalone=True
+    )
+
+
 def _style_num_id(document: object, style_id: str) -> str | None:
     """numId that a built-in list style points at, if any."""
     from docx.oxml.ns import qn
@@ -1167,6 +1404,7 @@ def export_docx(
     normal.paragraph_format.line_spacing = spec.get("line_spacing", 1.25)
     normal.paragraph_format.space_after = Pt(7)
     _normalize_bullets(document, body_font)
+    _fix_theme_fonts(document, body_font, body_ea)
 
     heading_colors = spec["colors"]["heading"]
     heading_sizes = spec["heading_sizes"]
@@ -1374,32 +1612,52 @@ class FontRouter:
     Latin stays on the Latin face: drawing a whole mixed paragraph with a CID font
     mangles accents ('ö') and letter spacing, while drawing symbols with a standard
     Latin font substitutes the wrong glyph or drops it silently.
+
+    When a bold CJK variant is available, CJK runs inside <b> tags switch to it
+    so bold Chinese text actually renders bold instead of staying regular.
     """
 
-    def __init__(self, cjk_font: str | None, symbol_font: str | None) -> None:
+    def __init__(
+        self,
+        cjk_font: str | None,
+        symbol_font: str | None,
+        bold_cjk_font: str | None = None,
+    ) -> None:
         self.cjk_font = cjk_font
         self.symbol_font = symbol_font
+        self.bold_cjk_font = bold_cjk_font
 
     def __bool__(self) -> bool:
         return bool(self.cjk_font or self.symbol_font)
 
-    def font_for(self, char: str) -> str | None:
+    def font_for(self, char: str, bold: bool = False) -> str | None:
         if latin_safe(char):
             return None
         if CJK_ONE_RE.match(char):
+            if bold and self.bold_cjk_font:
+                return self.bold_cjk_font
             return self.cjk_font or self.symbol_font
         return self.symbol_font or self.cjk_font
 
     def tag(self, markup: str) -> str:
-        """Wrap non-Latin runs in <font> tags, leaving existing markup untouched."""
+        """Wrap non-Latin runs in <font> tags, tracking <b>/<i> context."""
         if not self:
             return markup
         out: list[str] = []
+        bold = False
         for piece in re.split(r"(<[^>]+>)", markup):
-            if not piece or piece.startswith("<"):
+            if not piece:
+                continue
+            if piece.startswith("<"):
+                lower = piece.lower()
+                if lower.startswith(("<b>", "<b ")):
+                    bold = True
+                elif lower.startswith("</b>"):
+                    bold = False
                 out.append(piece)
                 continue
-            for font, group in itertools.groupby(piece, key=self.font_for):
+            key = lambda ch, b=bold: self.font_for(ch, bold=b)
+            for font, group in itertools.groupby(piece, key=key):
                 span = "".join(group)
                 out.append(
                     span if font is None else f'<font name="{font}">{span}</font>'
@@ -1501,35 +1759,51 @@ def export_pdf(
     non_latin = {ch for ch in document_text if not latin_safe(ch)}
     fallback_font: str | None = None
     if is_cjk_language(language) or any(CJK_ONE_RE.match(ch) for ch in non_latin):
-        cjk_defaults = {
-            "zh": "STSong-Light",
-            "ja": "HeiseiMin-W3",
-            "ko": "HYSMyeongJo-Medium",
-        }
-        candidate = spec["fonts"].get("pdf_cjk") or cjk_defaults.get(
-            language_family(language), "STSong-Light"
-        )
-        for name in (candidate, "STSong-Light"):
-            try:
-                pdfmetrics.registerFont(UnicodeCIDFont(name))
-                fallback_font = name
-                break
-            except (KeyError, OSError):
-                continue
-        if fallback_font:
-            # CID fonts have no bold/italic face; map the family to itself so
-            # <b>/<i> inside those spans do not raise during layout.
-            pdfmetrics.registerFontFamily(
-                fallback_font,
-                normal=fallback_font,
-                bold=fallback_font,
-                italic=fallback_font,
-                boldItalic=fallback_font,
+        cjk_chars = {ch for ch in non_latin if CJK_ONE_RE.match(ch)}
+        # Prefer an embedded TTF CJK font so the PDF is self-contained and
+        # renders correctly on viewers without the Adobe CJK pack. Fall back
+        # to a non-embedded CID font (STSong-Light) only if no TTF is found.
+        embedded = register_cjk_font(cjk_chars or None)
+        if embedded:
+            fallback_font = embedded
+        else:
+            cjk_defaults = {
+                "zh": "STSong-Light",
+                "ja": "HeiseiMin-W3",
+                "ko": "HYSMyeongJo-Medium",
+            }
+            candidate = spec["fonts"].get("pdf_cjk") or cjk_defaults.get(
+                language_family(language), "STSong-Light"
             )
+            for name in (candidate, "STSong-Light"):
+                try:
+                    pdfmetrics.registerFont(UnicodeCIDFont(name))
+                    fallback_font = name
+                    break
+                except (KeyError, OSError):
+                    continue
+            if fallback_font:
+                # CID fonts have no bold/italic face; map the family to itself so
+                # <b>/<i> inside those spans do not raise during layout.
+                pdfmetrics.registerFontFamily(
+                    fallback_font,
+                    normal=fallback_font,
+                    bold=fallback_font,
+                    italic=fallback_font,
+                    boldItalic=fallback_font,
+                )
 
     symbol_chars = {ch for ch in non_latin if not CJK_ONE_RE.match(ch)}
+    # If a bold CJK variant was registered, pass it so <b>CJK</b> renders bold.
+    bold_cjk = None
+    if fallback_font:
+        bold_candidate = f"{fallback_font}-Bold"
+        if bold_candidate in pdfmetrics.getRegisteredFontNames():
+            bold_cjk = bold_candidate
     router = FontRouter(
-        fallback_font, register_symbol_font(symbol_chars) if symbol_chars else None
+        fallback_font,
+        register_symbol_font(symbol_chars) if symbol_chars else None,
+        bold_cjk_font=bold_cjk,
     )
 
     def bullet_marker(level: int) -> str:
@@ -1748,7 +2022,12 @@ def export_pdf(
                 )
             )
         elif kind == "code":
-            code_html = html.escape(str(block["text"])).replace("\n", "<br/>")
+            # Apply the FontRouter so non-Latin chars (CJK, box-drawing, arrows)
+            # inside code blocks switch to a covering font instead of rendering
+            # as blank boxes when drawn purely in the Courier Latin face.
+            code_html = router.tag(
+                html.escape(str(block["text"])).replace("\n", "<br/>")
+            )
             story.append(
                 Paragraph(
                     code_html,
