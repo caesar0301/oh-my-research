@@ -335,10 +335,9 @@ def merge_inbox(workspace: Path) -> dict[str, Any]:
         merged.append(item)
         path.unlink(missing_ok=True)
 
-    if merged:
-        save_index(workspace, data)
-    elif not (workspace / "docs" / "index" / "papers-index.json").exists() and any(
-        data[b] for b in INDEX_BUCKETS
+    if merged or (
+        not (workspace / "docs" / "index" / "papers-index.json").exists()
+        and any(data[b] for b in INDEX_BUCKETS)
     ):
         save_index(workspace, data)
 

@@ -469,12 +469,18 @@ def process_source(
             failed["raw_path"] = _rel_to_workspace(workspace, persisted_raw)
         return failed
     finally:
-        if cleanup and local_file and local_file.exists():
-            if persisted_raw is None or local_file.resolve() != persisted_raw.resolve():
-                try:
-                    local_file.unlink()
-                except OSError:
-                    pass
+        if (
+            cleanup
+            and local_file
+            and local_file.exists()
+            and (
+                persisted_raw is None or local_file.resolve() != persisted_raw.resolve()
+            )
+        ):
+            try:
+                local_file.unlink()
+            except OSError:
+                pass
 
 
 def _save_temp(data: bytes, suffix: str) -> Path:
