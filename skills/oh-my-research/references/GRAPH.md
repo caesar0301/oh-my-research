@@ -30,7 +30,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 ```
 
 - Entry: `collect`
-- After collect: Gate M (enough materials to analyze?)
+- After collect: Gate M (source diversity & enough materials to analyze?) — shows diversity report, asks user: collect more types or proceed?
 - After analyze judgment: offer THINK if confidence low / gaps high
 - After THINK: Gate T (collect more from surfaced gaps?)
 - Gate A / QA1 unlock `synth`
@@ -42,7 +42,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 | Node | Requires | Produces |
 |------|----------|----------|
 | `init` | — | `AGENTS.md`, `.omr/tree-state.json` |
-| `collect` | workspace | `materials/**`, `docs/index/*` |
+| `collect` | workspace | `materials/**`, `docs/index/*`, Gate M result (with diversity report) |
 | `idea` | workspace | `docs/ideas/*` |
 | `analyze` | materials + index | brief, evidence-map, judgment, optional plan |
 | `think` | target artifact | refined target (in place after confirm) |
@@ -54,7 +54,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 
 ```
 unlocked always: init, collect, idea, think
-ready analyze: when materials/index exist, then Gate M passes (enough materials)
+ready analyze: when materials/index exist, then Gate M passes (source diversity + enough materials)
 unlock synth: after Gate A pass (judgment exists + gate recorded) + Gate P prefs confirmed
 ready decide: when judgment exists (optional path)
 ready reconcile: when any plans or synth exist

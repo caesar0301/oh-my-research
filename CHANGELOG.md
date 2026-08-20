@@ -1,3 +1,45 @@
+# Changelog
+
+All notable changes to the **oh-my-research** skill package are documented here.
+
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Single source of truth for the package version: `skills/oh-my-research/SKILL.md` → `metadata.version`.
+Keep these in sync (use `scripts/skill_version.py`):
+
+- `skills/oh-my-research/SKILL.md` → `metadata.version`
+- `.claude-plugin/marketplace.json` → `metadata.version` and `plugins[0].version`
+
+Workspace research tags/backups are separate — see `references/VERSION/version.md`.
+
+## [1.4.1] — 2026-08-20
+
+### Added
+
+- **Gate M enhanced with source-type diversity**: Gate M (Materials Sufficiency) now checks source-type diversity (papers, web, github, datasets, models), minimum count, topic coverage across research sub-questions, recency, and obvious gaps — not just "enough materials." Shows a **diversity report** to the user and asks whether to collect more source types before proceeding to ANALYZE. Prevents premature analysis on narrow or single-type corpora (e.g. only web syntheses, no primary papers; only papers, no code repos).
+  - `GATES.md`: Gate M overview + full section with diversity checks, diversity report format, outcomes table, JSON schema, and failure examples
+  - `COLLECT/collect.md`: Gate M runs after saving materials; chat reply includes diversity report; philosophy section updated
+  - `LLM-STATE.md`: Gate M checklist section + tree-state example with gate_m summary
+  - `GRAPH.md`: Gate M description includes source diversity; Node↔Artifact contracts updated; unlock rule updated
+  - `REFERENCE.md`: decision tree includes Gate M diversity check before routing to ANALYZE
+  - `ANALYZE/analyze.md`: Gate M prerequisite noted in Requires section
+  - Pattern files: `evidence-deep.json`, `evidence-first.json`, `idea-first.json`, `stance-first.json`, `loop.json` — all add `"collect": "gate_m"` to `skill_gates`
+  - `SKILL.md`: Gate M description in confirmation gates table updated; "No Gate C" line removed; best practices updated; post-step routing menu includes Gate M; version bumped to 1.4.1
+  - `WORKFLOW/workflow-overview.md`: Gate M diversity in end-to-end path; "When to ask user" updated
+
+### Changed
+
+- `SKILL.md`: Gate M table entry updated from "enough materials to analyze?" to "source diversity & enough materials?"; "No Gate C / no evaluation path" line replaced with "Rapid pattern skips all gates (fully-automated)."
+- `COLLECT/collect.md`: philosophy section updated — "after collect → run Gate M (with diversity report)" replaces "after collect → mark analyze ready"
+- `GRAPH.md`: Evidence-Deep graph description updated; unlock rule for analyze now requires Gate M pass (source diversity + enough materials)
+
+### Notes
+
+- Rapid pattern (`rapid.json`) intentionally excludes Gate M (fully-automated, gates off)
+- Gate M is LLM-evaluated (not a Python script); thresholds adapt to research scope
+- This enhancement addresses the real-world failure mode where COLLECT saves only web research syntheses and proceeds directly to ANALYZE without checking whether primary papers, GitHub repos, datasets, or models should also be collected
+
 ## [1.4.0] — 2026-08-19
 
 ### Added
@@ -48,21 +90,6 @@
 - LLM-STATE.md now has Tree-state pre-flight check section with common failure modes table.
 - REFERENCE.md auto-detection decision tree now includes PHASE-GUARD checks for SYNTH routing.
 - SKILL.md Best Practices updated with Phase-Guard rule and tree-state update rule.
-
-# Changelog
-
-All notable changes to the **oh-my-research** skill package are documented here.
-
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-Single source of truth for the package version: `skills/oh-my-research/SKILL.md` → `metadata.version`.
-Keep these in sync (use `scripts/skill_version.py`):
-
-- `skills/oh-my-research/SKILL.md` → `metadata.version`
-- `.claude-plugin/marketplace.json` → `metadata.version` and `plugins[0].version`
-
-Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
 ## [1.2.0] — 2026-08-19
 

@@ -6,7 +6,7 @@ Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists b
 
 | Gate | Position | Purpose | Required artifacts |
 |------|----------|---------|-------------------|
-| **M** | After COLLECT, before ANALYZE | Enough materials to start analysis? | materials + index |
+| **M** | After COLLECT, before ANALYZE | Source diversity & enough materials? | materials + index |
 | **L** | IDEA / ANALYZE when Loop active | Iterate deeper or advance? | `.omr/loop-state.json` |
 | **A** | After ANALYZE judgment, before unlock SYNTH | Evidence sufficient for report? | brief, evidence-map, judgment |
 | **QA1** | After judgment (auto or `qa qa1`) | Coverage, gaps, traceability | papers-index, evidence, judgment |
@@ -99,19 +99,113 @@ Paths: `.omr/quality-gates/QA1-evidence-analysis.json`, `QA2-pre-export.json`, o
 
 ---
 
-## Gate M — Materials Sufficiency (before ANALYZE)
+## Gate M — Materials Sufficiency & Source Diversity (before ANALYZE)
 
 Position: after COLLECT has ≥1 usable source and `analyze` is marked ready; before ANALYZE's deep pipeline begins.
 
+**Purpose:** prevent premature analysis on a narrow or single-type corpus. Ensures the user has been offered the chance to diversify source types before committing to deep analysis.
+
 **Checks (interpret for the intended scope — not a fixed quota):**
+- [ ] **Minimum count**: ≥3 materials collected (or explicit narrow-scope note accepted)
+- [ ] **Source-type diversity**: at least 2 distinct buckets populated among:
+  - `papers/` (arXiv, DOI, PDFs — primary sources)
+  - `web/` (blog posts, survey articles, documentation)
+  - `github/` (source repos, code samples)
+  - `datasets/` or HuggingFace models (benchmarks, weights, datasets)
+  - Platform-specific models (DashScope, OpenAI, Anthropic — if relevant to topic)
+- [ ] **Topic coverage**: collected materials touch ≥2 of the research sub-questions (from `AGENTS.md` or inferred)
+- [ ] **Recency**: at least 1 source from the last 2 years (or topic-appropriate rationale)
+- [ ] **Obvious gaps**: no entire sub-question area is empty of sources
 - [ ] Material set matches the intended scope (narrow single-paper deep dive vs broad survey)
 - [ ] At least one primary source, or an explicit plan to analyze a deliberately small corpus
 - [ ] Missing buckets / source types that the scope clearly needs are flagged (e.g. broad survey with only one paper)
 - [ ] **Full-text Markdown availability**: for each paper/web material, check `markdown_status` in the index. If `"converted"` → full-text available for ANALYZE. If `"failed"` or missing → warn the user that ANALYZE will run in **degraded (abstract-only) mode** for that material. If all materials failed conversion, recommend re-running `collect` or manually converting before proceeding.
+- [ ] **User consulted**: user was shown the diversity report and asked whether to collect more source types or proceed
 
-**Outcomes:** **proceed** → ANALYZE | **collect more** → return to COLLECT.
+**Diversity report (show to user):**
+
+```
+Source Type Inventory:
+  papers/    : N items  ✓/⚠/✗
+  web/       : N items  ✓/⚠/✗
+  github/    : N items  ✓/⚠/✗
+  datasets/  : N items  ✓/⚠/✗
+  models/    : N items  ✓/⚠/✗
+Sub-question coverage: Q1 ✓  Q2 ⚠  Q3 ✗  Q4 ✓
+Suggested missing types: [list relevant to topic]
+```
+
+**Outcomes:**
+
+| Status | Action |
+|-------|--------|
+| **pass** | Unlock `analyze` in tree-state; recommend `analyze` |
+| **warn** | Show gaps, suggest specific source types to collect; user decides: collect more or proceed |
+| **fail** | Do not unlock analyze; recommend specific collect actions |
+
+**Failure examples:**
+- Only web research syntheses, no primary papers → suggest arXiv collection
+- Only papers, no code → suggest GitHub repos for key methods
+- Missing entire sub-question area → suggest targeted search
+- All materials failed Markdown conversion → suggest re-running collect
 
 A 1-paper deep dive passes with an explicit "narrow corpus" note; a broad survey with one paper fails and asks the user to collect more. Quick-pass skips the pause but still records the check.
+
+Write `.omr/quality-gates/gate-m.json`:
+
+```json
+{
+  "gate": "M",
+  "run_at": "ISO-8601",
+  "status": "pass|warn|fail",
+  "scenario_note": "e.g. 6 web syntheses + 0 papers — broad but lacks primary sources",
+  "checks": [
+    {
+      "id": "minimum_count",
+      "status": "pass|warn|fail",
+      "details": "N materials collected"
+    },
+    {
+      "id": "source_diversity",
+      "status": "pass|warn|fail",
+      "details": "buckets populated: papers=0, web=6, github=0, datasets=0"
+    },
+    {
+      "id": "topic_coverage",
+      "status": "pass|warn|fail",
+      "details": "sub-questions covered: Q1,Q2,Q3 — Q4 missing"
+    },
+    {
+      "id": "recency",
+      "status": "pass|warn|fail",
+      "details": "latest source 2025-08; oldest 2018"
+    },
+    {
+      "id": "obvious_gaps",
+      "status": "pass|warn|fail",
+      "details": "no primary papers collected; github repos absent"
+    },
+    {
+      "id": "full_text_availability",
+      "status": "pass|warn|fail",
+      "details": "5/6 converted to Markdown; 1 failed (P-003)"
+    }
+  ],
+  "diversity": {
+    "papers": 0,
+    "web": 6,
+    "github": 0,
+    "datasets": 0,
+    "models": 0
+  },
+  "suggested_collects": [
+    "arxiv: DreamCoder (Ellis et al. 2020) — primary source for program induction",
+    "github: salesforce/CodeGen — code generation model repo"
+  ]
+}
+```
+
+**Semi-automated (default):** pause for user decision after showing the diversity report. **Quick-pass:** record JSON, unlock analyze, no pause.
 
 ---
 

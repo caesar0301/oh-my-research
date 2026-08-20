@@ -52,6 +52,7 @@ def _ssl_fallback_ctx() -> ssl.SSLContext:
     ctx.verify_mode = ssl.CERT_NONE
     return ctx
 
+
 # --- arxiv parsing (stdlib only — no external dependency) --------------------
 import xml.etree.ElementTree as ET
 
@@ -62,9 +63,27 @@ DOI_RE = re.compile(r"^10\.\d{4,}/\S+$")
 
 # File extensions anydoc can convert directly
 ANYDOC_EXTS = {
-    ".pdf", ".doc", ".docx", ".docm", ".odt", ".rtf", ".epub",
-    ".ppt", ".pps", ".pot", ".pptx", ".pptm", ".ppsx", ".ppsm", ".odp",
-    ".xls", ".xlsx", ".xlsm", ".xlsb", ".ods", ".csv",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".docm",
+    ".odt",
+    ".rtf",
+    ".epub",
+    ".ppt",
+    ".pps",
+    ".pot",
+    ".pptx",
+    ".pptm",
+    ".ppsx",
+    ".ppsm",
+    ".odp",
+    ".xls",
+    ".xlsx",
+    ".xlsm",
+    ".xlsb",
+    ".ods",
+    ".csv",
 }
 ANYDOC_EXTS_TUPLE = tuple(sorted(ANYDOC_EXTS))
 MARKDOWN_EXTS = {".md", ".markdown", ".txt"}
@@ -80,6 +99,7 @@ def write_text(path: Path, text: str) -> None:
 
 
 # --- Source resolution -------------------------------------------------------
+
 
 def _http_get(url: str, timeout: int = 60) -> bytes:
     """Download bytes. Prefer curl (handles macOS CA store), fall back to urllib."""
@@ -104,7 +124,9 @@ def _http_get(url: str, timeout: int = 60) -> bytes:
         with urllib.request.urlopen(req, timeout=timeout, context=_SSL_CTX) as r:  # noqa: S310
             return r.read()
     except urllib.error.URLError:
-        with urllib.request.urlopen(req, timeout=timeout, context=_ssl_fallback_ctx()) as r:  # noqa: S310
+        with urllib.request.urlopen(
+            req, timeout=timeout, context=_ssl_fallback_ctx()
+        ) as r:  # noqa: S310
             return r.read()
 
 
@@ -170,6 +192,7 @@ def _guess_suffix(url: str) -> str:
 
 # --- Conversion --------------------------------------------------------------
 
+
 def anydoc_available() -> bool:
     return shutil.which("npx") is not None
 
@@ -180,7 +203,14 @@ def convert_with_anydoc(src: Path, dst: Path) -> bool:
         dst.parent.mkdir(parents=True, exist_ok=True)
         # anydoc requires absolute paths for reliable -o output resolution
         result = subprocess.run(
-            ["npx", "-y", "@firecrawl/anydoc", str(src.resolve()), "-o", str(dst.resolve())],
+            [
+                "npx",
+                "-y",
+                "@firecrawl/anydoc",
+                str(src.resolve()),
+                "-o",
+                str(dst.resolve()),
+            ],
             capture_output=True,
             text=True,
             timeout=300,
@@ -195,6 +225,7 @@ def convert_pdf_fallback(src: Path) -> str | None:
     # pymupdf
     try:
         import fitz  # type: ignore
+
         doc = fitz.open(src)
         parts = []
         for page in doc:
@@ -209,6 +240,7 @@ def convert_pdf_fallback(src: Path) -> str | None:
     # pdfplumber
     try:
         import pdfplumber  # type: ignore
+
         with pdfplumber.open(src) as pdf:
             parts = [p.extract_text() or "" for p in pdf.pages]
         if any(parts):
@@ -224,6 +256,7 @@ def convert_html_fallback(src: Path) -> str | None:
     """Try markdownify+bs4. Returns Markdown text or None."""
     try:
         from markdownify import markdownify as md  # type: ignore
+
         html = src.read_text(encoding="utf-8", errors="ignore")
         out = md(html)
         return out or None
@@ -257,6 +290,7 @@ def convert(src: Path, dst: Path, source_url: str) -> tuple[bool, str]:
 
 # --- Orchestration -----------------------------------------------------------
 
+
 def process_source(
     workspace: Path,
     source: str,
@@ -272,7 +306,11 @@ def process_source(
 
     # Already converted? skip
     if md_path.exists() and md_path.stat().st_size > 0:
-        return {"id": material_id, "status": "exists", "path": str(md_path.relative_to(workspace))}
+        return {
+            "id": material_id,
+            "status": "exists",
+            "path": str(md_path.relative_to(workspace)),
+        }
 
     local_file: Path | None = None
     cleanup = False
@@ -288,7 +326,9 @@ def process_source(
             pdf_bytes, resolved_title = resolve_doi_pdf(source.strip())
             local_file = _save_temp(pdf_bytes, ".pdf")
             cleanup = True
-        elif low.startswith(("http://", "https://")) and low.endswith(ANYDOC_EXTS_TUPLE):
+        elif low.startswith(("http://", "https://")) and low.endswith(
+            ANYDOC_EXTS_TUPLE
+        ):
             local_file, resolved_title = download_to_temp(source)
             cleanup = True
         elif low.startswith(("http://", "https://")):
@@ -308,8 +348,15 @@ def process_source(
         else:
             ok, method = convert(local_file, md_path, source)
         if not ok:
-            write_text(failed_path, f"source: {source}\nid: {material_id}\nreason: {method}\n")
-            return {"id": material_id, "status": "failed", "reason": method, "failed_path": str(failed_path.relative_to(workspace))}
+            write_text(
+                failed_path, f"source: {source}\nid: {material_id}\nreason: {method}\n"
+            )
+            return {
+                "id": material_id,
+                "status": "failed",
+                "reason": method,
+                "failed_path": str(failed_path.relative_to(workspace)),
+            }
 
         return {
             "id": material_id,
@@ -319,8 +366,16 @@ def process_source(
             "title": resolved_title,
         }
     except Exception as e:
-        write_text(failed_path, f"source: {source}\nid: {material_id}\nreason: {type(e).__name__}: {e}\n")
-        return {"id": material_id, "status": "failed", "reason": f"{type(e).__name__}: {e}", "failed_path": str(failed_path.relative_to(workspace))}
+        write_text(
+            failed_path,
+            f"source: {source}\nid: {material_id}\nreason: {type(e).__name__}: {e}\n",
+        )
+        return {
+            "id": material_id,
+            "status": "failed",
+            "reason": f"{type(e).__name__}: {e}",
+            "failed_path": str(failed_path.relative_to(workspace)),
+        }
     finally:
         if cleanup and local_file and local_file.exists():
             try:
@@ -415,12 +470,14 @@ def process_dir(
 
         # Skip if already converted
         if md_path.exists() and md_path.stat().st_size > 0:
-            results.append({
-                "id": material_id,
-                "status": "exists",
-                "path": str(md_path.relative_to(workspace)),
-                "source": str(src_file),
-            })
+            results.append(
+                {
+                    "id": material_id,
+                    "status": "exists",
+                    "path": str(md_path.relative_to(workspace)),
+                    "source": str(src_file),
+                }
+            )
             continue
 
         # Convert using the existing convert() function
@@ -428,47 +485,62 @@ def process_dir(
         ok, method = convert(src_file, md_path, str(src_file))
 
         if ok:
-            results.append({
-                "id": material_id,
-                "status": "converted",
-                "method": method,
-                "path": str(md_path.relative_to(workspace)),
-                "source": str(src_file),
-            })
+            results.append(
+                {
+                    "id": material_id,
+                    "status": "converted",
+                    "method": method,
+                    "path": str(md_path.relative_to(workspace)),
+                    "source": str(src_file),
+                }
+            )
         else:
             write_text(
                 failed_path,
                 f"source: {src_file}\nid: {material_id}\nreason: {method}\n",
             )
-            results.append({
-                "id": material_id,
-                "status": "failed",
-                "reason": method,
-                "failed_path": str(failed_path.relative_to(workspace)),
-                "source": str(src_file),
-            })
+            results.append(
+                {
+                    "id": material_id,
+                    "status": "failed",
+                    "reason": method,
+                    "failed_path": str(failed_path.relative_to(workspace)),
+                    "source": str(src_file),
+                }
+            )
 
     return results
 
 
 # --- CLI ---------------------------------------------------------------------
 
+
 def main() -> int:
     p = argparse.ArgumentParser(description="OMR material → Markdown converter")
     p.add_argument("source", nargs="?", help="URL / DOI / arxiv / local path")
     p.add_argument("--id", help="material ID (e.g. P-001)")
-    p.add_argument("--bucket", default="papers", help="materials bucket (papers/web/github)")
+    p.add_argument(
+        "--bucket", default="papers", help="materials bucket (papers/web/github)"
+    )
     p.add_argument("--workspace", type=Path, default=Path.cwd())
     p.add_argument("--title", default=None)
-    p.add_argument("--index", action="store_true", help="convert all indexed sources lacking .md")
-    p.add_argument("--convert-dir", type=Path, default=None,
-                   help="(v1.4) batch convert existing files in a directory (e.g. materials/papers/)")
+    p.add_argument(
+        "--index", action="store_true", help="convert all indexed sources lacking .md"
+    )
+    p.add_argument(
+        "--convert-dir",
+        type=Path,
+        default=None,
+        help="(v1.4) batch convert existing files in a directory (e.g. materials/papers/)",
+    )
     args = p.parse_args()
 
     ws = args.workspace.resolve()
 
     if args.convert_dir is not None:
-        results = process_dir(ws, args.convert_dir, args.bucket if args.bucket != "papers" else None)
+        results = process_dir(
+            ws, args.convert_dir, args.bucket if args.bucket != "papers" else None
+        )
         print(json.dumps({"converted": results}, indent=2))
         return 0
 

@@ -28,6 +28,7 @@
   },
   "skill_gates": {
     "idea": "gate_l",
+    "collect": "gate_m",
     "analyze": "gate_l",
     "synth": "gate_d"
   },

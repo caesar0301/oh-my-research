@@ -25,11 +25,17 @@ Update after each op using unlock rules in `GRAPH.md`. Example shape:
   "unlocked": ["init", "collect", "idea", "think"],
   "ready": ["analyze"],
   "locked": ["synth", "decide", "reconcile"],
-  "completed": ["init", "collect"]
+  "completed": ["init", "collect"],
+  "gate_m": {
+    "status": "pass",
+    "run_at": "2026-08-20T10:00:00+08:00",
+    "diversity": {"papers": 2, "web": 5, "github": 1, "datasets": 0, "models": 0},
+    "gaps": ["datasets/models empty — acceptable for this scope"]
+  }
 }
 ```
 
-Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if unused.
+Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if unused. Gate M result is recorded under `.omr/quality-gates/gate-m.json` and summarized in tree-state for quick reference.
 
 ### Tree-state pre-flight check (v1.4 — blocking by default)
 
@@ -64,6 +70,7 @@ When the user explicitly overrides, record `scenario_note: "prerequisite skipped
   "ready": ["synth"],
   "locked": ["decide", "reconcile"],
   "completed": ["init", "collect", "analyze"],
+  "gate_m": {"status": "pass", "diversity": {"papers": 3, "web": 5, "github": 1}},
   "notes": "Gate A passed. THINK: 1 pass (first-principles, hardened). synth ready for Gate P."
 }
 ```
@@ -159,6 +166,14 @@ Agent evaluates checklists in `GATES.md` and writes results with rationale — s
 2. Apply QA1 or QA2 checklist in `GATES.md`; adjust numeric expectations to scope (e.g. a 3-paper deep dive can pass QA1 with an explicit “narrow corpus” rationale).
 3. Write JSON under `.omr/quality-gates/` with `status`, `checks[]` (`id`, `status`, `details`), and `rationale` / `scenario_note`.
 4. Fail closed on publication-safety and over-claiming; be flexible on coverage counts.
+
+## Gate M (LLM checklist — source diversity & sufficiency)
+
+1. After COLLECT saves materials, scan `materials/` buckets and `docs/index/`.
+2. Apply Gate M checklist in `GATES.md`; adapt diversity thresholds to scope (e.g. a narrow 3-paper deep dive can pass with an explicit "narrow corpus" rationale; a broad survey needs wider source-type diversity).
+3. Write JSON under `.omr/quality-gates/gate-m.json` with `status`, `checks[]`, `diversity` inventory, `suggested_collects`, and `scenario_note`.
+4. **Show the diversity report to the user** and ask: collect more source types or proceed?
+5. On warn/fail: suggest specific source types and queries to collect next; do not unlock analyze.
 
 ## Report progress (LLM-authored state)
 

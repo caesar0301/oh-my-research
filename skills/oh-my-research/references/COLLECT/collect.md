@@ -99,10 +99,43 @@ If conversion failed, `markdown_status: "failed"` and `markdown_failure_reason` 
 
 - Deliver materials **with full-text Markdown** — do not over-extract, but do not under-extract either
 - Graceful fallback: record failure, continue other inputs
-- After successful collect with ≥1 paper (converted or not) → mark `analyze` **ready** in tree-state
+- After successful collect with ≥1 material → run **Gate M** (Materials Sufficiency & Source Diversity) before marking `analyze` ready
+- Gate M checks: minimum count, source-type diversity (papers/web/github/datasets/models), topic coverage, recency, obvious gaps, full-text availability
+- Gate M shows a **diversity report** to the user and asks: collect more source types or proceed to analyze?
 - If a paper conversion failed, warn the user that ANALYZE will run on abstract-only for that paper (degraded mode)
 - **Post-collect validation (v1.4):** after COLLECT, verify that for every `.pdf` / `.docx` / `.html` in `materials/<bucket>/`, a corresponding `.md` file exists. If not, offer to run `material_to_markdown.py --convert-dir` to batch-convert the missing files. This prevents the common failure mode where sources are downloaded but never converted, and ANALYZE silently runs in degraded (abstract-only) mode.
 
+## Gate M — Source Diversity & Sufficiency Check
+
+After saving materials and updating indexes, run Gate M (see `GATES.md` for full checklist). The gate checks:
+
+1. **Minimum count**: ≥3 materials (or narrow-scope note)
+2. **Source-type diversity**: ≥2 distinct buckets (papers, web, github, datasets, models)
+3. **Topic coverage**: materials touch ≥2 research sub-questions
+4. **Recency**: ≥1 source from last 2 years
+5. **Obvious gaps**: no entire sub-question area empty
+6. **Full-text Markdown availability**: check `markdown_status` in index
+
+**Show the user a diversity report:**
+
+```
+Source Type Inventory:
+  papers/    : N items  ✓/⚠/✗
+  web/       : N items  ✓/⚠/✗
+  github/    : N items  ✓/⚠/✗
+  datasets/  : N items  ✓/⚠/✗
+  models/    : N items  ✓/⚠/✗
+Sub-question coverage: Q1 ✓  Q2 ⚠  Q3 ✗  Q4 ✓
+Suggested missing types: [list relevant to topic]
+```
+
+**Outcomes:**
+- **pass** → mark `analyze` ready in tree-state; recommend `analyze`
+- **warn** → suggest specific source types to collect; user decides: collect more or proceed
+- **fail** → do not unlock analyze; recommend specific collect actions
+
+Write result to `.omr/quality-gates/gate-m.json`.
+
 ## Chat reply
 
-List saved paths, new IDs, conversion status (method used / failures), recommended next: `analyze`.
+List saved paths, new IDs, conversion status (method used / failures), **Gate M diversity report**, Gate M status, recommended next: `analyze` (if pass) or `collect <suggested sources>` (if warn/fail).

@@ -7,6 +7,7 @@
     "edges": ["collect → analyze", "analyze → synth"]
   },
   "skill_gates": {
+    "collect": "gate_m",
     "analyze": "gate_a",
     "synth": "gate_d"
   },

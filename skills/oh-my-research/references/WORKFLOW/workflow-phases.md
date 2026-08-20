@@ -15,11 +15,11 @@
 - [ ] Only destination buckets with real files exist under `materials/`
 - [ ] Indexes updated with stable IDs (`docs/index/` created on first write)
 - [ ] Failures logged
-- [ ] `analyze` marked ready when ≥1 usable source (Gate M confirms sufficiency before the deep scan)
+- [ ] `analyze` marked ready when ≥1 usable source (Gate M confirms source diversity & sufficiency before the deep scan)
 
 ## [ANALYZE]
 
-- [ ] **Gate M** passed (enough materials for the intended scope)
+- [ ] **Gate M** passed (source diversity & enough materials for the intended scope — diversity report shown to user)
 - [ ] Question confirmed
 - [ ] Findings graded (`proven` / `suggests` / `inferred`)
 - [ ] `brief-*`, `evidence-*`, `judgment-*` written

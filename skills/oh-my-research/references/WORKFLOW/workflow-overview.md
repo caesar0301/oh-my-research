@@ -29,7 +29,7 @@ collect https://arxiv.org/abs/2401.xxxxx
 collect "lifecycle formation evolution survey"
 ```
 
-Materials land under `materials/<bucket>/` only for buckets that receive files; indexes under `docs/index/` on first index write. Tree: `analyze` becomes ready.
+Materials land under `materials/<bucket>/` only for buckets that receive files; indexes under `docs/index/` on first index write. Run **Gate M** (source diversity & sufficiency — shows diversity report, asks user: collect more types or proceed?). On pass → `analyze` becomes ready. On warn/fail → suggest specific source types to collect.
 
 ### 3. ANALYZE
 
@@ -37,7 +37,7 @@ Materials land under `materials/<bucket>/` only for buckets that receive files; 
 analyze
 ```
 
-**Gate M** first: enough materials for the intended scope? If not, ask to `collect` more.
+**Gate M** first: source diversity & enough materials for the intended scope? Shows diversity report (papers, web, github, datasets, models). Asks user: collect more types or proceed? If not, ask to `collect` more.
 
 Produces brief, evidence-map, judgment (id `R-001`).  
 Depth checkpoint: offer `think first-principles` or Source Triangulation when confidence/gaps warrant.
@@ -99,7 +99,7 @@ Runs recommended next steps along the active graph, pausing at gates unless user
 ## When to ask the user
 
 - Research question wording (ANALYZE)
-- **Gate M**: enough materials before analyzing (collect more?)
+- **Gate M**: enough materials before analyzing? (source diversity report — collect more types?)
 - **Gate T**: after THINK, collect more from surfaced gaps?
 - **Gate P**: language / format / mode / audience / citations before synth
 - Other gate confirmations (unless quick-pass)

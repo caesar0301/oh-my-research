@@ -15,7 +15,6 @@ Detailed operation guide for the unified OMR skill.
 | IDEA | `idea` | `IDEA/idea.md` |
 | DECIDE | `decide` | `DECIDE/decide.md` |
 | RECONCILE | `reconcile`, `archive`, `rollback`, `list` | `RECONCILE/reconcile.md` |
-| VERSION | `version tag\|history\|diff\|backup\|list` (workspace); `skill-version show\|check\|sync\|set\|bump` (package) | `VERSION/version.md` |
 | WORKFLOW | `workflow [--phase N] [--pattern P]` | `WORKFLOW/workflow-overview.md` |
 
 Cross-cutting: `GATES.md`, `GRAPH.md`, `LLM-STATE.md`, `LANGUAGE.md`.
@@ -24,53 +23,16 @@ Cross-cutting: `GATES.md`, `GRAPH.md`, `LLM-STATE.md`, `LANGUAGE.md`.
 
 ## Auto-Detection Decision Tree
 
-```
-Canonical op name in request?
-  → Yes → run that op (wins)
+The full decision tree — intention detection, workspace-state detection, and Phase-Guard routing — lives in `../SKILL.md` as a Mermaid flowchart. Canonical op names (`init`, `collect`, `analyze`, `think`, `synth`, `decide`, `idea`, `reconcile`, `workflow`, `qa`) always win over keyword routing.
 
-skill-version / bump skill / skill changelog / release skill?
-  → VERSION skill-package track (`skill_version.py`)
+**Intent keyword summary** (case-insensitive):
 
-version tag|history|diff|backup|list?
-  → VERSION workspace track (`version_control.py`)
-
-THINK keywords? (first principles, socratic, pre-mortem, red team,
-                 steelman, deepen, rethink, elicit, think)
-  → THINK on latest research artifact (or user-pointed path)
-
-IDEA keywords? (idea, brainstorm, speculate, what if, hypothesis)
-  → IDEA mode
-
-COLLECT signals? (URL, DOI, arxiv, github.com, huggingface, "search …", collect)
-  → COLLECT (init-on-demand if no AGENTS.md / .omr/)
-
-SYNTH keywords? (report, survey, write up, synthesize, manuscript, brief)
-  → **PHASE-GUARD**: check for judgment-*.md + gate-a.json before routing to SYNTH
-  → If prerequisites missing: show [PHASE-GUARD], offer to run ANALYZE first
-  → SYNTH mode
-
-Else inspect workspace:
-
-No AGENTS.md AND no .omr/ ?
-  → INIT
-
-Materials or papers-index, no judgment-* ?
-  → ANALYZE (default) — unless user clearly still adding sources → COLLECT
-
-Judgment present, no docs/{survey,report,manuscript,brief}/ content ?
-  → **PHASE-GUARD**: check for gate-a.json + gate-p.json
-  → If missing: run Gate A (check THINK ledger) → Gate P first
-  → SYNTH
-
-loop-state active ?
-  → Gate L (iterate vs advance) before next unlock
-
-Contradiction vs published claims/decision ?
-  → propose RECONCILE
-
-Ambiguous ?
-  → Ask user OR show graph-recommended next from Evidence-Deep
-```
+| Signal | Route |
+|---------------------------|-------|
+| `first principles`, `socratic`, `pre-mortem`, `red team`, `steelman`, `deepen`, `rethink`, `elicit`, `think` | **THINK** on latest artifact |
+| `idea`, `brainstorm`, `speculate`, `what if`, `hypothesis` | **IDEA** |
+| URL / DOI / arxiv / GitHub / HuggingFace / `search …` / `collect` | **COLLECT** (init-on-demand if needed) |
+| `report`, `survey`, `write up`, `synthesize`, `manuscript`, `brief` | **SYNTH** (Phase-Guard checked) |
 
 ---
 

@@ -39,14 +39,10 @@ MATERIAL_ID_RE = re.compile(
 # Raw arXiv ID in prose (arXiv:NNNN.NNNNN or arxiv:NNNN.NNNNN)
 # Exception: inside a proper citation like (Author, 2025) this is fine,
 # but bare arXiv:2506.23852 in prose is a violation.
-ARXIV_ID_RE = re.compile(
-    r"\barXiv:(\d{4}\.\d{4,5}(v\d+)?)\b", re.IGNORECASE
-)
+ARXIV_ID_RE = re.compile(r"\barXiv:(\d{4}\.\d{4,5}(v\d+)?)\b", re.IGNORECASE)
 
 # Evidence-grade labels used as inline prose tags
-EVIDENCE_LABEL_RE = re.compile(
-    r"\b(?:proven|suggests|inferred)\b", re.IGNORECASE
-)
+EVIDENCE_LABEL_RE = re.compile(r"\b(?:proven|suggests|inferred)\b", re.IGNORECASE)
 # But only flag when used as a grade label (e.g. "[proven]", "Grade: proven")
 # not when used in natural prose like "this proves that..."
 # We use a more specific pattern: grade-label usage
@@ -86,14 +82,10 @@ OUTCOME_STAMP_RE = re.compile(
 # outcome stamps are only violations when adjacent to THINK/ledger context
 
 # Evidence-grade label as inline tag like [PE-5] or [JC-1]
-EVIDENCE_TAG_RE = re.compile(
-    r"\[(?:PE|JC|SE|OE)-\d{1,4}\]", re.IGNORECASE
-)
+EVIDENCE_TAG_RE = re.compile(r"\[(?:PE|JC|SE|OE)-\d{1,4}\]", re.IGNORECASE)
 
 # Internal gap IDs like [G-1], G-7
-GAP_ID_RE = re.compile(
-    r"(?<![\w-])\[?G-\d{1,4}\]?(?![\w-])", re.IGNORECASE
-)
+GAP_ID_RE = re.compile(r"(?<![\w-])\[?G-\d{1,4}\]?(?![\w-])", re.IGNORECASE)
 
 # --- Linter ----------------------------------------------------------------
 
@@ -126,13 +118,15 @@ def lint_text(text: str) -> list[dict[str, Any]]:
                 line_end = len(text)
             line_content = text[line_start:line_end].strip()
 
-            violations.append({
-                "type": label,
-                "line": line_num,
-                "match": match.group(0),
-                "description": description,
-                "context": line_content[:120],
-            })
+            violations.append(
+                {
+                    "type": label,
+                    "line": line_num,
+                    "match": match.group(0),
+                    "description": description,
+                    "context": line_content[:120],
+                }
+            )
 
     # Check for outcome stamps near THINK/ledger context
     for match in OUTCOME_STAMP_RE.finditer(text):
@@ -142,18 +136,22 @@ def lint_text(text: str) -> list[dict[str, Any]]:
         context = text[context_start:context_end]
         if re.search(r"THINK|ledger|pass|outcome", context, re.IGNORECASE):
             line_num = text.count("\n", 0, match.start()) + 1
-            violations.append({
-                "type": "outcome_stamp",
-                "line": line_num,
-                "match": match.group(0),
-                "description": "THINK outcome stamp in public prose",
-                "context": context[:120],
-            })
+            violations.append(
+                {
+                    "type": "outcome_stamp",
+                    "line": line_num,
+                    "match": match.group(0),
+                    "description": "THINK outcome stamp in public prose",
+                    "context": context[:120],
+                }
+            )
 
     return violations
 
 
-def find_report_files(workspace: Path, mode: str | None, file_path: Path | None) -> list[Path]:
+def find_report_files(
+    workspace: Path, mode: str | None, file_path: Path | None
+) -> list[Path]:
     """Find report files to lint."""
     if file_path is not None:
         return [file_path] if file_path.exists() else []
@@ -214,21 +212,28 @@ def main() -> int:
         text = f.read_text(encoding="utf-8", errors="ignore")
         violations = lint_text(text)
         rel_path = str(f.relative_to(ws)) if f.is_relative_to(ws) else str(f)
-        file_results.append({
-            "file": rel_path,
-            "violations": violations,
-            "count": len(violations),
-        })
+        file_results.append(
+            {
+                "file": rel_path,
+                "violations": violations,
+                "count": len(violations),
+            }
+        )
         all_violations.extend(violations)
 
     total = len(all_violations)
 
     if args.json:
-        print(json.dumps({
-            "files": file_results,
-            "total_violations": total,
-            "clean": total == 0,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "files": file_results,
+                    "total_violations": total,
+                    "clean": total == 0,
+                },
+                indent=2,
+            )
+        )
     else:
         if total == 0:
             print(f"✓ {len(files)} file(s) scanned — no publication-safety violations.")
@@ -239,7 +244,9 @@ def main() -> int:
                     continue
                 print(f"  {fr['file']} ({fr['count']} violations):")
                 for v in fr["violations"]:
-                    print(f"    L{v['line']} [{v['type']}] {v['match']!r} — {v['description']}")
+                    print(
+                        f"    L{v['line']} [{v['type']}] {v['match']!r} — {v['description']}"
+                    )
                     print(f"      context: {v['context']}")
                 print()
 

@@ -8,6 +8,7 @@
   },
   "skill_gates": {
     "decide": "gate_b",
+    "collect": "gate_m",
     "analyze": "gate_a",
     "synth": "gate_d"
   },

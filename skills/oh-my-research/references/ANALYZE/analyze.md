@@ -10,7 +10,9 @@ analyze
 
 Also: “analyze these papers”, “map evidence”, “now what” after collect.
 
-**Requires:** ≥1 material under `materials/` and `docs/index/papers-index.json` (or other indexes with entries).
+**Requires:** ≥1 material under `materials/` and `docs/index/papers-index.json` (or other indexes with entries) **and Gate M passed** (or quick-pass / Rapid pattern).
+
+> **Gate M prerequisite:** Before running ANALYZE, Gate M (Materials Sufficiency & Source Diversity) must have passed. If Gate M has not run, run it first (see `COLLECT/collect.md` and `GATES.md`). Gate M checks source-type diversity (papers, web, github, datasets, models), minimum count, topic coverage, recency, and full-text Markdown availability. If Gate M warns or fails, collect more sources before analyzing.
 
 ### Pre-flight: Phase-Guard Check
 
@@ -30,7 +32,7 @@ If the agent produces a single combined file instead of three separate files, Ga
 
 ## Pipeline
 
-### 0. Gate M — enough materials?
+### 0. Gate M — source diversity & enough materials?
 
 Before the deep scan, run **Gate M** (see `GATES.md`): is the material set sufficient for the intended scope? If a broad survey has only one paper (or the scope clearly needs a missing source type), pause and ask the user to `collect` more. A deliberate narrow corpus (e.g. single-paper deep dive) passes with a "narrow corpus" note.
 

@@ -3,14 +3,13 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.4.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
 
 # Oh-My-Research
 
-Intelligent orchestrator for **report-first deep research**. Auto-detects user intent and workspace state, then executes the right mode—initialize, collect materials, deep-analyze with evidence boundaries and thinking paradigms, synthesize a survey/report, or maintain state.
+Intelligent orchestrator for **report-first deep research**. Auto-detects user intent and workspace state, then executes the right mode — initialize, collect materials, deep-analyze with evidence boundaries and thinking paradigms, synthesize a survey/report, or maintain state.
 
 **North star:** high-quality deep research reports from collected materials and evidence — not prototypes, not coding validation.
 
@@ -26,112 +25,95 @@ Intelligent orchestrator for **report-first deep research**. Auto-detects user i
 
 **Keywords**: research, survey, literature review, evidence, collect papers, analyze, first principles, synthesize report, deep research, oh-my-research, omr
 
-## Intelligent Auto-Detection
+## Core Pipeline (Evidence-Deep)
 
-See `references/REFERENCE.md` for the full decision tree.
+```
+COLLECT materials → [Gate M] → ANALYZE (deep evidence + THINK) → [Gate A] → [Gate P] → SYNTH (survey / report)
+```
 
-### Intention Detection (runs first)
+Optional: IDEA, DECIDE (stance), RECONCILE. Default pattern: **Evidence-Deep**. See `references/GRAPH.md` and `patterns/`.
 
-Before inspecting workspace state, scan the request:
+## Auto-Detection Decision Tree
 
-| Signal (case-insensitive) | Route |
-|---------------------------|-------|
-| `first principles`, `socratic`, `pre-mortem`, `red team`, `steelman`, `deepen`, `rethink`, `elicit`, `think` | **THINK** on latest artifact |
-| `idea`, `brainstorm`, `speculate`, `what if`, `hypothesis` | **IDEA** |
-| URL / DOI / arxiv / GitHub / HuggingFace / `search …` / `collect` | **COLLECT** (init-on-demand if needed) |
-| `report`, `survey`, `write up`, `synthesize`, `manuscript`, `brief` | **SYNTH** |
-| Canonical op (`init`, `collect`, `analyze`, `think`, `synth`, `decide`, `idea`, `reconcile`, `workflow`, `qa`, `version`, `skill-version`) | Named mode — **wins** over keyword routing |
+The agent runs **intention detection first**, then falls back to **workspace-state detection**. Canonical op names (`init`, `collect`, `analyze`, `think`, `synth`, `decide`, `idea`, `reconcile`, `workflow`, `qa`) **always win** over keyword routing.
 
-### Workspace-State Detection (when no strong intent)
+```mermaid
+flowchart TD
+    START([User request]) --> OP{Canonical op<br/>in request?}
+    OP -- Yes --> RUNOP[Run named op — wins]
+    OP -- No --> INT{Intent keywords?}
 
-1. No `AGENTS.md` and no `.omr/` → **INIT**
-2. Materials / `papers-index` present, no `docs/plans/judgment-*` → **ANALYZE** (prefer deepen; COLLECT only if user is still adding sources)
-3. Judgment present, no synthesis under `docs/{survey,report,manuscript,brief}/` → **SYNTH**
-4. Active `.omr/loop-state.json` with `active: true` → surface **Gate L** before advancing
-5. New materials contradict published claims / decision → propose **RECONCILE**
-6. Ambiguous → ask or show graph-recommended next step
+    INT -- THINK keywords<br/>first principles, socratic,<br/>pre-mortem, red team, steelman,<br/>deepen, rethink, elicit, think --> THINK[THINK on latest artifact]
+    INT -- IDEA keywords<br/>idea, brainstorm, speculate,<br/>what if, hypothesis --> IDEA[IDEA mode]
+    INT -- COLLECT signals<br/>URL, DOI, arxiv, github,<br/>huggingface, search, collect --> COLLECT[COLLECT — init-on-demand<br/>if no workspace]
+    INT -- SYNTH keywords<br/>report, survey, write up,<br/>synthesize, manuscript, brief --> SYNTHGUARD{Phase-Guard:<br/>judgment + gate-a present?}
+    INT -- none --> STATE[Inspect workspace state]
 
-**Override** with canonical operations at any time.
+    COLLECT --> GATEM[Run Gate M:<br/>source diversity + sufficiency]
+    GATEM --> ANALYZE
 
-Always show a phase label: `[INIT]`, `[COLLECT]`, `[ANALYZE]`, `[THINK]`, `[SYNTH]`, `[RECONCILE]`, `[FINISHED]` (plus `[DECIDE]` / `[IDEA]` when used).
+    SYNTHGUARD -- Yes --> SYNTH[SYNTH mode]
+    SYNTHGUARD -- No, missing --> BLOCKSYNTH[Show PHASE-GUARD<br/>offer ANALYZE first]
 
-### Phase-Guard: Cross-Stage Jump Protection (v1.3+, hardened in v1.4)
+    STATE --> S1{No AGENTS.md<br/>and no .omr/?}
+    S1 -- Yes --> INIT[INIT]
+    S1 -- No --> S2{Materials present,<br/>no judgment?}
+    S2 -- Yes --> GATEM
+    S2 -- No --> S3{Judgment present,<br/>no synth content?}
+    S3 -- Yes --> SYNTHGUARD
+    S3 -- No --> S4{loop-state active?}
+    S4 -- Yes --> GATEL[Gate L:<br/>iterate vs advance]
+    S4 -- No --> S5{Contradiction vs<br/>published claims?}
+    S5 -- Yes --> RECONCILE[Propose RECONCILE]
+    S5 -- No --> AMBIG[Ambiguous → ask user<br/>or show graph-recommended next]
 
-When auto-detection routes to a stage, **first** read `.omr/tree-state.json` and check whether the target stage is in `unlocked`, `ready`, or `completed`. If the stage is `locked`, the agent must check whether required **prerequisite artifacts** exist on disk before proceeding. This prevents silent stage-skipping (e.g. user says "write report" → SYNTH keyword detected → but no `judgment-*.md` exists).
+    GATEL --> AMBIG
+    THINK --> GATEA[Gate A / QA1]
+    GATEA --> SYNTHGUARD
+    BLOCKSYNTH --> ANALYZE
+    ANALYZE --> GATEA
+```
 
-**Prerequisite artifact checks (Evidence-Deep pattern):**
+**Always show a phase label** at the start of each action: `[INIT]`, `[COLLECT]`, `[ANALYZE]`, `[THINK]`, `[SYNTH]`, `[RECONCILE]`, `[FINISHED]` (plus `[DECIDE]` / `[IDEA]` when used).
+
+## Phase-Guard: Cross-Stage Jump Protection
+
+Before routing to a stage, **read `.omr/tree-state.json`** and check whether the target stage is `unlocked`, `ready`, or `completed`. If `locked`, verify the required **prerequisite artifacts** exist on disk before proceeding. This prevents silent stage-skipping (e.g. user says "write report" → SYNTH keyword detected → but no `judgment-*.md` exists).
 
 | Target stage | Required prerequisite artifacts | Required gate JSON | If missing |
 |---|---|---|---|
-| ANALYZE | `materials/` with ≥1 source + `docs/index/` entry | `gate-m.json` (run during ANALYZE) | Route to COLLECT first |
+| ANALYZE | `materials/` with ≥1 source + `docs/index/` entry | `gate-m.json` (source diversity + sufficiency, run during ANALYZE) | Route to COLLECT first |
 | THINK | `docs/plans/judgment-*.md` or `docs/plans/evidence-*.md` | (none) | Route to ANALYZE first |
 | SYNTH | `docs/plans/judgment-*.md` | `gate-a.json` (pass) + `gate-p.json` | Route to ANALYZE → THINK → Gate A → Gate P first |
 | DECIDE | `docs/plans/judgment-*.md` | (none) | Route to ANALYZE first |
 
-**Enforcement protocol (v1.4 — blocking by default):**
+**Blocking by default.** The agent must not proceed past a missing prerequisite without either (a) satisfying the prerequisites or (b) receiving an explicit user override (e.g. "I know, just write the report" or "skip guard"). A general instruction like "write the report" does **not** count as an override. When overridden, record `scenario_note: "prerequisite skipped by user override"` in the next gate JSON for auditability.
 
-1. Before executing a stage, read `.omr/tree-state.json` and check if the stage is in `unlocked`, `ready`, or `completed`.
-2. If the stage is `locked`, check if the required artifacts **and gate JSON** exist on disk.
-3. If artifacts exist but tree-state is stale → update tree-state and proceed.
-4. If artifacts are missing → **BLOCK**: show `[PHASE-GUARD]` notice with the specific missing prerequisites and offer to run the prerequisite stage. **Do not proceed until the user explicitly overrides** (e.g. types "I know, just write the report" or "skip guard").
-5. If user explicitly overrides, proceed but record `scenario_note: "prerequisite skipped by user override"` in the next gate JSON.
-
-**Blocking vs advisory (v1.4 change):** In v1.3 the guard was "advisory, not blocking." Real-world usage showed this was too soft — agents routinely skipped the guard entirely. In v1.4 the guard is **blocking by default**: the agent must not proceed to a locked stage without either (a) satisfying the prerequisites or (b) receiving an explicit user override. The override must be recorded in the gate JSON for auditability.
-
-## Core Pipeline (Evidence-Deep)
-
-```
-COLLECT materials → ANALYZE (deep evidence + THINK) → SYNTH (survey / report)
-```
-
-Optional: IDEA, DECIDE (stance), RECONCILE, VERSION (workspace), skill-version (package).
-
-Default pattern: **Evidence-Deep**. See `references/GRAPH.md` and `patterns/`.
+**Tree-state staleness:** after every op, update `.omr/tree-state.json` — move completed stages to `completed`, unlock dependents, write a brief `notes` summary. A stale tree-state signals an interrupted workflow; check and refresh it at the start of any new op.
 
 ## Operation Modes
 
-### INIT Mode
-Bootstrap workspace. Op: `init "<topic>"`. Creates **only** `AGENTS.md` + `.omr/tree-state.json` + `.omr/pattern.json` + `.omr/locale.json` (language from timezone). **No empty folders** — every other path is created on first content write. → `references/INIT/init.md`
-
-### COLLECT Mode
-Passive reception of sources → materials + indexes + **full-text Markdown**. Each source is downloaded and converted to `materials/<bucket>/<ID>.md` via **anydoc** (with fallbacks), so ANALYZE can read the entire paper — not just the abstract. Op: `collect <url|query|…>`. → `references/COLLECT/collect.md`
-
-### ANALYZE Mode
-Deep analysis centerpiece: brief, evidence-map, judgment, optional plan. **Reads full-text Markdown** (`materials/<bucket>/<ID>.md`) for each material — abstract-only is a degraded fallback, not the default. Guarded by **Gate M** (enough materials + full-text available?) before, **Gate A / QA1** after, and **Gate T** (collect more?) after a THINK pass. Op: `analyze`. → `references/ANALYZE/analyze.md`
-
-### THINK Mode
-Methodology-driven elicitation on research artifacts (never code). Each pass loads a playbook (`references/THINK/methods/<slug>.md`), never default-agrees, and stamps an outcome (`hardened`/`refined`/`unchanged`/`killed`). Op: `think [method]`. → `references/THINK/think.md`, `references/THINK/methods/`
-
-### SYNTH Mode
-Primary deliverable: long, publication-quality reports in the preferred language (auto-detected from timezone/locale — `en`, `zh-CN`, `ja`, `de`, … — or explicit `--language`) as Word/PDF, written **incrementally** (outline → one chapter per turn → continuity brief → assemble). **Gate P** confirms language / format / mode / audience / citations before writing. Ops: `synth [--mode] [--format docx|pdf] [--language <tag>] [--resume] [--chapter <id>] [--no-wiki]`. Never generate an entire deep report in one turn. Public deliverables must be self-contained and must not expose workflow terms, internal material IDs, evidence-grade labels, or artifact paths. → `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md`
-
-### IDEA Mode (optional)
-Capture speculative notes. Op: `idea "…"`. → `references/IDEA/idea.md`
-
-### DECIDE Mode (optional)
-Stance / claim framing with ≥3 alternatives; Gate B. Op: `decide`. → `references/DECIDE/decide.md`
-
-### RECONCILE Mode
-Contradiction blast-radius, archive, rollback. → `references/RECONCILE/reconcile.md`
-
-### VERSION Mode
-Two tracks → `references/VERSION/version.md`:
-- **Workspace:** `version tag|history|diff|backup|list` (research artifacts)
-- **Skill package:** `skill-version show|check|sync|set|bump` (semver + `CHANGELOG.md`; source of truth `SKILL.md` → `metadata.version`)
-
-### WORKFLOW Mode
-Graph-driven multi-step Evidence-Deep (or other pattern). Op: `workflow [--pattern P]`. → `references/WORKFLOW/workflow-overview.md`
-
-### QA
-`qa qa1|qa2|all|state-check` — see `references/GATES.md`. `state-check` (v1.4) runs disk-vs-tree-state reconciliation: scans disk for actual artifacts, compares against `.omr/tree-state.json`, proposes corrections, and lists missing gates/artifacts.
+| Mode | Op | One-line | Detail |
+|------|----|----------|--------|
+| INIT | `init "<topic>"` | Bootstrap workspace (only `AGENTS.md` + `.omr/*.json`; no empty folders) | `references/INIT/init.md` |
+| COLLECT | `collect <url\|query\|…>` | Sources → materials + indexes + **full-text Markdown** (via anydoc) | `references/COLLECT/collect.md` |
+| ANALYZE | `analyze` | Brief, evidence-map, judgment; reads full-text Markdown; Gate M before, Gate A / QA1 after, Gate T after THINK | `references/ANALYZE/analyze.md` |
+| THINK | `think [method]` | Methodology-driven elicitation on research artifacts (never code); stamps `hardened`/`refined`/`unchanged`/`killed` | `references/THINK/think.md`, `references/THINK/methods/` |
+| SYNTH | `synth [--mode] [--format docx\|pdf] [--language] [--resume] [--chapter] [--no-wiki]` | Incremental long reports in preferred language; Gate P confirms prefs; never one-shot a deep report | `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md` |
+| IDEA | `idea "…"` | Capture speculative notes (optional) | `references/IDEA/idea.md` |
+| DECIDE | `decide` | Stance / claim framing with ≥3 alternatives; Gate B (optional) | `references/DECIDE/decide.md` |
+| RECONCILE | `reconcile` | Contradiction blast-radius, archive, rollback | `references/RECONCILE/reconcile.md` |
+| VERSION | — | Workspace artifact versioning: tag, history, diff, backup, list | `references/VERSION/version.md` |
+| WORKFLOW | `workflow [--pattern P]` | Graph-driven multi-step Evidence-Deep (or other pattern) | `references/WORKFLOW/workflow-overview.md` |
+| QA | `qa qa1\|qa2\|all\|state-check` | LLM QA checklists; `state-check` reconciles disk vs tree-state | `references/GATES.md` |
 
 ## Confirmation Gates
 
-Default **semi-automated** (pause for confirm). Support “no confirmations” / quick-pass.
+Default **semi-automated** (pause for confirm). Support "no confirmations" / quick-pass. Rapid pattern skips all gates (fully-automated).
 
 | Gate | When |
 |------|------|
-| M | After COLLECT: enough materials to analyze? |
+| M | After COLLECT: source diversity & enough materials? Shows diversity report, asks user: collect more types or proceed? |
 | L | Loop pattern: iterate vs advance |
 | A / QA1 | After ANALYZE judgment, before unlock SYNTH |
 | T | After THINK: collect more from surfaced gaps? |
@@ -140,18 +122,7 @@ Default **semi-automated** (pause for confirm). Support “no confirmations” /
 | Lenses | Structure → Prose → Adversarial before Gate D |
 | D / QA2 | Before publishing SYNTH |
 
-No Gate C / no evaluation path.
-
-## Post-Step Routing Menu
-
-After IDEA / Gate A / THINK proceed / Gate B:
-
-1. **Pause at each gate** (default)
-2. **Quick pass** — continue without further confirmations
-3. **Continue recommended** — next graph edge
-4. **Run THINK** — deepen current artifact
-5. **Switch pattern**
-6. **Stop**
+**Post-Step Routing Menu** (after Gate M / IDEA / Gate A / THINK proceed / Gate T / Gate B): (1) Pause at each gate (default) · (2) Quick pass · (3) Continue recommended (next graph edge) · (4) Run THINK · (5) Switch pattern · (6) Stop.
 
 ## Default Paths
 
@@ -168,27 +139,37 @@ Paths below are **logical destinations**. Create a folder only when writing the 
 | Wiki | `wiki/` |
 | Archive | `docs/archive/` |
 
-Templates: `assets/`. Patterns: `patterns/`. Detailed ops: `references/REFERENCE.md`.
+Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `references/REFERENCE.md`.
 
 ## Best Practices
 
 1. Trust auto-detection; override with canonical ops when needed
-2. **Phase-Guard before every stage (blocking by default)**: read `.omr/tree-state.json`, run startup reconciliation (disk vs. state), check prerequisites, show `[PHASE-GUARD]` if missing — **block** unless user explicitly overrides with override language. Never silently skip a stage
+2. **Phase-Guard before every stage (blocking by default)** — read `.omr/tree-state.json`, check prerequisites, show `[PHASE-GUARD]` if missing; never silently skip a stage
 3. Never create empty directories — mkdir only as the parent of a real file write
 4. Never upgrade `suggests` → `proven` without stronger source language
-5. Use THINK (first principles / triangulation) before Gate A when confidence is low — **in Evidence-Deep pattern, THINK is offered by default after judgment, not only when confidence is low**
-6. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
-7. Prefer a professionally formatted DOCX or PDF in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
-8. Keep internal traceability private; translate it into standard citations and natural prose
-9. Make the final report self-contained, professional, and accessible to its intended reader
-10. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
-11. Write full reports to disk; reply in chat with summary only
-12. Run document lenses and visually inspect the rendered file before Gate D
-13. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
+5. Use THINK (first principles / triangulation) before Gate A when confidence is low — in Evidence-Deep, THINK is offered by default after judgment, not only when confidence is low
+6. **Run Gate M after every collect batch** — show the source-type diversity report (papers, web, github, datasets, models), let the user decide whether to collect more source types before proceeding to analyze. Prevents premature analysis on narrow or single-type corpora
+7. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
+8. Prefer a professionally formatted DOCX or PDF in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
+9. Keep internal traceability private; translate it into standard citations and natural prose
+10. Make the final report self-contained, professional, and accessible to its intended reader
+11. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
+12. Write full reports to disk; reply in chat with summary only
+13. Run document lenses and visually inspect the rendered file before Gate D
+14. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
 
 ## Dependencies
 
 - Read/write project workspace
 - Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `skill_version.py` (package semver sync), `collect_cli.py` (records source + invokes `material_to_markdown.py` to download + convert to full-text Markdown), `material_to_markdown.py` (downloads source via arxiv/DOI/URL, converts to Markdown via **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; supports `--convert-dir` for batch conversion of pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths)
+- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py` to download + convert to full-text Markdown), `material_to_markdown.py` (downloads source via arxiv/DOI/URL, converts to Markdown via **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; supports `--convert-dir` for batch conversion of pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths)
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export; **anydoc** (`npx -y @firecrawl/anydoc`, Node 20+) for material → Markdown conversion; optional `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` as fallbacks if anydoc is unavailable
+
+## Deep Dive
+
+- `references/REFERENCE.md` — complete operation guide, artifact naming, evidence boundaries, tree state, troubleshooting
+- `references/GRAPH.md` — pattern graphs, node ↔ artifact contracts, unlock rules, cycles
+- `references/GATES.md` — gate definitions and QA checklists
+- `references/LLM-STATE.md` — agent-owned state JSON schemas
+- `references/LANGUAGE.md` — timezone/locale → preferred BCP-47 language tag
+- `references/THINK/methods/` — per-method elicitation playbooks

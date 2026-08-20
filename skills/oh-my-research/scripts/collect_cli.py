@@ -91,20 +91,43 @@ def convert_source(
     Returns the converter's result dict (status / method / path / ...). On
     any invocation error, returns a failed record with the reason."""
     if not _CONVERTER.exists():
-        return {"id": material_id, "status": "failed", "reason": "converter script not found"}
+        return {
+            "id": material_id,
+            "status": "failed",
+            "reason": "converter script not found",
+        }
     try:
         result = subprocess.run(
-            [sys.executable, str(_CONVERTER), source,
-             "--id", material_id, "--bucket", bucket,
-             "--workspace", str(workspace), "--title", title or ""],
-            capture_output=True, text=True, timeout=600,
+            [
+                sys.executable,
+                str(_CONVERTER),
+                source,
+                "--id",
+                material_id,
+                "--bucket",
+                bucket,
+                "--workspace",
+                str(workspace),
+                "--title",
+                title or "",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=600,
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
-        return {"id": material_id, "status": "failed",
-                "reason": result.stderr.strip() or f"converter exit {result.returncode}"}
+        return {
+            "id": material_id,
+            "status": "failed",
+            "reason": result.stderr.strip() or f"converter exit {result.returncode}",
+        }
     except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as e:
-        return {"id": material_id, "status": "failed", "reason": f"{type(e).__name__}: {e}"}
+        return {
+            "id": material_id,
+            "status": "failed",
+            "reason": f"{type(e).__name__}: {e}",
+        }
 
 
 def record(
@@ -128,7 +151,9 @@ def record(
         write_text(note, f"source: {source}\ntitle: {item['title']}\n")
         item["path"] = str(note.relative_to(workspace))
         if convert:
-            conv = convert_source(workspace, source, item["id"], "papers", item["title"])
+            conv = convert_source(
+                workspace, source, item["id"], "papers", item["title"]
+            )
             item["markdown_path"] = conv.get("path", "")
             item["markdown_status"] = conv.get("status", "")
             item["markdown_method"] = conv.get("method", "")
@@ -188,8 +213,12 @@ def main() -> None:
     p.add_argument("sources", nargs="+", help="URLs, DOIs, or search queries")
     p.add_argument("--workspace", type=Path, default=Path.cwd())
     p.add_argument("--title", default=None)
-    p.add_argument("--convert", action=argparse.BooleanOptionalAction, default=True,
-                   help="download + convert each source to full-text Markdown via anydoc (default: on)")
+    p.add_argument(
+        "--convert",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="download + convert each source to full-text Markdown via anydoc (default: on)",
+    )
     args = p.parse_args()
     ws = args.workspace.resolve()
     results = [record(ws, s, args.title, convert=args.convert) for s in args.sources]
