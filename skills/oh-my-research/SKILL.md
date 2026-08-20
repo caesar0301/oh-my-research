@@ -3,6 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
+  version: "1.4.2"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -131,7 +132,7 @@ Paths below are **logical destinations**. Create a folder only when writing the 
 | Artifact | Path (when content exists) |
 |----------|------|
 | State | `.omr/` (tree-state, pattern, locale; other JSON as needed) |
-| Materials | `materials/{papers,web,github,datasets,search,failed}/` — only buckets that receive files |
+| Materials | `materials/{papers-raw,papers,web,github,datasets,search,failed}/` — papers: raw binaries in `papers-raw/`, Markdown in `papers/` (same stem); other buckets only when they receive files |
 | Indexes | `docs/index/` |
 | Plans | `docs/plans/` |
 | Ideas | `docs/ideas/` |
@@ -162,7 +163,7 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 
 - Read/write project workspace
 - Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py` to download + convert to full-text Markdown), `material_to_markdown.py` (downloads source via arxiv/DOI/URL, converts to Markdown via **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; supports `--convert-dir` for batch conversion of pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths)
+- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF renderer applying LLM-authored `_document.json`), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py` to download + convert to full-text Markdown), `material_to_markdown.py` (downloads source via arxiv/DOI/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths)
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export; **anydoc** (`npx -y @firecrawl/anydoc`, Node 20+) for material → Markdown conversion; optional `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` as fallbacks if anydoc is unavailable
 
 ## Deep Dive

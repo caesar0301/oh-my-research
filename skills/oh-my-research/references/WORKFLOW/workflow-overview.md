@@ -29,7 +29,7 @@ collect https://arxiv.org/abs/2401.xxxxx
 collect "lifecycle formation evolution survey"
 ```
 
-Materials land under `materials/<bucket>/` only for buckets that receive files; indexes under `docs/index/` on first index write. Run **Gate M** (source diversity & sufficiency — shows diversity report, asks user: collect more types or proceed?). On pass → `analyze` becomes ready. On warn/fail → suggest specific source types to collect.
+Materials land under `materials/<bucket>/` only for buckets that receive files (papers: raw binaries in `papers-raw/`, Markdown in `papers/`); indexes under `docs/index/` on first index write. Run **Gate M** (source diversity & sufficiency — shows diversity report, asks user: collect more types or proceed?). On pass → `analyze` becomes ready. On warn/fail → suggest specific source types to collect.
 
 ### 3. ANALYZE
 

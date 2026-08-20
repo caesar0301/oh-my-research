@@ -46,7 +46,7 @@ Before the deep scan, run **Gate M** (see `GATES.md`): is the material set suffi
 ### 2. Materials scan → graded findings
 
 For each material:
-- **Read the full-text Markdown file** (`materials/<bucket>/<ID>.md`) — this is the primary source for analysis. The full paper body (introduction, methods, results, discussion, tables, figures captions) must be read, not just the abstract.
+- **Read the full-text Markdown file** (`materials/papers/<ID>.md` for papers, otherwise `materials/<bucket>/<ID>.md`) — this is the primary source for analysis. The full paper body (introduction, methods, results, discussion, tables, figures captions) must be read, not just the abstract. Do not treat `materials/papers-raw/` binaries as the analysis source.
 - If `markdown_path` exists in the index entry and the `.md` file is present → **read it in full**. For long papers, read in sections (offset/limit pagination) but cover the entire document.
 - If `markdown_status` is `"failed"` or the `.md` file is missing → **degraded mode**: fall back to abstract/metadata only, but record this explicitly in the evidence map as a traceability note (`[P-001: abstract-only — full-text conversion failed]`) and flag the finding's confidence as reduced.
 - Extract contributions, methods, limitations from the **full paper body**, not the abstract alone.

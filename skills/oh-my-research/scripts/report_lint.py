@@ -68,7 +68,7 @@ GATE_NAME_RE = re.compile(
 # Private artifact paths
 PRIVATE_PATH_RE = re.compile(
     r"(?:docs/plans/|\.omr/|tree-state\.json|report-state\.json|"
-    r"materials/(?:papers|web|github)/|docs/index/)",
+    r"materials/(?:papers-raw|papers|web|github)/|docs/index/)",
     re.IGNORECASE,
 )
 

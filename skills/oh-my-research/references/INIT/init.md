@@ -16,7 +16,7 @@ Also: new project, start research, initialize workspace, or first message with a
 
 - INIT creates only files that exist immediately (`AGENTS.md`, `.omr/tree-state.json`, `.omr/pattern.json`, `.omr/locale.json`). `.omr/` appears because those JSON files are written — not as an empty shell.
 - Do **not** scaffold `materials/`, `docs/`, `wiki/`, `docs/plans/`, `docs/index/`, `docs/ideas/`, `docs/survey|report|…/`, `chapters/`, `deliverables/`, `.omr/quality-gates/`, `.omr/versions/`, `.omr/backups/`, etc.
-- Later modes create a path’s parent dirs **only when writing the first real artifact** there (e.g. first paper → `materials/papers/…`; first judgment → `docs/plans/…`).
+- Later modes create a path’s parent dirs **only when writing the first real artifact** there (e.g. first paper PDF → `materials/papers-raw/…`, first paper Markdown → `materials/papers/…`; first judgment → `docs/plans/…`).
 
 ## Steps
 

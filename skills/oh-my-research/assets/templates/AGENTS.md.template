@@ -34,7 +34,7 @@ Override anytime with `synth --language <tag>` (e.g. `en`, `zh-CN`, `ja`, `de`) 
 
 | When | Path created |
 |------|----------------|
-| Collect a paper | `materials/papers/<file>` (+ `docs/index/` when indexing) |
+| Collect a paper | `materials/papers-raw/<ID>.<ext>` + `materials/papers/<ID>.md` (+ `docs/index/` when indexing) |
 | Collect a web page | `materials/web/<file>` |
 | Collect a GitHub URL | `materials/github/<file>` |
 | Search log / HF / failure | `materials/search|datasets|failed/<file>` only if used |

@@ -12,7 +12,9 @@ Pipeline (per source):
      - Preferred: `@firecrawl/anydoc` CLI (Node 20+, no install)
      - Fallback: `pymupdf` (PDF), `pdfplumber` (PDF), `markdownify`+`bs4` (HTML)
      - Last resort: record `.failed.txt` with the reason
-  3. Write `materials/<bucket>/<ID>.md` (full-text) next to the `.source.txt`.
+  3. For papers: persist the binary at `materials/papers-raw/<ID>.<ext>` and write
+     full-text Markdown to `materials/papers/<ID>.md` (same stem, different suffix).
+     Other buckets still write `materials/<bucket>/<ID>.md`.
 
 The script is mechanical: no semantic analysis, no summarization. It only turns
 bytes on disk into Markdown text that ANALYZE then reads in full.
@@ -21,7 +23,7 @@ Usage:
   python3 material_to_markdown.py <source> --id P-001 [--workspace .]
   python3 material_to_markdown.py <source> --id P-001 --bucket papers
   python3 material_to_markdown.py --index            # convert all indexed sources
-  python3 material_to_markdown.py --convert-dir materials/papers  # (v1.4) batch convert existing files
+  python3 material_to_markdown.py --convert-dir materials/papers-raw  # batch convert raw papers
 
 Exit codes: 0 success, 1 conversion failed (see .failed.txt), 2 usage error.
 """
@@ -39,6 +41,7 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
@@ -55,8 +58,6 @@ def _ssl_fallback_ctx() -> ssl.SSLContext:
 
 
 # --- arxiv parsing (stdlib only — no external dependency) --------------------
-import xml.etree.ElementTree as ET
-
 ARXIV_API = "http://export.arxiv.org/api/query?id_list={id}"
 ARXIV_ABS_RE = re.compile(r"arxiv\.org/abs/([^/?#]+)", re.IGNORECASE)
 ARXIV_PDF_RE = re.compile(r"arxiv\.org/pdf/([^/?#]+)", re.IGNORECASE)
@@ -88,6 +89,65 @@ ANYDOC_EXTS = {
 }
 ANYDOC_EXTS_TUPLE = tuple(sorted(ANYDOC_EXTS))
 MARKDOWN_EXTS = {".md", ".markdown", ".txt"}
+PAPERS_RAW_BUCKET = "papers-raw"
+
+
+def papers_raw_dir(workspace: Path) -> Path:
+    return workspace / "materials" / PAPERS_RAW_BUCKET
+
+
+def markdown_dir(workspace: Path, bucket: str) -> Path:
+    return workspace / "materials" / bucket
+
+
+def persist_raw_paper(workspace: Path, src: Path, material_id: str) -> Path:
+    """Copy `src` to materials/papers-raw/<ID><ext>. Returns the persisted path."""
+    workspace = workspace.resolve()
+    suffix = src.suffix.lower() or ".pdf"
+    dest = papers_raw_dir(workspace) / f"{material_id}{suffix}"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if src.resolve() != dest.resolve():
+        shutil.copy2(src, dest)
+    return dest
+
+
+def find_existing_raw(workspace: Path, material_id: str) -> Path | None:
+    raw_dir = papers_raw_dir(workspace)
+    if not raw_dir.is_dir():
+        return None
+    for cand in sorted(raw_dir.glob(f"{material_id}.*")):
+        if cand.name.endswith(".source.txt"):
+            continue
+        if cand.suffix.lower() in MARKDOWN_EXTS:
+            continue
+        return cand
+    return None
+
+
+def markdown_output_bucket(directory: Path, workspace: Path, bucket: str | None) -> str:
+    """Where --convert-dir should write .md files.
+
+    materials/papers-raw → papers; other dirs keep their bucket name (legacy
+    mixed PDFs in materials/papers still convert in place).
+    """
+    if bucket is not None:
+        return "papers" if bucket == PAPERS_RAW_BUCKET else bucket
+    try:
+        rel = directory.relative_to(workspace / "materials")
+        name = rel.parts[0] if rel.parts else "papers"
+    except ValueError:
+        name = directory.name
+    if name == PAPERS_RAW_BUCKET:
+        return "papers"
+    return name
+
+
+def _rel_to_workspace(workspace: Path, path: Path) -> str:
+    try:
+        return str(path.relative_to(workspace))
+    except ValueError:
+        return str(path)
+
 
 # Fallback converters (imported lazily so the script runs even if missing)
 PDF_FALLBACK_LIBS = ["pymupdf", "pdfplumber"]
@@ -302,21 +362,28 @@ def process_source(
     title: str | None = None,
 ) -> dict[str, Any]:
     """Download + convert one source. Returns a result record."""
-    bucket_dir = workspace / "materials" / bucket
-    md_path = bucket_dir / f"{material_id}.md"
+    workspace = workspace.resolve()
+    md_path = markdown_dir(workspace, bucket) / f"{material_id}.md"
     failed_path = workspace / "materials" / "failed" / f"{material_id}.failed.txt"
     low = source.lower()
+    keep_raw = bucket == "papers"
+
+    existing_raw = find_existing_raw(workspace, material_id) if keep_raw else None
 
     # Already converted? skip
     if md_path.exists() and md_path.stat().st_size > 0:
-        return {
+        result: dict[str, Any] = {
             "id": material_id,
             "status": "exists",
-            "path": str(md_path.relative_to(workspace)),
+            "path": _rel_to_workspace(workspace, md_path),
         }
+        if existing_raw is not None:
+            result["raw_path"] = _rel_to_workspace(workspace, existing_raw)
+        return result
 
     local_file: Path | None = None
     cleanup = False
+    persisted_raw: Path | None = existing_raw
     resolved_title = title or source
 
     try:
@@ -344,47 +411,70 @@ def process_source(
         else:
             raise ValueError(f"cannot resolve source: {source}")
 
+        assert local_file is not None
+        convert_src = local_file
+        if keep_raw and local_file.suffix.lower() not in MARKDOWN_EXTS:
+            persisted_raw = persist_raw_paper(workspace, local_file, material_id)
+            convert_src = persisted_raw
+
         # --- convert (markdown/txt passthrough; anydoc preferred; fallbacks) ---
-        if local_file.suffix.lower() in MARKDOWN_EXTS:
-            write_text(md_path, local_file.read_text(encoding="utf-8", errors="ignore"))
+        if convert_src.suffix.lower() in MARKDOWN_EXTS:
+            write_text(
+                md_path, convert_src.read_text(encoding="utf-8", errors="ignore")
+            )
             ok, method = True, "passthrough"
         else:
-            ok, method = convert(local_file, md_path, source)
+            ok, method = convert(convert_src, md_path, source)
+        raw_rel = (
+            _rel_to_workspace(workspace, persisted_raw)
+            if persisted_raw is not None
+            else ""
+        )
         if not ok:
             write_text(
                 failed_path, f"source: {source}\nid: {material_id}\nreason: {method}\n"
             )
-            return {
+            failed: dict[str, Any] = {
                 "id": material_id,
                 "status": "failed",
                 "reason": method,
-                "failed_path": str(failed_path.relative_to(workspace)),
+                "failed_path": _rel_to_workspace(workspace, failed_path),
             }
+            if raw_rel:
+                failed["raw_path"] = raw_rel
+            return failed
 
-        return {
+        converted: dict[str, Any] = {
             "id": material_id,
             "status": "converted",
             "method": method,
-            "path": str(md_path.relative_to(workspace)),
+            "path": _rel_to_workspace(workspace, md_path),
             "title": resolved_title,
         }
+        if raw_rel:
+            converted["raw_path"] = raw_rel
+        return converted
     except Exception as e:  # noqa: BLE001 — record any failure, continue pipeline
         write_text(
             failed_path,
             f"source: {source}\nid: {material_id}\nreason: {type(e).__name__}: {e}\n",
         )
-        return {
+        failed = {
             "id": material_id,
             "status": "failed",
             "reason": f"{type(e).__name__}: {e}",
-            "failed_path": str(failed_path.relative_to(workspace)),
+            "failed_path": _rel_to_workspace(workspace, failed_path),
         }
+        if persisted_raw is not None and persisted_raw.exists():
+            failed["raw_path"] = _rel_to_workspace(workspace, persisted_raw)
+        return failed
     finally:
         if cleanup and local_file and local_file.exists():
-            try:
-                local_file.unlink()
-            except OSError:
-                pass
+            if persisted_raw is None or local_file.resolve() != persisted_raw.resolve():
+                try:
+                    local_file.unlink()
+                except OSError:
+                    pass
 
 
 def _save_temp(data: bytes, suffix: str) -> Path:
@@ -422,96 +512,90 @@ def process_dir(
     don't yet have a corresponding .md file, and converts them. The material ID
     is derived from the filename stem (e.g. 2506.23852.pdf → ID 2506.23852).
 
-    This handles the common use case where a user has already downloaded a batch
-    of PDFs (e.g. via curl/wget) and needs them converted to Markdown without
-    re-downloading or manually scripting the conversion.
+    For `materials/papers-raw/`, Markdown is written to `materials/papers/` with
+    the same stem. Legacy mixed PDFs in `materials/papers/` still convert in
+    place.
 
     Args:
         workspace: workspace root path
-        directory: directory containing source files (e.g. materials/papers/)
+        directory: directory containing source files (e.g. materials/papers-raw/)
         bucket: override bucket name; if None, inferred from directory name
 
     Returns:
         List of result dicts (one per file)
     """
+    workspace = workspace.resolve()
     directory = directory.resolve()
     if not directory.is_dir():
         print(f"not a directory: {directory}", file=sys.stderr)
         return []
 
-    # Infer bucket from directory name if not specified
-    if bucket is None:
-        # materials/papers/ → "papers", materials/web/ → "web"
-        try:
-            rel = directory.relative_to(workspace / "materials")
-            bucket = rel.parts[0] if rel.parts else "papers"
-        except ValueError:
-            bucket = "papers"
+    md_bucket = markdown_output_bucket(directory, workspace, bucket)
+    from_papers_raw = directory.name == PAPERS_RAW_BUCKET
 
-    # Find convertible files (exclude .md, .txt, .source.txt, .failed.txt)
     convertible_exts = ANYDOC_EXTS | {".html", ".htm"}
-    skip_exts = MARKDOWN_EXTS | {".source.txt", ".failed.txt", ".json", ".ds_store"}
+    skip_exts = MARKDOWN_EXTS | {".json", ".ds_store"}
 
     results: list[dict[str, Any]] = []
     for src_file in sorted(directory.iterdir()):
         if not src_file.is_file():
             continue
         suffix = src_file.suffix.lower()
-        # Skip already-markdown, text, and metadata files
-        if suffix in skip_exts or src_file.name.startswith("."):
+        if (
+            suffix in skip_exts
+            or src_file.name.startswith(".")
+            or src_file.name.endswith(".source.txt")
+            or src_file.name.endswith(".failed.txt")
+        ):
             continue
         if suffix not in convertible_exts:
             continue
 
-        # Derive material ID from filename stem
         material_id = src_file.stem
-        # For arXiv PDFs named like "2506.23852.pdf", the ID is "2506.23852"
-        # For files named "P-001.pdf", the ID is "P-001"
-        # Either way, the stem is the ID
+        md_path = markdown_dir(workspace, md_bucket) / f"{material_id}.md"
+        raw_rel = _rel_to_workspace(workspace, src_file) if from_papers_raw else ""
 
-        # Determine output path: materials/<bucket>/<ID>.md
-        md_path = workspace / "materials" / bucket / f"{material_id}.md"
-
-        # Skip if already converted
         if md_path.exists() and md_path.stat().st_size > 0:
-            results.append(
-                {
-                    "id": material_id,
-                    "status": "exists",
-                    "path": str(md_path.relative_to(workspace)),
-                    "source": str(src_file),
-                }
-            )
+            rec: dict[str, Any] = {
+                "id": material_id,
+                "status": "exists",
+                "path": _rel_to_workspace(workspace, md_path),
+                "source": str(src_file),
+            }
+            if raw_rel:
+                rec["raw_path"] = raw_rel
+            results.append(rec)
             continue
 
-        # Convert using the existing convert() function
         failed_path = workspace / "materials" / "failed" / f"{material_id}.failed.txt"
         ok, method = convert(src_file, md_path, str(src_file))
 
         if ok:
-            results.append(
-                {
-                    "id": material_id,
-                    "status": "converted",
-                    "method": method,
-                    "path": str(md_path.relative_to(workspace)),
-                    "source": str(src_file),
-                }
-            )
+            rec = {
+                "id": material_id,
+                "status": "converted",
+                "method": method,
+                "path": _rel_to_workspace(workspace, md_path),
+                "source": str(src_file),
+            }
+            if raw_rel:
+                rec["raw_path"] = raw_rel
+            results.append(rec)
         else:
             write_text(
                 failed_path,
                 f"source: {src_file}\nid: {material_id}\nreason: {method}\n",
             )
-            results.append(
-                {
-                    "id": material_id,
-                    "status": "failed",
-                    "reason": method,
-                    "failed_path": str(failed_path.relative_to(workspace)),
-                    "source": str(src_file),
-                }
-            )
+            rec = {
+                "id": material_id,
+                "status": "failed",
+                "reason": method,
+                "failed_path": _rel_to_workspace(workspace, failed_path),
+                "source": str(src_file),
+            }
+            if raw_rel:
+                rec["raw_path"] = raw_rel
+            results.append(rec)
 
     return results
 
@@ -535,7 +619,7 @@ def main() -> int:
         "--convert-dir",
         type=Path,
         default=None,
-        help="(v1.4) batch convert existing files in a directory (e.g. materials/papers/)",
+        help="batch convert existing files (e.g. materials/papers-raw/)",
     )
     args = p.parse_args()
 

@@ -108,7 +108,7 @@ Position: after COLLECT has ≥1 usable source and `analyze` is marked ready; be
 **Checks (interpret for the intended scope — not a fixed quota):**
 - [ ] **Minimum count**: ≥3 materials collected (or explicit narrow-scope note accepted)
 - [ ] **Source-type diversity**: at least 2 distinct buckets populated among:
-  - `papers/` (arXiv, DOI, PDFs — primary sources)
+  - `papers/` (Markdown) and `papers-raw/` (PDF/DOCX binaries — primary sources)
   - `web/` (blog posts, survey articles, documentation)
   - `github/` (source repos, code samples)
   - `datasets/` or HuggingFace models (benchmarks, weights, datasets)
@@ -275,7 +275,7 @@ Position: after judgment, typically with Gate A. Op: `qa qa1`.
 | `gap-detection` | Open gaps present with severity |
 | `contradiction` | Conflicts handled or “None detected” stated |
 | `traceability` | Findings link to material IDs in private plans/indexes |
-| `full-text-usage` | Verify that ANALYZE read the full-text Markdown (`materials/<bucket>/<ID>.md`) for each material where it exists. Any material analyzed abstract-only (conversion failed or `.md` missing) must be explicitly flagged in the evidence map's traceability notes with reduced confidence. If a material has a converted `.md` but ANALYZE only used the abstract, this is a **fail** — re-run the materials scan. |
+| `full-text-usage` | Verify that ANALYZE read the full-text Markdown (`materials/papers/<ID>.md` or `materials/<bucket>/<ID>.md`) for each material where it exists. Any material analyzed abstract-only (conversion failed or `.md` missing) must be explicitly flagged in the evidence map's traceability notes with reduced confidence. If a material has a converted `.md` but ANALYZE only used the abstract, this is a **fail** — re-run the materials scan. |
 
 Write `.omr/quality-gates/QA1-evidence-analysis.json` with rationale per check.
 

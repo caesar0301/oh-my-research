@@ -4,8 +4,11 @@
 Creates only the directories needed for the files being written — never a full
 empty materials/ tree. After recording a source, optionally invokes
 `material_to_markdown.py` to download + convert the source into a full-text
-Markdown file (`materials/<bucket>/<ID>.md`) so ANALYZE can read the entire
-paper, not just the abstract.
+Markdown file so ANALYZE can read the entire paper, not just the abstract.
+
+Papers persist the raw binary at `materials/papers-raw/<ID>.<ext>` and the
+converted Markdown at `materials/papers/<ID>.md` (same stem, different suffix).
+Other buckets still write `materials/<bucket>/<ID>.md`.
 """
 
 from __future__ import annotations
@@ -116,8 +119,13 @@ def convert_source(
             timeout=600,
             check=False,
         )
-        if result.returncode == 0 and result.stdout.strip():
-            return json.loads(result.stdout)
+        if result.stdout.strip():
+            try:
+                payload = json.loads(result.stdout)
+                if isinstance(payload, dict) and payload.get("status"):
+                    return payload
+            except json.JSONDecodeError:
+                pass
         return {
             "id": material_id,
             "status": "failed",
@@ -148,7 +156,7 @@ def record(
             "title": title or source,
             "collected_at": now,
         }
-        note = workspace / "materials" / "papers" / f"{item['id']}.source.txt"
+        note = workspace / "materials" / "papers-raw" / f"{item['id']}.source.txt"
         write_text(note, f"source: {source}\ntitle: {item['title']}\n")
         item["path"] = str(note.relative_to(workspace))
         if convert:
@@ -158,6 +166,7 @@ def record(
             item["markdown_path"] = conv.get("path", "")
             item["markdown_status"] = conv.get("status", "")
             item["markdown_method"] = conv.get("method", "")
+            item["raw_path"] = conv.get("raw_path", "")
             if conv.get("reason"):
                 item["markdown_failure_reason"] = conv["reason"]
         data["papers"].append(item)

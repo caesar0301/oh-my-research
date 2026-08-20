@@ -13,6 +13,21 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.4.2] — 2026-08-20
+
+### Changed
+
+- Version set to 1.4.2
+
+## [1.5.0] — 2026-08-20
+
+### Changed
+
+- **Paper materials layout:** COLLECT now keeps raw paper binaries in `materials/papers-raw/<ID>.<ext>` and converted Markdown in `materials/papers/<ID>.md` (same stem, different suffix). Previously the PDF lived only in a temp file and was deleted after conversion. Index entries add `raw_path`; paper `.source.txt` sidecars move to `papers-raw/`. `--convert-dir materials/papers-raw` writes Markdown to `materials/papers/`. Legacy mixed PDFs in `materials/papers/` still convert in place. Web and other buckets are unchanged.
+  - `material_to_markdown.py` / `collect_cli.py`: persist-and-convert for the papers bucket
+  - `COLLECT/collect.md`, `SKILL.md`, `REFERENCE.md`, `INIT/init.md`, `ANALYZE/analyze.md`, `GATES.md`, `AGENTS.md.template`, `scripts/README.md`
+  - `report_lint.py`: private-path regex includes `materials/papers-raw/`
+
 ## [1.4.1] — 2026-08-20
 
 ### Added

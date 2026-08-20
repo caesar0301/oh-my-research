@@ -49,7 +49,8 @@ The full decision tree — intention detection, workspace-state detection, and P
 | Papers index | `papers-index.json` (+ `.md`) | `docs/index/` |
 | Synthesis | chapters under mode dir | `docs/{survey,report,manuscript,brief}/` |
 | Material IDs | `P-xxx` papers, `W-xxx` web, `G-xxx` github | indexes |
-| Full-text Markdown | `materials/<bucket>/<ID>.md` | `materials/{papers,web,github}/` |
+| Full-text Markdown | `materials/<bucket>/<ID>.md` | papers: `materials/papers/`; also `web`, `github` |
+| Paper raw binaries | `materials/papers-raw/<ID>.<ext>` | same stem as the Markdown file |
 
 `{id}` default: `R-001` for first research thread (increment if multiple threads).
 
