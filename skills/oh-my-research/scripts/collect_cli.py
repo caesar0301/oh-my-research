@@ -114,6 +114,7 @@ def convert_source(
             capture_output=True,
             text=True,
             timeout=600,
+            check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)

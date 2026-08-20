@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import ssl
@@ -57,8 +58,8 @@ def _ssl_fallback_ctx() -> ssl.SSLContext:
 import xml.etree.ElementTree as ET
 
 ARXIV_API = "http://export.arxiv.org/api/query?id_list={id}"
-ARXIV_ABS_RE = re.compile(r"arxiv\.org/abs/([^/?#]+)", re.I)
-ARXIV_PDF_RE = re.compile(r"arxiv\.org/pdf/([^/?#]+)", re.I)
+ARXIV_ABS_RE = re.compile(r"arxiv\.org/abs/([^/?#]+)", re.IGNORECASE)
+ARXIV_PDF_RE = re.compile(r"arxiv\.org/pdf/([^/?#]+)", re.IGNORECASE)
 DOI_RE = re.compile(r"^10\.\d{4,}/\S+$")
 
 # File extensions anydoc can convert directly
@@ -110,6 +111,7 @@ def _http_get(url: str, timeout: int = 60) -> bytes:
                 ["curl", "-fsSL", "--max-time", str(timeout), url],
                 capture_output=True,
                 timeout=timeout + 10,
+                check=False,
             )
             if result.returncode == 0 and result.stdout:
                 return result.stdout
@@ -121,12 +123,12 @@ def _http_get(url: str, timeout: int = 60) -> bytes:
         headers={"User-Agent": "oh-my-research/1.0 (material collector)"},
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout, context=_SSL_CTX) as r:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=timeout, context=_SSL_CTX) as r:
             return r.read()
     except urllib.error.URLError:
         with urllib.request.urlopen(
             req, timeout=timeout, context=_ssl_fallback_ctx()
-        ) as r:  # noqa: S310
+        ) as r:
             return r.read()
 
 
@@ -167,7 +169,7 @@ def resolve_doi_pdf(doi: str) -> tuple[bytes, str]:
     landing = _http_get(url)
     # Naive: scan for a PDF link
     text = landing.decode("utf-8", errors="ignore")
-    pdf_match = re.search(r'href="(https?://[^"]+\.pdf)"', text, re.I)
+    pdf_match = re.search(r'href="(https?://[^"]+\.pdf)"', text, re.IGNORECASE)
     if pdf_match:
         return _http_get(pdf_match.group(1)), doi
     raise ValueError(f"DOI landing page had no obvious PDF link: {doi}")
@@ -178,6 +180,7 @@ def download_to_temp(url: str) -> tuple[Path, str]:
     data = _http_get(url)
     suffix = _guess_suffix(url)
     fd, tmp = tempfile.mkstemp(suffix=suffix)
+    os.close(fd)
     Path(tmp).write_bytes(data)
     return Path(tmp), url.rsplit("/", 1)[-1]
 
@@ -214,6 +217,7 @@ def convert_with_anydoc(src: Path, dst: Path) -> bool:
             capture_output=True,
             text=True,
             timeout=300,
+            check=False,
         )
         return result.returncode == 0 and dst.exists()
     except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -235,7 +239,7 @@ def convert_pdf_fallback(src: Path) -> str | None:
             return "\n\n".join(parts)
     except ImportError:
         pass
-    except Exception:
+    except Exception:  # noqa: BLE001, S110 — best-effort fallback; try next lib
         pass
     # pdfplumber
     try:
@@ -247,7 +251,7 @@ def convert_pdf_fallback(src: Path) -> str | None:
             return "\n\n".join(parts)
     except ImportError:
         pass
-    except Exception:
+    except Exception:  # noqa: BLE001, S110 — best-effort fallback; try next lib
         pass
     return None
 
@@ -262,7 +266,7 @@ def convert_html_fallback(src: Path) -> str | None:
         return out or None
     except ImportError:
         return None
-    except Exception:
+    except Exception:  # noqa: BLE001 — best-effort fallback converter
         return None
 
 
@@ -270,9 +274,8 @@ def convert(src: Path, dst: Path, source_url: str) -> tuple[bool, str]:
     """Convert `src` to Markdown at `dst`. Returns (success, method_or_reason)."""
     suffix = src.suffix.lower()
     # 1. anydoc (preferred)
-    if anydoc_available():
-        if convert_with_anydoc(src, dst):
-            return True, "anydoc"
+    if anydoc_available() and convert_with_anydoc(src, dst):
+        return True, "anydoc"
     # 2. fallbacks
     if suffix == ".pdf":
         text = convert_pdf_fallback(src)
@@ -365,7 +368,7 @@ def process_source(
             "path": str(md_path.relative_to(workspace)),
             "title": resolved_title,
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — record any failure, continue pipeline
         write_text(
             failed_path,
             f"source: {source}\nid: {material_id}\nreason: {type(e).__name__}: {e}\n",
@@ -386,6 +389,7 @@ def process_source(
 
 def _save_temp(data: bytes, suffix: str) -> Path:
     fd, tmp = tempfile.mkstemp(suffix=suffix)
+    os.close(fd)
     Path(tmp).write_bytes(data)
     return Path(tmp)
 
