@@ -75,7 +75,7 @@ DEFAULT_SPEC: dict[str, Any] = {
     "line_spacing": 1.25,
     "cover": {
         "enabled": True,
-        "elements": ["title", "subtitle", "author", "date", "attribution"],
+        "elements": ["title", "subtitle", "author", "date"],
     },
     "toc": {"enabled": True, "title": None, "depth": 3},
     "header": {"enabled": True, "text": None},
