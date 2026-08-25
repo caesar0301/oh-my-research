@@ -45,7 +45,7 @@ Default workflow pattern: **Evidence-Deep** (best for literature surveys and str
 
 ## Recommended companion: FlowJet
 
-OMR covers the research lifecycle. Pair it with **[FlowJet](https://github.com/caesar0301/flowjet-agent)** (`git@github.com:caesar0301/flowjet-agent.git`) for the document and diagram skills that reports actually need:
+OMR covers the research lifecycle. Pair it with **[FlowJet](https://github.com/caesar0301/flowjet-agent)** for the document and diagram skills that reports actually need:
 
 - **Docs writing** — structure and polish long-form Markdown
 - **draw.io** — figures and architecture diagrams
