@@ -1635,6 +1635,7 @@ class FontRouter:
                     bold = False
                 out.append(piece)
                 continue
+
             def key(ch: str, b: bool = bold) -> str | None:
                 return self.font_for(ch, bold=b)
 
