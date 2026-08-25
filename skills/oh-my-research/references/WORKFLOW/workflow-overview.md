@@ -64,7 +64,7 @@ synth --mode survey --format docx --language en
 2. Write one chapter per turn into `docs/survey/chapters/`  
 3. Update `_continuity.md` after each chapter  
 4. Resume with `synth --resume` if interrupted  
-5. Write abstract last → lenses → author `_document.json` presentation spec → LLM QA2 → export DOCX/PDF → Gate D  
+5. Write abstract last → lenses → author `_document.json` presentation spec → LLM QA2 → export DOCX/PDF/Markdown → Gate D  
 
 See `references/SYNTH/long-report.md`. Chat: progress only.
 

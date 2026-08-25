@@ -8,7 +8,7 @@ Judgment, structure, and progress tracking are **agent-owned**. Do not rely on P
 |---------|--------|
 | Research judgment, outlines, gates, method choice, continuity | **LLM** following reference docs |
 | Report content **and presentation** (title, fonts, colors, cover, TOC, header/footer, chapter order) — via `_document.json` | **LLM** authoring the spec |
-| Bytes on disk: DOCX/PDF render from spec, version backups, skill semver sync, URL indexing + full-text Markdown conversion (anydoc + fallbacks) | **Scripts** (`export_report.py`, `version_control.py`, `skill_version.py`, `collect_cli.py`, `material_to_markdown.py`) |
+| Bytes on disk: DOCX/PDF/Markdown render from spec, version backups, skill semver sync, URL indexing + full-text Markdown conversion (anydoc + fallbacks) | **Scripts** (`export_report.py`, `version_control.py`, `skill_version.py`, `collect_cli.py`, `material_to_markdown.py`) |
 
 `export_report.py` is a **thin renderer**: it applies the LLM-authored `docs/<mode>/_document.json`, not hardcoded styling. It never invents structure or layout — it renders exactly what the spec + chapters describe.
 
@@ -217,6 +217,6 @@ python skills/oh-my-research/scripts/skill_version.py bump minor --message "…"
 python scripts/collect_cli.py "https://arxiv.org/abs/…"
 ```
 
-`export_report.py` still enforces a mechanical publication-safety scan before writing DOCX/PDF — fix prose if it rejects.
+`export_report.py` still enforces a mechanical publication-safety scan before writing DOCX/PDF/Markdown — fix prose if it rejects.
 
 `skill_version.py` syncs package semver only; it does not tag research workspaces.

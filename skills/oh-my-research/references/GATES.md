@@ -318,7 +318,7 @@ Position: after Gate A unlocks SYNTH; before SYNTH Phase A (outline).
 **Checks (confirm or adjust — record once per report, then keep stable):**
 - [ ] Mode: `survey` / `report` / `manuscript` / `brief` (pattern default or user choice)
 - [ ] Language: single BCP-47 tag (per `LANGUAGE.md` resolution order)
-- [ ] Format: `docx` / `pdf`
+- [ ] Format: `docx` / `pdf` / `md`
 - [ ] Audience + intended length/depth
 - [ ] Citation style: author–date vs numbered (consistent throughout)
 - [ ] Wiki yes/no (if not already specified)
@@ -358,7 +358,7 @@ Process: announce → findings table → user accept/reject → apply → contin
 - [ ] No workflow terms, gate names, internal IDs, or private paths
 - [ ] Language consistent (single primary BCP-47 tag)
 - [ ] All planned chapters complete in `.omr/report-state.json`
-- [ ] Final DOCX/PDF rendered (`export_report.py`) and visually inspected
+- [ ] Final deliverable rendered (`export_report.py`) — DOCX/PDF visually inspected; for Markdown: lint clean, TOC anchors resolve, front-matter complete
 - [ ] **Incremental writing compliance (v1.4)**:
   - `docs/<mode>/chapters/` directory exists with ≥1 `.md` file (unless brief mode < 3K words)
   - `.omr/report-state.json` exists with `chapters[]` array

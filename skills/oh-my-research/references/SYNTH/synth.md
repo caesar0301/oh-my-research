@@ -1,6 +1,6 @@
 # SYNTH Mode — Deep Research Report
 
-**Primary deliverable.** Write a self-contained, publication-quality survey/report (or manuscript/brief) from private research artifacts. Preferred output: professionally formatted **Word (`.docx`) or PDF**, in the auto-detected or user-selected language (see `LANGUAGE.md`).
+**Primary deliverable.** Write a self-contained, publication-quality survey/report (or manuscript/brief) from private research artifacts. Preferred output: professionally formatted **Word (`.docx`), PDF, or Markdown (`.md`)**, in the auto-detected or user-selected language (see `LANGUAGE.md`).
 
 Long deep reports **must not** be generated in a single model turn. Write **incrementally to disk**, one chapter (or chapter section) at a time, then assemble the final document.
 
@@ -15,7 +15,7 @@ synth --mode report
 synth --mode manuscript
 synth --mode brief
 synth --no-wiki
-synth --format docx|pdf
+synth --format docx|pdf|md
 synth --language <tag>   # e.g. en, zh-CN, zh-TW, ja, ko, de, fr, es, pt-BR, …
 synth --resume
 synth --chapter <id>
@@ -88,7 +88,7 @@ Deep reports routinely exceed a single context window. **Mandatory rules:**
 4. Keep a compact **continuity brief** (claims, terms, citation ledger, open threads) — reload that, not all prior chapters.
 5. Write **executive summary and conclusions last**, after body chapters exist.
 6. **Resume** from `.omr/report-state.json` if interrupted (`synth --resume`).
-7. Assemble DOCX/PDF only when all planned chapters are `done`.
+7. Assemble DOCX/PDF/Markdown only when all planned chapters are `done`.
 
 Detailed protocol: `long-report.md`.
 
@@ -96,7 +96,7 @@ Detailed protocol: `long-report.md`.
 
 Private artifacts (`docs/plans/`, indexes, continuity brief) may use internal material IDs and evidence grades.
 
-Public chapters and the final DOCX/PDF must **not** expose:
+Public chapters and the final DOCX/PDF/Markdown must **not** expose:
 
 - internal material IDs (`P-001`, `W-002`, …)
 - workflow names, gates, QA labels, artifact paths
@@ -128,7 +128,7 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 6. Report is self-contained for a reader without working files
 7. Professional, user-friendly tone
 8. Per-chapter lenses as needed; whole-document Structure/Prose/Adversarial pass before export
-9. Rendered DOCX/PDF inspected; publication-safety scan clean
+9. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety scan clean
 10. Optional wiki after Gate D (`--no-wiki` to skip)
 
 ## Process (summary)
@@ -142,7 +142,7 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 5. Closing chapters; abstract last.
 6. Lenses (chapter-scoped, then light global).
 7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
-8. LLM QA2 → `export_report.py` for DOCX/PDF → inspect → Gate D.
+8. LLM QA2 → `export_report.py` for DOCX/PDF/Markdown → inspect → Gate D.
 9. Deliver path + short summary; optional wiki.
 
 ## Presentation is LLM-driven (not baked into the script)
@@ -180,7 +180,7 @@ docs/survey/
 │   ├── 08-conclusions.md
 │   └── 09-references.md
 └── deliverables/
-    └── <topic>-survey-<lang>.docx|pdf
+    └── <topic>-survey-<lang>.docx|pdf|md
 ```
 
 Brief mode may use fewer chapters; manuscript may use journal-style sections. Outline drives the actual file set.
@@ -193,6 +193,9 @@ Driven by `_document.json` (above). Aim for:
 - Title page, abstract/executive summary, TOC, numbered headings, body, limitations, conclusion, references
 - Readable typography, page numbers, consistent hierarchy
 - DOCX for editable delivery; PDF for stable distribution
+- Markdown (`.md`) for a single self-contained deliverable: Mermaid figures and GFM tables pass through verbatim (see `long-report.md` § Figures)
+
+> **Figures across formats:** figures render graphically in the Markdown deliverable. In DOCX/PDF exports, Mermaid blocks appear as source code; consult the Markdown version for rendered figures.
 
 ## Chat reply templates
 

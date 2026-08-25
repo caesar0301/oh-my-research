@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render publication-safe Markdown chapters into DOCX or PDF.
+"""Render publication-safe Markdown chapters into DOCX, PDF, or Markdown.
 
 This is a THIN, SPEC-DRIVEN renderer. All presentation decisions (title page,
 fonts, colors, sizes, table of contents, headers/footers, chapter order,
@@ -9,7 +9,7 @@ hardcoded policy here. The script only:
   1. resolves the spec (JSON) merged over minimal defaults,
   2. assembles the chapter Markdown the agent wrote,
   3. runs a mechanical publication-safety scan,
-  4. renders bytes (DOCX via python-docx, PDF via reportlab).
+  4. renders bytes (DOCX via python-docx, PDF via reportlab, Markdown via stdlib).
 
 Author the spec at docs/<mode>/_document.json (or pass --spec). Generate a
 starter with --emit-spec, then edit it per report/scenario/language.
@@ -2063,6 +2063,214 @@ def export_pdf(
 
 
 # --------------------------------------------------------------------------- #
+# MARKDOWN
+# --------------------------------------------------------------------------- #
+HEADING_LINE_RE = re.compile(r"^(#{1,6})\s+(.+)$")
+MERMAID_FENCE_RE = re.compile(r"^```mermaid\s*$", re.MULTILINE)
+GITHUB_ANCHOR_RE = re.compile(r"[^\w\u3400-\u9fff\s-]")
+
+MERMAID_TYPES = tuple(
+    diagram.lower()
+    for diagram in (
+        "graph",
+        "flowchart",
+        "sequenceDiagram",
+        "classDiagram",
+        "stateDiagram-v2",
+        "stateDiagram",
+        "erDiagram",
+        "journey",
+        "gantt",
+        "pie",
+        "mindmap",
+        "timeline",
+        "quadrantChart",
+        "gitGraph",
+    )
+)
+
+
+def github_anchor(text: str) -> str:
+    """GitHub-style heading anchor: lowercase, strip punctuation, spaces to '-'."""
+    slug = GITHUB_ANCHOR_RE.sub("", text.strip().lower())
+    return re.sub(r"\s+", "-", slug)
+
+
+def iter_headings(text: str) -> Iterable[tuple[int, str]]:
+    """ATX headings outside fenced code blocks, in document order."""
+    in_fence = False
+    for line in text.splitlines():
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        match = HEADING_LINE_RE.match(line)
+        if match:
+            yield len(match.group(1)), clean_inline(match.group(2))
+
+
+def lint_mermaid(body: str) -> list[str]:
+    """Structural lint for fenced Mermaid blocks; returns violation messages."""
+    findings: list[str] = []
+    for index, match in enumerate(MERMAID_FENCE_RE.finditer(body), start=1):
+        # 1. Block must close before the next opening fence or EOF.
+        close = body.find("\n```", match.end())
+        if close == -1:
+            findings.append(f"mermaid block #{index}: unclosed fence")
+            continue
+        # 2. First non-empty line must declare a known diagram type.
+        first = next(
+            (
+                line.strip()
+                for line in body[match.end() : close].splitlines()
+                if line.strip()
+            ),
+            "",
+        )
+        if not first.lower().startswith(MERMAID_TYPES):
+            findings.append(f"mermaid block #{index}: unknown diagram type {first!r}")
+    return findings
+
+
+def front_matter(spec: dict[str, Any], language: str) -> str:
+    """YAML front-matter carrying the report metadata (JSON strings are YAML)."""
+    date_str = spec.get("date") or datetime.now(timezone.utc).date().isoformat()
+    fields = [
+        ("title", spec.get("title")),
+        ("subtitle", spec.get("subtitle") or lang_string(spec, language, "subtitle")),
+        ("author", spec.get("author")),
+        ("date", date_str),
+        ("lang", language),
+    ]
+    lines = ["---"]
+    lines += [
+        f"{key}: {json.dumps(str(value), ensure_ascii=False)}"
+        for key, value in fields
+        if value
+    ]
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def title_block(spec: dict[str, Any], language: str) -> str:
+    """Reader-facing title block mirroring the DOCX/PDF cover semantics."""
+    lines = [f"# {spec.get('title') or ''}"]
+    cover = spec.get("cover") or {}
+    if cover.get("enabled", True):
+        date_str = spec.get("date") or datetime.now(timezone.utc).date().isoformat()
+        for element in cover.get("elements") or ["title"]:
+            # The H1 already carries the title; the credit lives in the footer.
+            if element in ("title", "attribution"):
+                continue
+            if element == "subtitle":
+                subtitle = spec.get("subtitle") or lang_string(
+                    spec, language, "subtitle"
+                )
+                lines.append(f"**{subtitle}**")
+            elif element == "author" and spec.get("author"):
+                lines.append(f"*{spec['author']}*")
+            elif element == "date":
+                lines.append(date_str)
+    return "\n\n".join(lines)
+
+
+def drop_leading_h1(text: str, title: str) -> str:
+    """Remove the opening H1 line when it merely repeats the document title."""
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if not line.strip():
+            continue
+        if line.startswith("```"):
+            return text  # chapter opens with a fence; no leading H1 to drop
+        match = re.match(r"^#\s+(.+)$", line)
+        if not match or clean_inline(match.group(1)) != title:
+            return text
+        rest = lines[index + 1 :]
+        while rest and not rest[0].strip():
+            rest.pop(0)
+        return "\n".join(rest)
+    return text
+
+
+def chapter_bodies(chapters: list[tuple[str, str]], spec: dict[str, Any]) -> list[str]:
+    """Chapter texts in spec order; a duplicated leading H1 is dropped."""
+    bodies = [text for _, text in chapters]
+    title = spec.get("title")
+    if spec.get("drop_first_h1_matching_title", True) and title and bodies:
+        bodies[0] = drop_leading_h1(bodies[0], title)
+    return bodies
+
+
+def toc_block(bodies: list[str], spec: dict[str, Any], language: str) -> str | None:
+    """Static anchor TOC in the GitHub dialect (duplicate anchors get -N)."""
+    toc = spec.get("toc") or {}
+    depth = int(toc.get("depth", 3) or 3)
+    seen: dict[str, int] = {}
+    entries: list[str] = []
+    for body in bodies:
+        for level, text in iter_headings(body):
+            if level > depth:
+                continue
+            anchor = github_anchor(text)
+            count = seen.get(anchor, 0)
+            seen[anchor] = count + 1
+            if count:
+                anchor = f"{anchor}-{count}"
+            entries.append(f"{'  ' * (level - 1)}- [{text}](#{anchor})")
+    if not entries:
+        return None
+    title = toc.get("title") or lang_string(spec, language, "toc")
+    return f"## {title}\n\n" + "\n".join(entries)
+
+
+def export_md(
+    chapters: list[tuple[str, str]],
+    output: Path,
+    spec: dict[str, Any],
+    language: str,
+) -> None:
+    """Render chapters to a single self-contained Markdown deliverable."""
+    # 1. YAML front-matter for static site generators and metadata readers.
+    header = front_matter(spec, language)
+
+    # 2. Title block mirroring the cover semantics of the DOCX/PDF renderers.
+    title = title_block(spec, language)
+
+    # 3. Chapter bodies verbatim: GFM tables and Mermaid fences pass through
+    #    unchanged; only a duplicated leading H1 is dropped (spec-controlled).
+    bodies = chapter_bodies(chapters, spec)
+
+    # 4. Static TOC built from the emitted headings so its anchors stay in
+    #    sync with the dropped title H1 — portable, unlike [TOC] markers.
+    toc = toc_block(bodies, spec, language)
+
+    parts = [header, title]
+    if toc:
+        parts.append(toc)
+    parts.append("\n\n---\n\n".join(bodies))
+    document = "\n\n".join(parts)
+
+    # 5. Attribution footer replaces the DOCX/PDF page footer.
+    credit = attribution_label(spec)
+    if credit:
+        document += f"\n\n---\n\n*{credit}*"
+
+    # 6. Fail closed on malformed Mermaid before anything is written.
+    findings = lint_mermaid(document)
+    if findings:
+        raise SystemExit(
+            "Mermaid lint failed:\n" + "\n".join(f"  - {f}" for f in findings)
+        )
+
+    # 7. Atomic write; deliverables/ appears only when a file lands in it.
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_suffix(output.suffix + ".tmp")
+    tmp.write_text(document.rstrip() + "\n", encoding="utf-8")
+    tmp.replace(output)
+
+
+# --------------------------------------------------------------------------- #
 # Spec resolution + CLI
 # --------------------------------------------------------------------------- #
 def resolve_spec(root: Path, args: argparse.Namespace, combined: str) -> dict[str, Any]:
@@ -2118,7 +2326,7 @@ def main() -> None:
     )
     parser.add_argument("--workspace", type=Path, default=Path.cwd())
     parser.add_argument("--mode", default="survey", choices=MODES)
-    parser.add_argument("--format", default="docx", choices=["docx", "pdf"])
+    parser.add_argument("--format", default="docx", choices=["docx", "pdf", "md"])
     parser.add_argument(
         "--language",
         default=None,
@@ -2172,8 +2380,10 @@ def main() -> None:
 
     if args.format == "docx":
         export_docx(chapters, output, spec, language)
-    else:
+    elif args.format == "pdf":
         export_pdf(chapters, output, spec, language)
+    else:
+        export_md(chapters, output, spec, language)
     print(output)
 
 
