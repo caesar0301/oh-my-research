@@ -58,7 +58,7 @@
 - [ ] Gaps/limitations section present
 - [ ] Lenses run; accepted edits applied
 - [ ] Presentation spec authored: `docs/<mode>/_document.json` (title, fonts, cover, TOC, header/footer, chapter order per report/language)
-- [ ] LLM QA2 recorded; DOCX/PDF exported (spec applied) and inspected
+- [ ] LLM QA2 recorded; deliverable (DOCX/PDF/Markdown) exported (spec applied) and inspected
 - [ ] Gate D passed
 - [ ] Wiki generated or skipped
 - [ ] Chat: progress / summary only (no full chapters)

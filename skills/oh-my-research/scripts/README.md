@@ -4,7 +4,7 @@
 
 | Script | Role |
 |--------|------|
-| `export_report.py` | Thin, spec-driven renderer: applies the LLM-authored `docs/<mode>/_document.json` to turn `chapters/` into publication-safe DOCX/PDF. No hardcoded styling. Default `--language` follows timezone/workspace via `prefer_language.py`. |
+| `export_report.py` | Thin, spec-driven renderer: applies the LLM-authored `docs/<mode>/_document.json` to turn `chapters/` into publication-safe DOCX/PDF/Markdown. No hardcoded styling. Default `--language` follows timezone/workspace via `prefer_language.py`. |
 | `prefer_language.py` | Detect preferred BCP-47 language from timezone/locale; optional `.omr/locale.json` write; `--list` dumps timezone map |
 | `version_control.py` | Workspace research tags and backups (`.omr/versions/`, `.omr/backups/`) |
 | `skill_version.py` | Skill-package semver: `show` / `check` / `sync` / `set` / `bump` against `SKILL.md` (+ marketplace + `CHANGELOG.md`) |

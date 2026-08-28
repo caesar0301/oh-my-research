@@ -16,7 +16,7 @@ A deep report is often tens of thousands of words. Holding outline + all evidenc
 | `docs/<mode>/chapters/*.md` | yes (body) | Reader-facing chapter files |
 | `docs/<mode>/_document.json` | no (working) | LLM-authored presentation spec (drives rendering) |
 | `.omr/report-state.json` | no | Progress machine for resume |
-| `docs/<mode>/deliverables/*` | yes | Final DOCX/PDF |
+| `docs/<mode>/deliverables/*` | yes | Final DOCX/PDF/Markdown |
 
 Underscore-prefixed working files are **excluded from export content** by `export_report.py` (chapters only). `_document.json` is read as the presentation spec, not rendered as content.
 
@@ -232,3 +232,14 @@ Never restart from outline unless the user asks to re-outline.
 ```
 
 Quick-pass may write 2–3 short chapters per turn **only if** each is flushed to disk before the next starts and total output stays well within safe limits. Prefer one chapter per turn for deep survey quality.
+
+## Figures (Mermaid)
+
+- **All figures are Mermaid fenced blocks** — no ASCII art, no external images
+  - `flowchart` for structures and pipelines; `sequenceDiagram` for interactions
+  - `classDiagram` / `stateDiagram-v2` / `erDiagram` for static models
+  - `pie` / `mindmap` / `timeline` for summaries
+- **Caption**: one italic line immediately below the fence — `*Figure 3-1: ...*` (manual `chapter-sequence` numbering)
+- **Node IDs** must not match `[PWGSE]-\d+` (e.g. `P-001`) — the publication-safety scan treats that pattern as an internal material ID and blocks the export; use `N1`, `N2`, or short semantic names
+- **Labels** inside nodes/edges follow the report language; keep each label short enough to survive reader-side auto-layout
+- Markdown deliverables render fences natively (GitHub/GitLab/Typora); DOCX/PDF exports show Mermaid source as code blocks — the Markdown version is the graphical reference

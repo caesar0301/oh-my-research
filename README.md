@@ -6,7 +6,7 @@
 
 Oh-My-Research (OMR) is an Agent Skill that turns papers, web sources, and other materials into **evidence-bound, publication-quality surveys and reports**.
 
-You bring a topic and sources. The skill collects, analyzes with clear evidence boundaries, optionally deepens with structured thinking (first principles, Socratic, triangulation, …), then writes a long-form deliverable chapter by chapter — and exports a polished Word or PDF in your preferred language.
+You bring a topic and sources. The skill collects, analyzes with clear evidence boundaries, optionally deepens with structured thinking (first principles, Socratic, triangulation, …), then writes a long-form deliverable chapter by chapter — and exports a polished Word, PDF, or Markdown document in your preferred language.
 
 ## Vision
 
@@ -37,7 +37,7 @@ Analyze and Think form a side-cycle: deepen with structured paradigms when confi
 | **Collect** | Papers, URLs, repos, datasets land in materials + indexes |
 | **Analyze** | Brief, evidence map, and judgment — with explicit evidence grades |
 | **Think** | Side-cycle on analyze: first principles, red team, steelman, … then back |
-| **Synth** | Long survey or report written incrementally, then exported as DOCX or PDF |
+| **Synth** | Long survey or report written incrementally, then exported as DOCX, PDF, or Markdown |
 
 Optional paths: capture ideas, take a stance (`decide`), or **reconcile** when new evidence contradicts prior claims.
 
@@ -92,14 +92,14 @@ Once the skill is loaded, talk naturally — or name an operation:
 
 You can also run the full graph-guided flow with `workflow`.
 
-Reports are written **chapter by chapter** (with resume if interrupted), then assembled. Language defaults from your timezone/locale (e.g. `Asia/Shanghai` → Chinese, `Asia/Tokyo` → Japanese), or set `--language` explicitly. Prefer `--format docx` or `pdf` for the deliverable you will share.
+Reports are written **chapter by chapter** (with resume if interrupted), then assembled. Language defaults from your timezone/locale (e.g. `Asia/Shanghai` → Chinese, `Asia/Tokyo` → Japanese), or set `--language` explicitly. Prefer `--format docx`, `pdf`, or `md` for the deliverable you will share.
 
 ## What you get
 
 - A research workspace (`AGENTS.md`, `.omr/` state, materials, indexes, plans)
 - Working artifacts: brief, evidence map, judgment (and optional plan / decision / ideas)
 - A **self-contained** survey or report under `docs/{survey,report,manuscript,brief}/`
-- Professional **Word or PDF** export with cover, TOC, and consistent formatting
+- Professional **Word, PDF, or Markdown** export with cover, TOC, and consistent formatting
 - Quality checkpoints before you publish (analyze gate + document lenses + publish gate)
 
 Internal IDs, gate names, and OMR workflow terms stay in private working files. The published document reads like a normal research report.
@@ -112,7 +112,7 @@ Internal IDs, gate names, and OMR workflow terms stay in private working files. 
 | `collect` | Ingest sources into materials + indexes |
 | `analyze` | Deep analysis → brief, evidence map, judgment |
 | `think [method]` | Structured elicitation on a research artifact |
-| `synth` | Incremental long report → Word/PDF |
+| `synth` | Incremental long report → Word/PDF/Markdown |
 | `idea` / `decide` | Optional speculation or stance |
 | `reconcile` | Repair state when evidence conflicts |
 | `workflow` | Graph-driven multi-step run (default Evidence-Deep) |
@@ -127,7 +127,7 @@ Details: [`skills/oh-my-research/SKILL.md`](skills/oh-my-research/SKILL.md) · f
 2. **Evidence grades matter** — do not treat “suggests” as “proves”
 3. **Deepen when unsure** — use THINK before locking analysis and writing
 4. **Long reports are incremental** — outline → chapters → continuity → assemble; resume if needed
-5. **Share the document, not the workflow** — the DOCX/PDF should stand alone for its reader
+5. **Share the document, not the workflow** — the exported document should stand alone for its reader
 
 ## Development
 
