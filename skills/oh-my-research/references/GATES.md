@@ -121,7 +121,10 @@ Position: after COLLECT has ≥1 usable source and `analyze` is marked ready; be
 - [ ] Material set matches the intended scope (narrow single-paper deep dive vs broad survey)
 - [ ] At least one primary source, or an explicit plan to analyze a deliberately small corpus
 - [ ] Missing buckets / source types that the scope clearly needs are flagged (e.g. broad survey with only one paper)
-- [ ] **Full-text Markdown availability**: for each paper/web material, check `markdown_status` in the index. If `"converted"` → full-text available for ANALYZE. If `"failed"` or missing → warn the user that ANALYZE will run in **degraded (abstract-only) mode** for that material. If all materials failed conversion, recommend re-running `collect` or manually converting before proceeding.
+- [ ] **Full-text Markdown availability (v1.5 — remediate before judging)**: for each paper/web material, check `markdown_status` in the index. If any entry is not `"converted"` but has a resolvable source, **first run the mandatory remediation** (`python3 scripts/material_to_markdown.py --index --workspace <ws>`, see `ANALYZE/analyze.md` § Pre-flight) and re-check. Only entries that **still** fail after remediation count against the gate:
+  - **fail** if unconverted entries remain and the ANALYZE pre-flight remediation has **not** been run — the gate asks the agent to run it first
+  - **warn** if entries still fail after remediation ran (degraded abstract-only mode is then allowed, but each must be flagged in the evidence map's traceability notes with reduced confidence)
+  - **pass** only when all convertible materials are converted, or failures are explained (e.g. publisher paywall) and flagged
 - [ ] **User consulted**: user was shown the diversity report and asked whether to collect more source types or proceed
 
 **Diversity report (show to user):**
@@ -151,6 +154,7 @@ Suggested missing types: [list relevant to topic]
 - Only papers, no code → suggest GitHub repos for key methods
 - Missing entire sub-question area → suggest targeted search
 - All materials failed Markdown conversion → suggest re-running collect
+- Unconverted paper entries present and pre-flight remediation (`material_to_markdown.py --index`) not yet run → **fail**; run remediation, then re-check (v1.5)
 
 A 1-paper deep dive passes with an explicit "narrow corpus" note; a broad survey with one paper fails and asks the user to collect more. Quick-pass skips the pause but still records the check.
 

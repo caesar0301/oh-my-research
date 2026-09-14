@@ -5,6 +5,8 @@ Pipeline (per source):
   1. Resolve to a local file:
      - arxiv URL  → download PDF via arxiv API (preferred) or http fallback
      - DOI        → resolve to publisher PDF (best-effort http)
+     - preprint hosts (ACL Anthology, bioRxiv, medRxiv, OpenReview, Zenodo,
+       SSRN, HAL) → PDF via stable transform or landing-page scan
      - http(s) PDF → download
      - local path → use directly
      - HTML page  → fetch and save as .html
@@ -62,6 +64,14 @@ ARXIV_API = "http://export.arxiv.org/api/query?id_list={id}"
 ARXIV_ABS_RE = re.compile(r"arxiv\.org/abs/([^/?#]+)", re.IGNORECASE)
 ARXIV_PDF_RE = re.compile(r"arxiv\.org/pdf/([^/?#]+)", re.IGNORECASE)
 DOI_RE = re.compile(r"^10\.\d{4,}/\S+$")
+# ACL Anthology paper pages: https://aclanthology.org/<ID>/ → PDF at /<ID>.pdf
+ACL_RE = re.compile(r"aclanthology\.org/([^/?#]+)", re.IGNORECASE)
+# Preprint/repository hosts whose landing pages usually expose a direct PDF link
+# (bioRxiv/medRxiv, OpenReview, Zenodo, SSRN, HAL). See collect-enrichment.md §3.1.
+PAPER_LANDING_HOST_RE = re.compile(
+    r"(biorxiv\.org|medrxiv\.org|openreview\.net|zenodo\.org|ssrn\.com|hal\.science)",
+    re.IGNORECASE,
+)
 
 # File extensions anydoc can convert directly
 ANYDOC_EXTS = {
@@ -221,18 +231,40 @@ def resolve_arxiv_pdf(url: str) -> tuple[bytes, str]:
     return _http_get(pdf_url), title
 
 
-def resolve_doi_pdf(doi: str) -> tuple[bytes, str]:
-    """Best-effort DOI → PDF. Many publishers block automated download, so this
-    may raise; the caller records a failure and continues."""
-    # Try doi.org redirect, then look for a PDF link in the landing page.
-    url = f"https://doi.org/{doi}"
+def resolve_pdf_from_landing(url: str, label: str) -> tuple[bytes, str]:
+    """Best-effort: fetch a landing page and scan it for a direct PDF link.
+    Many publishers block automated download, so this may raise; the caller
+    records a failure and continues."""
     landing = _http_get(url)
     # Naive: scan for a PDF link
     text = landing.decode("utf-8", errors="ignore")
     pdf_match = re.search(r'href="(https?://[^"]+\.pdf)"', text, re.IGNORECASE)
     if pdf_match:
-        return _http_get(pdf_match.group(1)), doi
-    raise ValueError(f"DOI landing page had no obvious PDF link: {doi}")
+        return _http_get(pdf_match.group(1)), label
+    raise ValueError(f"landing page had no obvious PDF link: {label}")
+
+
+def resolve_doi_pdf(doi: str) -> tuple[bytes, str]:
+    """Best-effort DOI → PDF. Resolve via doi.org redirect, then look for a
+    PDF link in the landing page."""
+    return resolve_pdf_from_landing(f"https://doi.org/{doi}", doi)
+
+
+def resolve_paper_host_pdf(url: str) -> tuple[bytes, str]:
+    """Resolve preprint/repository paper URLs to a PDF.
+
+    - ACL Anthology: stable transform (landing URL → <ID>.pdf)
+    - bioRxiv / medRxiv / OpenReview / Zenodo / SSRN / HAL: landing-page scan
+    Raises on failure — the caller records a failure and continues.
+    """
+    acl = ACL_RE.search(url)
+    if acl:
+        paper_id = acl.group(1).rstrip("/")
+        return _http_get(f"https://aclanthology.org/{paper_id}.pdf"), paper_id
+    if PAPER_LANDING_HOST_RE.search(url):
+        label = url.rsplit("/", 1)[-1] or url
+        return resolve_pdf_from_landing(url, label)
+    raise ValueError(f"no resolver for paper host URL: {url}")
 
 
 def download_to_temp(url: str) -> tuple[Path, str]:
@@ -394,6 +426,13 @@ def process_source(
             cleanup = True
         elif DOI_RE.match(source.strip()):
             pdf_bytes, resolved_title = resolve_doi_pdf(source.strip())
+            local_file = _save_temp(pdf_bytes, ".pdf")
+            cleanup = True
+        elif low.startswith(("http://", "https://")) and (
+            PAPER_LANDING_HOST_RE.search(low) or "aclanthology.org" in low
+        ):
+            # Preprint/repository paper hosts → treat as papers (PDF semantics)
+            pdf_bytes, resolved_title = resolve_paper_host_pdf(source)
             local_file = _save_temp(pdf_bytes, ".pdf")
             cleanup = True
         elif low.startswith(("http://", "https://")) and low.endswith(

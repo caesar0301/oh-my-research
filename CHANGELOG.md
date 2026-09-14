@@ -13,6 +13,19 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.4.8] — 2026-09-14
+
+### Changed
+
+- **Full-text conversion is now enforced, not just prescribed** (closes the gap where COLLECT/ANALYZE mandated full-text Markdown but relied on the agent invoking the converter per source):
+  - **ANALYZE pre-flight remediation** (`references/ANALYZE/analyze.md`): before the deep scan, every indexed papers/web entry with `markdown_status != "converted"` but a resolvable source is **automatically** batch-converted via `material_to_markdown.py --index` (which retries previously failed conversions). Only sources still failing after remediation may be analyzed in degraded (abstract-only) mode, flagged per-material; if more than half the paper bucket remains unconverted after remediation, ANALYZE stops and recommends re-running `collect`.
+  - **Gate M conditional fail** (`references/GATES.md`, `references/COLLECT/collect.md`): unconverted entries with remediation not yet run are now a Gate M **fail** (previously warn); degraded mode is allowed only after remediation ran, with per-material flags.
+
+### Added
+
+- **Preprint/repository host routing** (`collect_cli.py` `classify()` + `material_to_markdown.py`): bioRxiv, medRxiv, OpenReview, ACL Anthology, Zenodo, SSRN, and HAL URLs now classify as `papers` (previously misrouted to `web`, losing the `P-` ID, `papers-raw/` binary, and full-text conversion). ACL Anthology resolves via a stable landing→`<ID>.pdf` transform; the other hosts resolve via landing-page PDF scan (generalized `resolve_pdf_from_landing()` shared with the DOI path).
+- `material_to_markdown.py --index`: batch-convert (and retry) every indexed source lacking a non-empty `.md` file.
+
 ## [1.4.7] — 2026-08-21
 
 ### Changed

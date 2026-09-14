@@ -31,6 +31,23 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _CONVERTER = _SCRIPT_DIR / "material_to_markdown.py"
 
 INDEX_BUCKETS = ("papers", "web", "github", "search")
+
+# Preprint & repository hosts that carry paper semantics (PDF / DOI resolvable).
+# Routing these to `web` would lose the P- ID, papers-raw binary, and full-text
+# conversion — see docs/design/collect-enrichment.md §2.2/§3.1.
+PAPER_HOST_RE = re.compile(
+    r"(arxiv\.org"
+    r"|biorxiv\.org"
+    r"|medrxiv\.org"
+    r"|openreview\.net"
+    r"|aclanthology\.org"
+    r"|zenodo\.org"
+    r"|ssrn\.com"
+    r"|hal\.science"
+    r")",
+    re.IGNORECASE,
+)
+
 PREFIX_FOR_KIND = {
     "papers": "P",
     "web": "W",
@@ -99,7 +116,7 @@ def next_id(items: list[dict[str, Any]], prefix: str) -> str:
 
 def classify(source: str) -> str:
     s = source.lower()
-    if "arxiv.org" in s or re.match(r"^10\.\d+", s) or s.endswith(".pdf"):
+    if PAPER_HOST_RE.search(s) or re.match(r"^10\.\d+", s) or s.endswith(".pdf"):
         return "papers"
     if "github.com" in s:
         return "github"

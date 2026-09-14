@@ -18,6 +18,23 @@ Also: “analyze these papers”, “map evidence”, “now what” after colle
 
 Before starting, read `.omr/tree-state.json`. If `analyze` is not in `ready` or `unlocked`, check if prerequisites are met (materials + index). If they are, update tree-state to mark `analyze` as `ready`. If materials are missing, route to COLLECT instead.
 
+### Pre-flight: Full-Text Remediation (v1.5 — mandatory before the deep scan)
+
+Abstract-only analysis is the **last resort**, not the default. Before the materials scan:
+
+1. Scan the index (`docs/index/papers-index.json` and any other index files) for entries where `markdown_status` is not `"converted"` (missing, `"failed"`, or empty) but a resolvable `source` exists (arXiv / DOI / preprint host / http(s) PDF / web URL).
+2. If any such entries exist, **automatically run** the batch converter:
+
+   ```bash
+   python3 scripts/material_to_markdown.py --index --workspace <workspace>
+   ```
+
+   This downloads + converts every indexed source that lacks a non-empty `.md` file (anydoc → pymupdf/pdfplumber/markdownify fallbacks), including retrying previously failed conversions. Then refresh the index state from the converter output.
+3. Only sources that **still** fail after remediation may be analyzed in degraded (abstract-only) mode. Each one must be recorded in the evidence map's traceability notes as `[<ID>: abstract-only — conversion failed: <reason>]`, with that finding's confidence flagged as reduced.
+4. If more than half of the paper-bucket materials remain unconverted after remediation, stop and recommend `collect` again (network/converter environment problem) instead of proceeding degraded.
+
+This closes the historical gap where full-text conversion was prescribed but never executed because it relied on the agent remembering to invoke the converter per source.
+
 ## Mandatory Output Artifacts (Non-negotiable)
 
 ANALYZE **must** produce all three required artifacts as **separate files**. Using a single combined file (e.g. `deep-analysis.md`) as a substitute is **not acceptable** — downstream stages (THINK, Gate A, SYNTH) depend on reading specific artifact files by name pattern.

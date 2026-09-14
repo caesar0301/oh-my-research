@@ -150,18 +150,27 @@ If conversion failed, `markdown_status: "failed"` and `markdown_failure_reason` 
 - Gate M checks: minimum count, source-type diversity (papers/web/github/datasets/models), topic coverage, recency, obvious gaps, full-text availability
 - Gate M shows a **diversity report** to the user and asks: collect more source types or proceed to analyze?
 - If a paper conversion failed, warn the user that ANALYZE will run on abstract-only for that paper (degraded mode)
-- **Post-collect validation:** after COLLECT, verify that for every convertible file in `materials/papers-raw/`, a corresponding `materials/papers/<stem>.md` exists. If not, offer to run `material_to_markdown.py --convert-dir materials/papers-raw` to batch-convert the missing files. This prevents the common failure mode where sources are downloaded but never converted, and ANALYZE silently runs in degraded (abstract-only) mode.
+- **Post-collect validation (mandatory remediation, v1.5):** after COLLECT, verify that for every convertible file in `materials/papers-raw/`, a corresponding `materials/papers/<stem>.md` exists, and that every indexed papers/web entry has `markdown_status: "converted"`. If not, **run the batch converter before Gate M** — do not leave sources downloaded but never converted (this is the common failure mode where ANALYZE silently runs in degraded abstract-only mode):
+
+  ```bash
+  # Convert pre-downloaded binaries (e.g. curl'ed PDFs)
+  python3 scripts/material_to_markdown.py --convert-dir materials/papers-raw --workspace .
+  # Convert / retry every indexed source lacking a non-empty .md
+  python3 scripts/material_to_markdown.py --index --workspace .
+  ```
+
+  Gate M treats unconverted entries as a **fail** until this remediation has run; only sources that still fail afterwards (paywall, broken link) may proceed as flagged degraded-mode materials.
 
 ## Gate M — Source Diversity & Sufficiency Check
 
-After saving materials and updating indexes, run Gate M (see `GATES.md` for full checklist). The gate checks:
+After saving materials, updating indexes, **and running the mandatory post-collect conversion remediation**, run Gate M (see `GATES.md` for full checklist). The gate checks:
 
 1. **Minimum count**: ≥3 materials (or narrow-scope note)
 2. **Source-type diversity**: default buckets papers, web, github, search should be populated unless the user opted out; also datasets/models when the topic needs them
 3. **Topic coverage**: materials touch ≥2 research sub-questions
 4. **Recency**: ≥1 source from last 2 years
 5. **Obvious gaps**: no entire sub-question area empty
-6. **Full-text Markdown availability**: check `markdown_status` in index
+6. **Full-text Markdown availability**: check `markdown_status` in the index. Unconverted entries with remediation not yet run → **fail** (run `material_to_markdown.py --index` first). Still failing after remediation → **warn** (degraded mode allowed, flagged per-material).
 
 **Show the user a diversity report:**
 
