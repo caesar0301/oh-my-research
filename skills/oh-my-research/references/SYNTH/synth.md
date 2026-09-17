@@ -126,21 +126,22 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 4. Comparative structure where sources conflict
 5. Gaps and limitations mandatory
 6. Report is self-contained for a reader without working files
-7. Professional, user-friendly tone
-8. Per-chapter lenses as needed; whole-document Structure/Prose/Adversarial pass before export
-9. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety scan clean
-10. Optional wiki after Gate D (`--no-wiki` to skip)
+7. Professional, user-friendly tone; **natural, idiomatic expression in the report language** (no translationese — compose directly in the target language, per `LANGUAGE.md` § Non-English Writing); register (`plain`/`academic`/`hybrid`) matches Gate P and stays stable
+8. Non-English reports: technical terms annotated at first mention as `译名（English Original, ABBR）`, one translation per term report-wide (tracked in the continuity brief's bilingual term table)
+9. Per-chapter lenses as needed; whole-document Structure/Prose/Adversarial pass, then the **Consistency & Polish pass** (terminology consistency, first-mention annotation, translationese sweep, register adherence, logical clarity — `long-report.md` § Phase E.4) before export
+10. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety scan clean
+11. Optional wiki after Gate D (`--no-wiki` to skip)
 
 ## Process (summary)
 
-**Gate P first** — confirm language / format / mode / audience / citations before outlining (see `GATES.md`); record once and keep stable.
+**Gate P first** — confirm language / format / mode / audience / register (plain, academic, or hybrid) / citations before outlining (see `GATES.md`); record once and keep stable.
 
 1. Load judgment + evidence-map + brief + indexes (slim — not wholesale every turn).
 2. LLM: outline + citation map + `.omr/report-state.json` adapted to the topic (`long-report.md`, `LLM-STATE.md`).
 3. Confirm outline (or quick-pass).
-4. Loop: next chapter from report-state → slim context pack → write → save → update continuity → mark done in JSON.
+4. Loop: next chapter from report-state → slim context pack → write (register + no-translationese + term first-mention rules, `long-report.md` § C2) → save → update continuity (bilingual term table) → mark done in JSON.
 5. Closing chapters; abstract last.
-6. Lenses (chapter-scoped, then light global).
+6. Lenses (chapter-scoped, then light global), then the **Consistency & Polish pass** (`long-report.md` § Phase E.4).
 7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
 8. LLM QA2 → `export_report.py` for DOCX/PDF/Markdown → inspect → Gate D.
 9. Deliver path + short summary; optional wiki.
@@ -222,6 +223,7 @@ Quality review: passed
 - No single-shot full-report generation
 - No pasting full chapters into chat
 - No over-claiming; limitations always present
+- No translationese in non-English reports; compose directly in the report language; annotate terms at first mention and keep one translation per term
 - No internal IDs / workflow terms in public chapters or export
 - Author `_document.json` for presentation — don't rely on the script to choose styling/structure
 - Do not export if publication-safety scan fails

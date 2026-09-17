@@ -12,7 +12,7 @@ Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists b
 | **QA1** | After judgment (auto or `qa qa1`) | Coverage, gaps, traceability | papers-index, evidence, judgment |
 | **T** | After a THINK pass | Material gaps surfaced by THINK → collect more? | think revelations / collect-targets |
 | **B** | Only if DECIDE runs | Stance sound? | decision draft (≥3 alts, risks, refs) |
-| **P** | After Gate A, before SYNTH outline | Language, format, mode, audience, citations | judgment + preferences |
+| **P** | After Gate A, before SYNTH outline | Language, format, mode, audience, register, citations | judgment + preferences |
 | **Lenses** | Before Gate D on SYNTH draft | Structure / Prose / Adversarial | `docs/<mode>/chapters/` |
 | **D** | Before publishing SYNTH | Traceable, no over-claiming? | judgment (+ optional decision) |
 | **QA2** | Pre-export (`qa qa2`) | Structure, citations, coherence, safety | chapters + deliverable |
@@ -324,6 +324,7 @@ Position: after Gate A unlocks SYNTH; before SYNTH Phase A (outline).
 - [ ] Language: single BCP-47 tag (per `LANGUAGE.md` resolution order)
 - [ ] Format: `docx` / `pdf` / `md`
 - [ ] Audience + intended length/depth
+- [ ] Register: `plain` (clear, direct, explain-like-I'm-five bar) / `academic` (formal scholarly prose) / `hybrid` — drives chapter writing rules (`SYNTH/long-report.md` § C2)
 - [ ] Citation style: author–date vs numbered (consistent throughout)
 - [ ] Wiki yes/no (if not already specified)
 
@@ -340,8 +341,9 @@ Prefer **chapter-scoped** lenses during the long-report loop; one light global p
 | Lens | Method |
 |------|--------|
 | **Structure** | Cuts, merges, moves — does shape serve a deep report? |
-| **Prose** | Clarity, tone, plain explanations, natural evidence-strength phrasing |
+| **Prose** | Clarity, tone, plain explanations, natural evidence-strength phrasing; compose directly in the report language (no translationese) |
 | **Adversarial** | Forced missing-angle findings; empty list not allowed |
+| **Consistency & Polish** | Mandatory pass after the three lenses, before export: terminology consistency (vs bilingual term table), first-mention English annotation, translationese sweep, register adherence, logical clarity — see `SYNTH/long-report.md` § Phase E.4 |
 
 Process: announce → findings table → user accept/reject → apply → continue.
 
@@ -361,6 +363,12 @@ Process: announce → findings table → user accept/reject → apply → contin
 - [ ] Self-contained for a reader without working files
 - [ ] No workflow terms, gate names, internal IDs, or private paths
 - [ ] Language consistent (single primary BCP-47 tag)
+- [ ] **Register & expression quality (v1.5)**:
+  - `terminology_consistency`: terms match the continuity brief's bilingual term table; one concept = one name report-wide; no competing translations
+  - `first_mention_annotation` (non-English reports): every technical term has its English annotation at first occurrence; no re-annotation afterward
+  - `register_adherence`: style matches the Gate P register (`plain`/`academic`/`hybrid`) with no mid-report drift; no translationese in non-English chapters
+  - `logic_clarity`: chapter transitions carry the argument; no dangling cross-references; conclusions and abstract trace back to body arguments
+  - `consistency_polish_pass`: the Consistency & Polish pass (`SYNTH/long-report.md` § Phase E.4) was run after the lenses and its findings were resolved or accepted
 - [ ] All planned chapters complete in `.omr/report-state.json`
 - [ ] Final deliverable rendered (`export_report.py`) — DOCX/PDF visually inspected; for Markdown: lint clean, TOC anchors resolve, front-matter complete
 - [ ] **Incremental writing compliance (v1.4)**:
@@ -381,7 +389,7 @@ Op: `qa qa2`. Evaluate chapters under `docs/<mode>/chapters/` (ignore `_*.md` wo
 |-------|----------|
 | `structure` | Outline chapters exist and match report-state; section set fits **this** mode/topic |
 | `citations` | Reader-facing cites resolve to complete bibliography entries |
-| `coherence` | Order sensible; no orphan stubs; takeaways consistent with continuity |
+| `coherence` | Order sensible; no orphan stubs; takeaways consistent with continuity; terminology consistent with the bilingual term table; term first-mention annotations present (non-English); register matches Gate P with no drift; logical transitions carry the argument |
 | `publication-safety` | No internal IDs, workflow/gate jargon (`OMR`, `THINK mode`, `Gate A`), grade labels, or private paths. Product attribution (`Powered by oh-my-research`) is allowed chrome. |
 | `self-contained` | Definitions, context, findings, limitations, references stand alone |
 | `language` | Consistent language; no mixed boilerplate |

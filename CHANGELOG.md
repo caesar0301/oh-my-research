@@ -13,6 +13,19 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.5.0] — 2026-09-17
+
+### Added
+
+- **SYNTH expression-quality overhaul** — targets low readability, unnatural phrasing (translationese in non-English reports), and inconsistent terminology:
+  - **Register confirmed at Gate P** (`references/GATES.md`, `references/SYNTH/synth.md`): new `plain` (clear, direct, ELI5-bar wording) / `academic` (formal scholarly prose) / `hybrid` register, recorded once with language/format/mode/audience and kept stable.
+  - **Chapter writing rules** (`references/SYNTH/long-report.md` § C2): compose directly in the report language (never draft-then-translate); avoid calques, mechanical passives, and literal connectives; follow idiomatic professional patterns of the target language.
+  - **Term first-mention annotation** (non-English reports): technical terms annotated at first occurrence as `译名（English Original, ABBR）` — e.g. 「检索增强生成（Retrieval-Augmented Generation, RAG）」; keep-English with a short gloss when no standard translation exists; one name per term report-wide.
+  - **Bilingual term table** in the continuity brief (`§ C3`): `译名 | English original | standard/nonstandard/keep-English | first defined in` — the single source of truth for cross-chapter terminology.
+  - **Consistency & Polish pass** (`references/SYNTH/long-report.md` § Phase E.4, mandatory before export): terminology consistency vs the term table, first-mention annotation completeness, translationese sweep, register adherence, logical clarity (transitions, dangling references, abstract↔body traceability).
+  - **Non-English writing policy** (`references/LANGUAGE.md` § Non-English Writing): compose-don't-translate principle, translationese markers to avoid, term handling, register rules.
+- **Gate D register & expression checks** (`references/GATES.md`): `terminology_consistency`, `first_mention_annotation`, `register_adherence`, `logic_clarity`, and evidence that the Consistency & Polish pass ran; QA2 `coherence` expanded to cover terminology/register/logic.
+
 ## [1.4.8] — 2026-09-14
 
 ### Changed

@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.4.8"
+  version: "1.5.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -119,7 +119,7 @@ Default **semi-automated** (pause for confirm). Support "no confirmations" / qui
 | A / QA1 | After ANALYZE judgment, before unlock SYNTH |
 | T | After THINK: collect more from surfaced gaps? |
 | B | Only if DECIDE runs |
-| P | Before SYNTH: language / format / mode / audience |
+| P | Before SYNTH: language / format / mode / audience / register / citations |
 | Lenses | Structure → Prose → Adversarial before Gate D |
 | D / QA2 | Before publishing SYNTH |
 
@@ -153,7 +153,7 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 7. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
 8. Prefer a professionally formatted DOCX, PDF, or Markdown deliverable in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
 9. Keep internal traceability private; translate it into standard citations and natural prose
-10. Make the final report self-contained, professional, and accessible to its intended reader
+10. Make the final report self-contained, professional, and accessible to its intended reader; in non-English reports compose directly in the report language (no translationese), annotate technical terms in English at first mention, and run the Consistency & Polish pass before export
 11. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
 12. Write full reports to disk; reply in chat with summary only
 13. Run document lenses and visually inspect the rendered file before Gate D

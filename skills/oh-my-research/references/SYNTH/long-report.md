@@ -29,6 +29,7 @@ Write `.omr/report-state.json` yourself from the outline. **Do not** call a fixe
   "mode": "survey",
   "language": "en",
   "format": "docx",
+  "register": "plain",
   "title": "Topic-specific title",
   "status": "outlining|writing|closing|exporting|done",
   "chapters": [
@@ -112,6 +113,16 @@ For each pending chapter:
 - Natural evidence-strength wording
 - End with a 3–5 bullet **Chapter takeaways** subsection (helps continuity; can be trimmed at export if desired)
 
+**Expression quality rules (mandatory — see `LANGUAGE.md` § Non-English Writing):**
+
+1. **Register**: write in the register confirmed at Gate P (`plain` | `academic` | `hybrid`) and keep it stable across chapters.
+   - `plain`: clear and direct, explain each term where it first appears, prefer short sentences, use analogies to anchor hard concepts ("explain like I'm five" bar — simple wording, never dumbed-down content)
+   - `academic`: formal scholarly register, precise claims, appropriate hedging — but **still natural prose**, not stiff translationese
+   - `hybrid`: plain narration with academic rigor in method/results discussion
+2. **No translationese** (non-English reports, hard rule): compose **directly in the target language**, never draft in English and translate. Avoid word-for-word calques, mechanical passive voice, English word order and literal discourse connectives ("moreover"→"而且" chains); use the idiomatic sentence patterns and collocations of professional writing in that language.
+3. **Term first-mention annotation** (non-English reports): when a technical term first appears, write it as `译名（English Original, ABBR）` — e.g. 「检索增强生成（Retrieval-Augmented Generation, RAG）」. If no standard translation exists or the translation would mislead, keep the English term as the name and add a short in-language gloss. Use **one** name for the rest of the report; never re-annotate.
+4. Check the continuity brief's **bilingual term table** before writing: reuse locked translations exactly; add new terms (with status) as they enter.
+
 Save immediately to `chapters/<id>.md`.
 
 ### C3. Update continuity (mandatory, same turn or next)
@@ -129,7 +140,17 @@ Edit `_continuity.md` to ≤ ~800–1,200 words total:
 - Claim … (Li, 2024) — limited sample
 
 ## Terms & definitions locked
-- Term — definition used in report
+
+Bilingual term table (mandatory for non-English reports; for `en` reports keep only `English term | 状态` columns):
+
+| 译名 / localized term | English original | 状态 | 首次定义 |
+|-----------------------|------------------|------|----------|
+| 检索增强生成 | Retrieval-Augmented Generation, RAG | standard | ch.02 |
+| Chain-of-Thought（保留英文） | Chain-of-Thought, CoT | keep-English | ch.03 |
+
+- `standard`: widely accepted translation — annotate at first mention, then use the translation alone
+- `nonstandard`: no settled translation — keep English term as the name, gloss in-language if needed
+- `keep-English`: term conventionally left untranslated (model names, dataset names, abbreviations)
 
 ## Citation ledger
 - (Smith, 2025) — used in ch.01, ch.03
@@ -172,8 +193,25 @@ Order:
 ## Phase E — Review without reloading everything
 
 1. **Per-chapter lens** (optional): Structure/Prose/Adversarial on the chapter just written, using only that file + continuity.
-2. **Global light pass**: skim `_continuity.md` + each chapter’s heading structure (first heading + takeaways), not full text, to catch duplication/order issues.
+2. **Global light pass**: skim `_continuity.md` + each chapter's heading structure (first heading + takeaways), not full text, to catch duplication/order issues.
 3. Spot-fix 1–2 weakest chapters if needed (`--chapter <id>`).
+4. **Consistency & Polish pass (mandatory, before export)** — see below.
+
+### Phase E.4 — Consistency & Polish pass
+
+The dedicated end-of-report check for expression consistency and logical clarity. Runs **after** the lenses and **before** authoring `_document.json` / export. Method: chapter-by-chapter scan against the continuity brief's bilingual term table + the Gate P register, reading each chapter file once (chapter files are read once here — that's acceptable; do not keep them all in context afterward).
+
+Checklist (each item yields findings; empty findings lists are not allowed — a genuinely clean item must say "checked, clean" with one line of evidence):
+
+| # | Check | What to verify |
+|---|-------|----------------|
+| 1 | **Terminology consistency** | Every term matches the bilingual term table: one concept = one name report-wide; no two competing translations of the same term; no re-annotation after first mention |
+| 2 | **First-mention annotation** | Every table term has its English annotation at its actual first occurrence in the report; terms absent from the table are flagged and added (with status) |
+| 3 | **Translationese sweep** (non-English) | Scan each chapter for the worst-sounding passage (calque, mechanical passive, literal connectives, unnatural collocation) and rewrite it in idiomatic target-language prose |
+| 4 | **Register adherence** | Style matches the Gate P register in every chapter; no drift between plain and academic mid-report |
+| 5 | **Logical clarity** | Chapter transitions carry the argument forward; no dangling references ("如前所述" pointing nowhere); conclusions trace back to body arguments; abstract matches the finished body |
+
+Output a findings table (chapter, item, issue, fix). User accepts/rejects fixes (quick-pass applies high-confidence fixes directly). Apply fixes chapter-by-chapter; update the term table if translations changed. Record evidence of this pass for Gate D (e.g. `scenario_note` or a checks entry referencing fixes applied).
 
 ## Phase F — Export
 
@@ -218,6 +256,8 @@ Never restart from outline unless the user asks to re-outline.
 | Expand continuity forever | Cap and prune |
 | Export mid-loop | Export when state is complete |
 | Dump entire evidence-map each turn | Evidence slice for this chapter |
+| Draft in English, then translate to the report language | Compose directly in the target language |
+| Skip the Consistency & Polish pass before export | Run it after lenses, before `_document.json` |
 
 ## Agent turn checklist
 

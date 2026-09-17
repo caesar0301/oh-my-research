@@ -106,6 +106,26 @@ python3 skills/oh-my-research/scripts/prefer_language.py --language ja
 5. Unicode symbols (`→ ⇒ ≥ ✓ ✗ ★ ①`) need no spec field: the exporter embeds a wide-coverage system font for them, since neither standard Latin nor CJK fonts cover the full set.
 6. If user later switches language, update `.omr/locale.json` and confirm before rewriting chapters.
 
+### Non-English Writing (SYNTH body prose, mandatory)
+
+Non-English reports must read like they were **written** in that language, not translated into it. Full writing rules: `SYNTH/long-report.md` § C2; end-of-report verification: `SYNTH/long-report.md` § Phase E.4 (Consistency & Polish pass).
+
+**Core principle — compose, don't translate:**
+
+1. **Think in the target language.** Never draft in English and convert. If you notice yourself mapping English sentences word-by-word, stop and re-express the idea the way a professional writer in that language would.
+2. **Avoid translationese markers:** word-for-word calques, mechanical passive voice (many languages prefer active or topic-comment structures), English discourse connectives chained literally, English sentence rhythm and length imposed on the target language, unnatural collocations.
+3. **Use idiomatic patterns** of academic/professional writing in the target language — its standard hedging devices, transition phrases, and definition formulas.
+
+**Term handling (first mention + consistency):**
+
+4. Annotate a technical term at its first occurrence as `译名（English Original, ABBR）` — e.g. 「检索增强生成（Retrieval-Augmented Generation, RAG）」, 「強化学習（Reinforcement Learning, RL）」.
+5. If no standard translation exists, or a translation would mislead, keep the English term as the name with a short in-language gloss.
+6. Use exactly **one** name per term for the rest of the report (no re-annotation, no alternating synonyms). Track choices in the continuity brief's **bilingual term table** (`译名 | English original | standard/nonstandard/keep-English | first defined in`).
+
+**Register:**
+
+7. Follow the register confirmed at Gate P — `plain` (clear, direct, terms explained as they appear, ELI5 bar on wording, not on content depth) or `academic` (formal, hedged, precise — still natural prose). Keep it stable across all chapters; verify before export in the Consistency & Polish pass.
+
 ### Chat replies
 
 Match the preferred language for status lines and summaries unless the user is clearly writing in another language (mirror that turn; keep report language stable).
