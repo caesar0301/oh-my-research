@@ -13,6 +13,21 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.6.0] — 2026-09-24
+
+### Added
+
+- **Reader-journey-first report design**: SYNTH outlines now define the reader's starting point/destination, central question, argument spine, canonical dimensions, concept ladder, and per-chapter knowledge contracts before chapter titles are finalized.
+- **Narrative coherence protocol** (`references/SYNTH/narrative-coherence.md`): operational rules for known-to-new exposition, reasoning paragraphs, explicit chapter bridges, local self-containment, taxonomy integrity, repetition control, and revision consistency.
+- **Semantic continuity brief**: tracks reader knowledge state, argument progress, canonical labels, chapter bridges, claim state, synchronized revision locations, and repetition budget in addition to terms and citations.
+- **Reverse-outline Narrative Audit**: full-report review now checks progressive disclosure, argument-spine alignment, taxonomy drift, dangling references, stale resolved/open claims, self-containment, and prose continuity before export.
+
+### Changed
+
+- Gate P now records reader assumptions and destination; Gate D and QA2 treat narrative-order, taxonomy, self-containment, revision-integrity, and repetition failures as explicit publication checks.
+- Chapter writing now uses `anchor → gap → move` openings, reasoning-oriented paragraphs, define-before-use rules, and answer → next-question closings.
+- Abstract, overview, outline, and continuity templates now enforce self-contained reader-facing explanations rather than source/result inventories.
+
 ## [1.5.0] — 2026-09-17
 
 ### Added

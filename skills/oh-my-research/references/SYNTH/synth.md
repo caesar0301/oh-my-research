@@ -85,12 +85,12 @@ Deep reports routinely exceed a single context window. **Mandatory rules:**
 1. **Never** draft the entire report body in one response.
 2. **Outline first**, then write **one chapter per turn** (or one major section if a chapter is still too large).
 3. **Flush each chapter to disk immediately** under `docs/<mode>/chapters/`.
-4. Keep a compact **continuity brief** (claims, terms, citation ledger, open threads) — reload that, not all prior chapters.
+4. Keep a compact **continuity brief** as a semantic contract: argument spine, reader knowledge state, canonical dimensions, claims, terms, chapter bridges, revision state, citation ledger, and repetition budget.
 5. Write **executive summary and conclusions last**, after body chapters exist.
 6. **Resume** from `.omr/report-state.json` if interrupted (`synth --resume`).
-7. Assemble DOCX/PDF/Markdown only when all planned chapters are `done`.
+7. Assemble DOCX/PDF/Markdown only when all planned chapters are `done` and the Narrative Audit has no blocking findings.
 
-Detailed protocol: `long-report.md`.
+Detailed protocols: `long-report.md` and `narrative-coherence.md`.
 
 ## Private working layer vs public report
 
@@ -120,28 +120,32 @@ Write the full report body in that language. For non-`en` / non-Chinese chrome, 
 Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default when `--language` is omitted.
 ## Quality bar (before Gate D)
 
-1. All planned chapters on disk; report-state shows complete
-2. Claims privately map to evidence; public prose uses conventional citations only
-3. Evidence strength expressed naturally (no internal labels)
-4. Comparative structure where sources conflict
-5. Gaps and limitations mandatory
-6. Report is self-contained for a reader without working files
-7. Professional, user-friendly tone; **natural, idiomatic expression in the report language** (no translationese — compose directly in the target language, per `LANGUAGE.md` § Non-English Writing); register (`plain`/`academic`/`hybrid`) matches Gate P and stays stable
-8. Non-English reports: technical terms annotated at first mention as `译名（English Original, ABBR）`, one translation per term report-wide (tracked in the continuity brief's bilingual term table)
-9. Per-chapter lenses as needed; whole-document Structure/Prose/Adversarial pass, then the **Consistency & Polish pass** (terminology consistency, first-mention annotation, translationese sweep, register adherence, logical clarity — `long-report.md` § Phase E.4) before export
-10. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety scan clean
-11. Optional wiki after Gate D (`--no-wiki` to skip)
+1. All planned chapters on disk; report-state shows complete.
+2. Claims privately map to evidence; public prose uses conventional citations only.
+3. Evidence strength is expressed naturally; conflicting sources receive comparative treatment.
+4. The outline records a reader journey, argument spine, concept ladder, canonical dimensions, and chapter contracts; the report follows them or records justified revisions.
+5. The report progresses from situation and essential concepts to framework, evidence, synthesis, uncertainty, and implications. No necessary premise appears after the conclusion that depends on it.
+6. Taxonomy is stable: pipeline stages, optimization goals, mechanisms, candidates, and evaluation criteria are not conflated under shifting labels.
+7. Every chapter has a logical bridge from prior knowledge to its question and onward to the next; paragraphs interpret evidence rather than list papers and numbers.
+8. The report is self-contained for a reader without working files: it identifies the subject, audience, scope, terms, metrics, baselines, assumptions, and recommendation conditions; tables and figures are locally interpretable.
+9. Abstract, body, takeaways, limitations, and conclusion share the same final claim state; no resolved issue remains described as open and no dangling reference survives revision.
+10. Professional, user-friendly tone; **natural, idiomatic expression in the report language** (no translationese — compose directly in the target language, per `LANGUAGE.md` § Non-English Writing); register (`plain`/`academic`/`hybrid`) matches Gate P and stays stable.
+11. Non-English reports: technical terms are plainly defined and annotated at first mention as `译名（English Original, ABBR）`; use one translation per term report-wide.
+12. Per-chapter lenses completed; whole-document reverse outline + Narrative Audit completed; mandatory **Consistency & Polish pass** (`long-report.md` § Phase E.5) has no blocking findings.
+13. Gaps and limitations are present and tied to what would change the conclusions.
+14. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety scan clean.
+15. Optional wiki after Gate D (`--no-wiki` to skip).
 
 ## Process (summary)
 
 **Gate P first** — confirm language / format / mode / audience / register (plain, academic, or hybrid) / citations before outlining (see `GATES.md`); record once and keep stable.
 
 1. Load judgment + evidence-map + brief + indexes (slim — not wholesale every turn).
-2. LLM: outline + citation map + `.omr/report-state.json` adapted to the topic (`long-report.md`, `LLM-STATE.md`).
-3. Confirm outline (or quick-pass).
-4. Loop: next chapter from report-state → slim context pack → write (register + no-translationese + term first-mention rules, `long-report.md` § C2) → save → update continuity (bilingual term table) → mark done in JSON.
-5. Closing chapters; abstract last.
-6. Lenses (chapter-scoped, then light global), then the **Consistency & Polish pass** (`long-report.md` § Phase E.4).
+2. LLM: design reader journey → argument spine → canonical dimensions → concept ladder → chapter contracts; write outline + citation map + `.omr/report-state.json` (`long-report.md`, `narrative-coherence.md`, `LLM-STATE.md`).
+3. Validate prerequisite order and taxonomy, then confirm the outline (or quick-pass).
+4. Loop: next chapter from report-state → chapter contract + semantic continuity pack + evidence slice → write from known to new → save → update reader state, bridges, claim state, terms, and repetition budget → mark done in JSON.
+5. Write comparative synthesis, limitations, conclusions, and a self-contained abstract last.
+6. Run per-chapter lenses → build reverse outline → run whole-document Narrative Audit → apply structural fixes → run the **Consistency & Polish pass** (`long-report.md` § Phase E.5).
 7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
 8. LLM QA2 → `export_report.py` for DOCX/PDF/Markdown → inspect → Gate D.
 9. Deliver path + short summary; optional wiki.
@@ -167,7 +171,8 @@ Tune the spec to the report: e.g. a Chinese report sets `fonts.body.eastasia` + 
 docs/survey/
 ├── _outline.md
 ├── _citation-map.md          # private; not exported
-├── _continuity.md            # private rolling brief; not exported
+├── _continuity.md            # private semantic continuity contract; not exported
+├── _narrative-audit.md       # private reverse outline + findings; not exported
 ├── _document.json            # LLM-authored presentation spec (drives rendering)
 ├── chapters/
 │   ├── 00-title-abstract.md
@@ -223,8 +228,11 @@ Quality review: passed
 - No single-shot full-report generation
 - No pasting full chapters into chat
 - No over-claiming; limitations always present
-- No translationese in non-English reports; compose directly in the report language; annotate terms at first mention and keep one translation per term
+- No chapter list before reader journey, argument spine, canonical dimensions, and concept ladder are explicit
+- No undefined report-specific subject, metric, baseline, taxonomy, or recommendation threshold
+- No taxonomy drift, dangling reference, stale claim state, or conclusion-before-premise at export
+- No translationese in non-English reports; compose directly in the report language; define and annotate terms at first mention, then keep one name
 - No internal IDs / workflow terms in public chapters or export
 - Author `_document.json` for presentation — don't rely on the script to choose styling/structure
-- Do not export if publication-safety scan fails
-- Prefer continuing the chapter loop over rewriting completed chapters
+- Do not export if the Narrative Audit, Consistency & Polish pass, or publication-safety scan has blocking findings
+- Prefer continuing the chapter loop, but revise completed chapters immediately when taxonomy, argument order, or claim state changes

@@ -108,7 +108,7 @@ python3 skills/oh-my-research/scripts/prefer_language.py --language ja
 
 ### Non-English Writing (SYNTH body prose, mandatory)
 
-Non-English reports must read like they were **written** in that language, not translated into it. Full writing rules: `SYNTH/long-report.md` § C2; end-of-report verification: `SYNTH/long-report.md` § Phase E.4 (Consistency & Polish pass).
+Non-English reports must read like they were **written** in that language, not translated into it. Full writing rules: `SYNTH/long-report.md` § C2; end-of-report verification: `SYNTH/long-report.md` § Phase E.5 (Consistency & Polish pass).
 
 **Core principle — compose, don't translate:**
 

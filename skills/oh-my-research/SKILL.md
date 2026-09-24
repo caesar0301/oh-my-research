@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -153,11 +153,12 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 7. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
 8. Prefer a professionally formatted DOCX, PDF, or Markdown deliverable in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
 9. Keep internal traceability private; translate it into standard citations and natural prose
-10. Make the final report self-contained, professional, and accessible to its intended reader; in non-English reports compose directly in the report language (no translationese), annotate technical terms in English at first mention, and run the Consistency & Polish pass before export
-11. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
-12. Write full reports to disk; reply in chat with summary only
-13. Run document lenses and visually inspect the rendered file before Gate D
-14. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
+10. Design SYNTH as a reader journey before a chapter list: define the reader's starting point and destination, argument spine, canonical dimensions, concept ladder, and chapter contracts; follow `references/SYNTH/narrative-coherence.md`
+11. Make the final report self-contained, professional, and accessible to its intended reader; define terms and premises before use, preserve one taxonomy and claim state, compose directly in the report language, and run the reverse-outline Narrative Audit plus Consistency & Polish pass before export
+12. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
+13. Write full reports to disk; reply in chat with summary only
+14. Run document lenses and visually inspect the rendered file before Gate D
+15. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
 
 ## Dependencies
 
@@ -173,5 +174,7 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 - `references/GATES.md` — gate definitions and QA checklists
 - `references/LLM-STATE.md` — agent-owned state JSON schemas
 - `references/LANGUAGE.md` — timezone/locale → preferred BCP-47 language tag
+- `references/SYNTH/long-report.md` — incremental report state, chapter loop, continuity, and final review
+- `references/SYNTH/narrative-coherence.md` — reader journey, argument spine, concept order, self-containment, and Narrative Audit
 - `references/COLLECT/collect.md` — default four-bucket mix + parallel workers
 - `references/COLLECT/agents/bucket-worker.md` — per-bucket collect agent

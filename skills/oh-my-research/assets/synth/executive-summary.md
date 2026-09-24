@@ -1,22 +1,26 @@
 # Executive Summary
 
-## Question
+Write this after the body. Make it independently readable by a time-poor reader; do not assume knowledge of the title, workspace, organization, taxonomy, or earlier chapters.
 
-{{RESEARCH_QUESTION}}
+## Situation and Question
+
+Identify the subject, stakes, audience, and central question in plain language.
 
 ## Bottom Line
 
-State the conclusion directly in professional language. Describe the strength and limits of the supporting research naturally; do not show internal evidence labels.
+State the answer directly. Include the decisive reason, the main boundary, and the decision implication. Do not expose internal evidence labels.
 
-## Key Findings
+## Reasoning in Brief
 
-1.
-2.
-3.
+Present 3–5 findings in the same causal or logical order as the report's argument spine. Define unavoidable technical terms at first use; do not list unexplained products, metrics, or numbers.
 
-## Gaps
+## Implications
 
--
+State what to do, what not to infer, and which condition would change the recommendation.
+
+## Evidence Limits
+
+Name the most decision-relevant gaps, including whether findings are source-reported or independently verified.
 
 ## Sources
 

@@ -56,27 +56,38 @@ Rules:
 
 See `LLM-STATE.md`.
 
-## Phase A — Outline (one turn)
+## Phase A — Reader journey and outline (one turn)
 
-Load: research question, judgment summary (not full evidence dump), themes from evidence-map.
+Load: research question, intended audience, judgment summary (not full evidence dump), and themes from the evidence map. Follow `narrative-coherence.md`.
 
-Write `docs/<mode>/_outline.md` adapted to **this** research (not a fixed theme-a/b/c skeleton):
+Before naming chapters, write these into `docs/<mode>/_outline.md`:
 
-1. Title + one-sentence scope
-2. Ordered chapter list with purpose, target length, evidence clusters
-3. Dependencies (conclusions after themes, abstract last)
-4. Writing order note
+1. **Reader starting point and destination** — assume as little private or domain context as possible.
+2. **Central question and provisional bottom line** — one sentence each.
+3. **Argument spine** — 4–8 ordered reasoning moves from situation to implication.
+4. **Canonical dimensions** — define stable labels and whether they are stages, orthogonal axes, mechanisms, candidate solutions, or evaluation criteria. Do not call incompatible kinds by one label such as “routes”.
+5. **Concept ladder** — order terms from familiar to specialized and record prerequisites.
+6. **Chapter contracts** — for every chapter: reader starts knowing, guiding question, new concepts, chapter answer, evidence role, argument-spine step, exit state, and bridge to the next chapter.
+7. **Dependencies and writing order** — conclusions after their premises; abstract/executive summary last.
 
-Confirm with user unless quick-pass. Then write matching `.omr/report-state.json`. Create `docs/<mode>/chapters/` only when writing the first chapter file (and other `docs/<mode>/` files only when writing them).
+Then validate the outline as a reader dependency graph:
+
+- Every chapter advances one distinct argument-spine step and changes the reader's knowledge state.
+- No conclusion depends on a concept or premise introduced later.
+- Background and comparison criteria precede method/product enumeration and scoring.
+- Taxonomy labels keep one meaning from overview through conclusion.
+- Chapter order follows explanatory need, not discovery order, paper chronology, or source buckets.
+
+Confirm with the user unless quick-pass. Then write matching `.omr/report-state.json`. Create `docs/<mode>/chapters/` only when writing the first chapter file (and other `docs/<mode>/` files only when writing them).
 
 **Starter shapes (customize freely):**
 
 | Scenario | Shape |
 |----------|--------|
-| Deep survey | intro → background → N theme chapters → synthesis → gaps → conclusions → references → abstract last |
-| Industry report | context → findings → analysis → recommendations → limitations → references → exec summary last |
-| Brief | overview → findings → limitations → references → exec summary last |
-| Single-paper deep dive | context → method → results reading → critique → implications → references → abstract last |
+| Deep survey | situation → concepts/framework → N evidence themes → comparative synthesis → gaps → implications/conclusions → references → abstract last |
+| Industry report | decision context → system boundary/framework → findings → alternatives/trade-offs → recommendation → limitations → references → exec summary last |
+| Brief | situation/question → essential context → findings → implication/limits → references → exec summary last |
+| Single-paper deep dive | context/prerequisites → method → results reading → critique → implications → references → abstract last |
 
 Split any chapter that would exceed ~2,500 words into `…-part-1` / `…-part-2`.
 
@@ -100,18 +111,34 @@ For each pending chapter:
 
 ### C1. Build slim context pack (only these)
 
-1. Report title, language, mode
-2. This chapter’s outline row (purpose, target words, evidence_focus)
-3. Full `_continuity.md` (keep it short — see below)
-4. **Evidence slice**: excerpts / notes for `evidence_focus` IDs only (from evidence-map + material abstracts). Do not reload the entire evidence-map.
-5. Optional: last ~200 words of the **immediately previous** chapter for tone bridge (read from disk; do not reload older chapters)
+1. Report title, language, mode, audience, and register.
+2. The **full argument spine** and canonical dimensions from `_outline.md` (compact, always loaded).
+3. This chapter's full contract: reader starts knowing, guiding question, new concepts, chapter answer, evidence role, argument step, exit state, bridge, target words, and `evidence_focus`.
+4. Full `_continuity.md` (keep it short — see below), especially reader knowledge state, canonical labels, claim-state ledger, and repetition budget.
+5. **Evidence slice**: excerpts / notes for `evidence_focus` IDs only (from evidence-map + full-text material notes). Do not reload the entire evidence-map.
+6. Last ~200 words of the immediately previous chapter **and the next chapter's contract**. The former anchors the transition; the latter prevents a dead-end closing.
+
+Before drafting, verify that every concept the chapter assumes is either in `reader starts knowing` or will be defined locally. If not, revise the chapter contract or move the prerequisite earlier.
 
 ### C2. Write the chapter
 
-- Reader-facing prose only
-- Conventional citations from the map
-- Natural evidence-strength wording
-- End with a 3–5 bullet **Chapter takeaways** subsection (helps continuity; can be trimmed at export if desired)
+- Open with **anchor → gap → move**: restate the relevant established result, name what remains unanswered, then state this chapter's question.
+- Proceed from familiar context to specialized mechanism, then evidence, boundary, and implication.
+- Use reader-facing prose and conventional citations from the map.
+- Express evidence strength naturally.
+- End with a short synthesis paragraph that answers the guiding question and creates the next bridge.
+- Add **Chapter takeaways** only when they improve navigation. Keep 2–4 bullets, each stating what the chapter changed in the argument; never replay every subsection.
+
+**Reasoning paragraph rule:** when a paragraph contains several model names, numbers, or citations, give it an explicit claim and implication. Prefer `claim/question → explanation/mechanism → evidence/example → boundary → implication` over a source or fact list.
+
+**Self-containment rules (mandatory — see `narrative-coherence.md`):**
+
+1. Define a technical concept before using it to support a conclusion; expanding an acronym alone is not a definition.
+2. At first use, explain the subject/system, metric direction, baseline, comparison conditions, and report-specific shorthand needed to interpret the claim.
+3. Introduce each table or figure with its purpose and dimensions; follow it with the result the reader should take from it.
+4. Restate the needed premise beside a cross-reference. Never use a chapter number, “as above”, “this route”, or a demonstrative as a substitute for the premise.
+5. Use canonical dimensions exactly. Keep pipeline stages, optimization goals, mechanisms, candidate solutions, and evaluation criteria distinct.
+6. When evidence changes an earlier claim, mark it in the claim-state ledger and revise every affected location before export.
 
 **Expression quality rules (mandatory — see `LANGUAGE.md` § Non-English Writing):**
 
@@ -127,44 +154,28 @@ Save immediately to `chapters/<id>.md`.
 
 ### C3. Update continuity (mandatory, same turn or next)
 
-Edit `_continuity.md` to ≤ ~800–1,200 words total:
+Edit `_continuity.md` to ≤ ~1,200–1,600 words total. Start from `assets/synth/_continuity.md` and maintain:
 
-```markdown
-# Continuity brief
+1. central question and current bottom line;
+2. argument-spine progress;
+3. reader knowledge state — what is now understood, what has not yet been introduced, and the next question made necessary;
+4. canonical dimensions and labels, explicitly typed as stage / axis / mechanism / candidate / criterion;
+5. established claims with their support and boundary;
+6. bilingual terms and plain-language definitions;
+7. chapter bridges;
+8. citation ledger;
+9. claim-state and revision ledger (`open | resolved | superseded`) with all locations that must remain synchronized;
+10. repetition budget for headline claims and their next allowed role.
 
-## Thesis so far
-…
+For the bilingual term table:
 
-## Established claims
-- Claim … (Smith, 2025)
-- Claim … (Li, 2024) — limited sample
+- `standard`: widely accepted translation — annotate at first mention, then use the translation alone;
+- `nonstandard`: no settled translation — keep English as the name and gloss it in-language if needed;
+- `keep-English`: model names, dataset names, and abbreviations conventionally left untranslated.
 
-## Terms & definitions locked
+After each chapter, update the reader knowledge state and chapter bridge, then check the claim-state ledger. If a claim became resolved or superseded, revise all affected existing chapters now; do not leave cleanup until the conclusion.
 
-Bilingual term table (mandatory for non-English reports; for `en` reports keep only `English term | 状态` columns):
-
-| 译名 / localized term | English original | 状态 | 首次定义 |
-|-----------------------|------------------|------|----------|
-| 检索增强生成 | Retrieval-Augmented Generation, RAG | standard | ch.02 |
-| Chain-of-Thought（保留英文） | Chain-of-Thought, CoT | keep-English | ch.03 |
-
-- `standard`: widely accepted translation — annotate at first mention, then use the translation alone
-- `nonstandard`: no settled translation — keep English term as the name, gloss in-language if needed
-- `keep-English`: term conventionally left untranslated (model names, dataset names, abbreviations)
-
-## Citation ledger
-- (Smith, 2025) — used in ch.01, ch.03
-- (Li, 2024) — used in ch.02
-
-## Open threads for later chapters
-- Need comparative treatment of X in synthesis
-- Limitations: geographic bias
-
-## Avoid repeating
-- Do not re-explain Term Y
-```
-
-Prune older detail aggressively. Continuity is a **compression layer**, not an archive.
+Prune evidence detail aggressively, but never prune the argument spine, canonical taxonomy, unresolved bridge, or current claim state. Continuity is a **semantic contract**, not merely a chapter summary.
 
 ### C4. Mark done
 
@@ -184,34 +195,49 @@ If mid-draft the chapter is still growing:
 
 Order:
 
-1. Comparative synthesis (reads continuity + theme takeaways only)
-2. Gaps and limitations
-3. Conclusions
-4. References (compile from citation ledger + map; complete entries)
-5. Abstract / executive summary / overview (**last** — summarize finished body via continuity + chapter takeaways, not by re-reading all files into context)
+1. **Build a body reverse outline** — one sentence per completed body section stating its argument function, prerequisite, result, and next link.
+2. **Comparative synthesis** — use the argument spine, canonical dimensions, body reverse outline, and chapter answers. Compare mechanisms on shared dimensions; do not replay source summaries.
+3. **Gaps and limitations** — distinguish open evidence gaps, invalidated assumptions, and scope boundaries. Synchronize the claim-state ledger.
+4. **Conclusions** — answer the central question by walking the shortest valid path through the argument spine; state implications and conditions that would change the answer.
+5. **References** — compile from the citation ledger + map; include complete entries.
+6. **Abstract / executive summary / overview** (**last**) — write an independently understandable account of situation, question, answer, decisive reasoning, implication, and limits. Preserve body order; do not produce a dense list of unexplained findings.
 
-## Phase E — Review without reloading everything
+## Phase E — Narrative and expression review
 
-1. **Per-chapter lens** (optional): Structure/Prose/Adversarial on the chapter just written, using only that file + continuity.
-2. **Global light pass**: skim `_continuity.md` + each chapter's heading structure (first heading + takeaways), not full text, to catch duplication/order issues.
-3. Spot-fix 1–2 weakest chapters if needed (`--chapter <id>`).
-4. **Consistency & Polish pass (mandatory, before export)** — see below.
+1. **Per-chapter lens**: Structure/Prose/Adversarial on each chapter after drafting, using that file + continuity. This is mandatory for long reports; quick-pass may combine the findings.
+2. **Complete the reverse outline**: extend the body reverse outline to synthesis, limitations, conclusions, and abstract; compare the whole document to the planned argument spine and chapter contracts.
+3. **Run the global Narrative Audit** from `narrative-coherence.md`: progressive disclosure, global coherence, self-containment, revision integrity, and prose continuity.
+4. Fix every blocking finding chapter-by-chapter. Structural repairs may reorder or merge chapters; do not limit repairs to 1–2 chapters.
+5. **Consistency & Polish pass** (mandatory, before export) — see below.
 
-### Phase E.4 — Consistency & Polish pass
+A headings-and-takeaways skim is not sufficient for global review. Read every chapter file once during the combined narrative/consistency pass. Keep only the reverse outline and findings table in context between chapters.
 
-The dedicated end-of-report check for expression consistency and logical clarity. Runs **after** the lenses and **before** authoring `_document.json` / export. Method: chapter-by-chapter scan against the continuity brief's bilingual term table + the Gate P register, reading each chapter file once (chapter files are read once here — that's acceptable; do not keep them all in context afterward).
+### Phase E.5 — Consistency & Polish pass
 
-Checklist (each item yields findings; empty findings lists are not allowed — a genuinely clean item must say "checked, clean" with one line of evidence):
+Run after the narrative audit and before authoring `_document.json` / export. Scan each chapter against the outline, continuity brief, bilingual term table, and Gate P register.
+
+Checklist (each item yields findings; a genuinely clean item must say "checked, clean" with one line of evidence):
 
 | # | Check | What to verify |
 |---|-------|----------------|
-| 1 | **Terminology consistency** | Every term matches the bilingual term table: one concept = one name report-wide; no two competing translations of the same term; no re-annotation after first mention |
-| 2 | **First-mention annotation** | Every table term has its English annotation at its actual first occurrence in the report; terms absent from the table are flagged and added (with status) |
-| 3 | **Translationese sweep** (non-English) | Scan each chapter for the worst-sounding passage (calque, mechanical passive, literal connectives, unnatural collocation) and rewrite it in idiomatic target-language prose |
-| 4 | **Register adherence** | Style matches the Gate P register in every chapter; no drift between plain and academic mid-report |
-| 5 | **Logical clarity** | Chapter transitions carry the argument forward; no dangling references ("如前所述" pointing nowhere); conclusions trace back to body arguments; abstract matches the finished body |
+| 1 | **Reader dependency order** | Each concept and premise appears before first use; detail increases from situation/framework to evidence/synthesis/action |
+| 2 | **Argument-spine alignment** | Every section has a distinct function; chapter order and conclusions follow the planned reasoning path; no isolated source catalogue |
+| 3 | **Taxonomy integrity** | Stages, axes, mechanisms, candidate solutions, and evaluation criteria remain distinct; every label keeps one meaning report-wide |
+| 4 | **Transitions and antecedents** | Openings use anchor → gap → move; closings create the next question; pronouns, demonstratives, and cross-references name an unmistakable referent |
+| 5 | **Local self-containment** | Subject, terms, metrics, baselines, figures, tables, report-specific assumptions, and recommendations can be interpreted without working files or distant premises |
+| 6 | **Revision integrity** | No resolved issue remains listed as open; abstract, body, takeaways, limitations, and conclusion share the same final claim state |
+| 7 | **Repetition discipline** | Repeated claims have distinct roles; takeaways, synthesis, conclusion, and abstract do not merely restate one another |
+| 8 | **Terminology and first mention** | One concept = one name; technical terms have a plain-language definition and, for non-English reports, the locked English annotation at actual first use only |
+| 9 | **Translationese sweep** (non-English) | Rewrite calques, mechanical passives, literal connectives, unnatural collocations, and overpacked sentences in idiomatic target-language prose |
+| 10 | **Register adherence** | Style matches Gate P in every chapter; no unexplained shift between plain and academic writing |
 
-Output a findings table (chapter, item, issue, fix). User accepts/rejects fixes (quick-pass applies high-confidence fixes directly). Apply fixes chapter-by-chapter; update the term table if translations changed. Record evidence of this pass for Gate D (e.g. `scenario_note` or a checks entry referencing fixes applied).
+Write `docs/<mode>/_narrative-audit.md` from `assets/synth/_narrative-audit.md` with:
+
+1. a reverse outline (`section | argument function | prerequisite | result | next link`);
+2. a findings table (`location | issue type | reader impact | repair | status`);
+3. blocking-check results and a resolution summary.
+
+Apply high-confidence fixes directly in quick-pass; otherwise ask the user to accept/reject substantive reframing. Update the outline and continuity ledgers whenever structure, taxonomy, or claim state changes. Rerun affected checks until no blocking finding remains. Gate D requires this artifact and fails while any finding remains `open`.
 
 ## Phase F — Export
 
@@ -251,21 +277,31 @@ Never restart from outline unless the user asks to re-outline.
 |--------|------------|
 | Generate all chapters in one reply | One chapter per turn |
 | Paste full report into chat | Paths + progress only |
-| Reload every prior chapter | Continuity brief + previous tail |
-| Write abstract first | Write abstract last |
-| Expand continuity forever | Cap and prune |
-| Export mid-loop | Export when state is complete |
+| Reload every prior chapter while drafting | Argument spine + continuity + previous tail + next contract |
+| Let source/discovery order determine the report | Build a reader dependency graph and concept ladder |
+| Call stages, axes, mechanisms, and candidates all “routes” | Define canonical dimensions and type each label |
+| Stack model names, metrics, and citations | State the claim, explain the mechanism, then interpret evidence and limits |
+| Use “as above” or a chapter number as the premise | Restate the needed proposition beside the cross-reference |
+| Write abstract first | Write a self-contained abstract last, in body argument order |
+| Repeat every conclusion in every takeaway | Track a repetition budget and give each recurrence a distinct role |
+| Expand continuity forever | Cap and prune evidence detail; retain semantic contracts and claim state |
+| Patch a resolved claim in one chapter only | Synchronize abstract, body, limitations, takeaways, and conclusion |
+| Export mid-loop | Export when state is complete and narrative audit passes |
 | Dump entire evidence-map each turn | Evidence slice for this chapter |
 | Draft in English, then translate to the report language | Compose directly in the target language |
-| Skip the Consistency & Polish pass before export | Run it after lenses, before `_document.json` |
+| Review only headings and takeaways | Read each chapter once, build a reverse outline, and run the Narrative Audit |
 
 ## Agent turn checklist
 
 ```
 [ ] report-state + outline loaded (LLM-owned JSON)
-[ ] only slim pack in context
+[ ] argument spine + canonical dimensions + chapter contract loaded
+[ ] assumed concepts are already known or defined locally
+[ ] previous bridge and next chapter contract loaded
+[ ] only the relevant evidence slice is in context
+[ ] chapter opens anchor → gap → move and closes with answer → next question
 [ ] chapter written to chapters/
-[ ] continuity updated and pruned
+[ ] continuity reader-state, bridge, taxonomy, claim-state, and repetition ledgers updated
 [ ] chapter marked done in report-state.json
 [ ] chat: progress line only
 [ ] stop turn (next chapter = next turn) unless user asked for quick-pass multi-chapter
