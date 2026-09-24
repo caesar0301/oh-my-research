@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -154,17 +154,18 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 8. Prefer a professionally formatted DOCX, PDF, or Markdown deliverable in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
 9. Keep internal traceability private; translate it into standard citations and natural prose
 10. Design SYNTH as a reader journey before a chapter list: define the reader's starting point and destination, argument spine, canonical dimensions, concept ladder, and chapter contracts; follow `references/SYNTH/narrative-coherence.md`
-11. Make the final report self-contained, professional, and accessible to its intended reader; define terms and premises before use, preserve one taxonomy and claim state, compose directly in the report language, and run the reverse-outline Narrative Audit plus Consistency & Polish pass before export
-12. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
-13. Write full reports to disk; reply in chat with summary only
-14. Run document lenses and visually inspect the rendered file before Gate D
-15. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
+11. Make the final report self-contained, professional, and accessible to its intended reader; define terms and premises before use, preserve one taxonomy and claim state, and run the reverse-outline Narrative Audit plus Consistency & Polish pass before export
+12. **Write in the report language, not through it** — apply `references/SYNTH/native-expression.md`: test every metaphor's provenance, use native heading style and sentence rhythm, avoid English-derived coinages, and clear all `high` findings from `scripts/prose_lint.py` before Gate D
+13. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
+14. Write full reports to disk; reply in chat with summary only
+15. Run document lenses and visually inspect the rendered file before Gate D
+16. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
 
 ## Dependencies
 
 - Read/write project workspace
 - Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF/Markdown renderer applying LLM-authored `_document.json`; the Markdown deliverable passes Mermaid figures and GFM tables through verbatim), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py`; `--id`/`--bucket`/`--inbox` for parallel workers, `--merge-inbox` for the coordinator), `material_to_markdown.py` (downloads source via arxiv/DOI/preprint hosts (ACL Anthology, bioRxiv, medRxiv, OpenReview, Zenodo, SSRN, HAL)/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--index` batch-converts/retries every indexed source lacking a `.md`, `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths)
+- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF/Markdown renderer applying LLM-authored `_document.json`; the Markdown deliverable passes Mermaid figures and GFM tables through verbatim), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py`; `--id`/`--bucket`/`--inbox` for parallel workers, `--merge-inbox` for the coordinator), `material_to_markdown.py` (downloads source via arxiv/DOI/preprint hosts (ACL Anthology, bioRxiv, medRxiv, OpenReview, Zenodo, SSRN, HAL)/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--index` batch-converts/retries every indexed source lacking a `.md`, `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths), `prose_lint.py` (native-expression linter: flags calqued metaphors, English-derived coinages, article-style CJK headings, wrong measure words, 的-chains, passive/em-dash stacking, and over-long sentences; `--strict` fails on medium findings, `.omr/prose-lint-allow.txt` allowlists field-standard terms)
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export; **anydoc** (`npx -y @firecrawl/anydoc`, Node 20+) for material → Markdown conversion; optional `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` as fallbacks if anydoc is unavailable
 
 ## Deep Dive
@@ -176,5 +177,6 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 - `references/LANGUAGE.md` — timezone/locale → preferred BCP-47 language tag
 - `references/SYNTH/long-report.md` — incremental report state, chapter loop, continuity, and final review
 - `references/SYNTH/narrative-coherence.md` — reader journey, argument spine, concept order, self-containment, and Narrative Audit
+- `references/SYNTH/native-expression.md` — metaphor provenance, native heading style, sentence-rhythm budgets, and the translationese scan
 - `references/COLLECT/collect.md` — default four-bucket mix + parallel workers
 - `references/COLLECT/agents/bucket-worker.md` — per-bucket collect agent

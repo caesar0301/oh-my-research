@@ -140,15 +140,20 @@ Before drafting, verify that every concept the chapter assumes is either in `rea
 5. Use canonical dimensions exactly. Keep pipeline stages, optimization goals, mechanisms, candidate solutions, and evaluation criteria distinct.
 6. When evidence changes an earlier claim, mark it in the claim-state ledger and revise every affected location before export.
 
-**Expression quality rules (mandatory — see `LANGUAGE.md` § Non-English Writing):**
+**Expression quality rules (mandatory — see `native-expression.md` and `LANGUAGE.md` § Non-English Writing):**
 
 1. **Register**: write in the register confirmed at Gate P (`plain` | `academic` | `hybrid`) and keep it stable across chapters.
    - `plain`: clear and direct, explain each term where it first appears, prefer short sentences, use analogies to anchor hard concepts ("explain like I'm five" bar — simple wording, never dumbed-down content)
    - `academic`: formal scholarly register, precise claims, appropriate hedging — but **still natural prose**, not stiff translationese
    - `hybrid`: plain narration with academic rigor in method/results discussion
-2. **No translationese** (non-English reports, hard rule): compose **directly in the target language**, never draft in English and translate. Avoid word-for-word calques, mechanical passive voice, English word order and literal discourse connectives ("moreover"→"而且" chains); use the idiomatic sentence patterns and collocations of professional writing in that language.
-3. **Term first-mention annotation** (non-English reports): when a technical term first appears, write it as `译名（English Original, ABBR）` — e.g. 「检索增强生成（Retrieval-Augmented Generation, RAG）」. If no standard translation exists or the translation would mislead, keep the English term as the name and add a short in-language gloss. Use **one** name for the rest of the report; never re-annotate.
-4. Check the continuity brief's **bilingual term table** before writing: reuse locked translations exactly; add new terms (with status) as they enter.
+2. **Compose, don't translate** (hard rule): build each sentence in the report language from the start. Never plan the sentence in English and render it.
+3. **Metaphor provenance test** (`native-expression.md` § 1): before using any figurative expression, verify the metaphor exists in the report language. If it does not, use a native metaphor or state the idea plainly — never coin a compound by translating an English metaphor (問題の形/问题的形状, attack surface/攻击面, load-bearing/承重).
+4. **Native heading style** (`native-expression.md` § 2): do not open a CJK heading with an article-mimicking classifier (一个/一次/一条). Name the topic or assert the claim; use correct measure words.
+5. **Sentence rhythm budget** (`native-expression.md` § 3): one proposition per sentence; keep Chinese sentences mostly under ~60 characters and none over ~100; at most one 破折号 per paragraph; no 「的」-chains of four or more in a clause; prefer active or topic-comment structures over stacked passives.
+6. **Verbs over nominalizations** (`native-expression.md` § 4): rewrite noun phrases carrying two or more nominalized verbs.
+7. **Term first-mention annotation** (non-English reports): when a technical term first appears, write it as `译名（English Original, ABBR）` — e.g. 「检索增强生成（Retrieval-Augmented Generation, RAG）」. If no standard translation exists or the translation would mislead, keep the English term as the name and add a short in-language gloss. Use **one** name for the rest of the report; never re-annotate.
+8. Check the continuity brief's **bilingual term table** before writing: reuse locked translations exactly; add new terms (with status) as they enter.
+9. **Read-aloud test before saving** (`native-expression.md` § 6): read the chapter's headings and each section's first sentence as if speaking to a colleague in that language; rewrite anything a native speaker would not say.
 
 Save immediately to `chapters/<id>.md`.
 
@@ -228,8 +233,9 @@ Checklist (each item yields findings; a genuinely clean item must say "checked, 
 | 6 | **Revision integrity** | No resolved issue remains listed as open; abstract, body, takeaways, limitations, and conclusion share the same final claim state |
 | 7 | **Repetition discipline** | Repeated claims have distinct roles; takeaways, synthesis, conclusion, and abstract do not merely restate one another |
 | 8 | **Terminology and first mention** | One concept = one name; technical terms have a plain-language definition and, for non-English reports, the locked English annotation at actual first use only |
-| 9 | **Translationese sweep** (non-English) | Rewrite calques, mechanical passives, literal connectives, unnatural collocations, and overpacked sentences in idiomatic target-language prose |
-| 10 | **Register adherence** | Style matches Gate P in every chapter; no unexplained shift between plain and academic writing |
+| 9 | **Native expression sweep** (non-English) | Run `scripts/prose_lint.py --mode <mode>`; resolve every `high` finding (calqued metaphor, coined compound, article-style heading, wrong measure word) and review each `medium` finding (的-chain, passive/dash stacking, long sentence, `X侧`); apply the metaphor provenance test and read-aloud test from `native-expression.md` |
+| 10 | **Heading and rhythm budgets** | Headings read as native section titles; sentence length, 破折号 density, and passive density within the budgets in `native-expression.md` § 2–3 |
+| 11 | **Register adherence** | Style matches Gate P in every chapter; no unexplained shift between plain and academic writing |
 
 Write `docs/<mode>/_narrative-audit.md` from `assets/synth/_narrative-audit.md` with:
 
@@ -289,6 +295,10 @@ Never restart from outline unless the user asks to re-outline.
 | Export mid-loop | Export when state is complete and narrative audit passes |
 | Dump entire evidence-map each turn | Evidence slice for this chapter |
 | Draft in English, then translate to the report language | Compose directly in the target language |
+| Coin a compound by translating an English metaphor | Apply the metaphor provenance test; use a native figure or plain statement |
+| Open CJK headings with 一个/一次/一条 | Name the topic or assert the claim |
+| Extend a sentence with 破折号 asides | Split at the logical seam |
+| Treat "no translationese" as a reminder | Run `prose_lint.py` and clear every `high` finding |
 | Review only headings and takeaways | Read each chapter once, build a reverse outline, and run the Narrative Audit |
 
 ## Agent turn checklist
@@ -300,6 +310,8 @@ Never restart from outline unless the user asks to re-outline.
 [ ] previous bridge and next chapter contract loaded
 [ ] only the relevant evidence slice is in context
 [ ] chapter opens anchor → gap → move and closes with answer → next question
+[ ] metaphors pass the provenance test; headings use native style
+[ ] read-aloud test done on headings and section openings
 [ ] chapter written to chapters/
 [ ] continuity reader-state, bridge, taxonomy, claim-state, and repetition ledgers updated
 [ ] chapter marked done in report-state.json

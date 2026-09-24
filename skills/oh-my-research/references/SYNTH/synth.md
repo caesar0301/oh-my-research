@@ -129,12 +129,13 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 7. Every chapter has a logical bridge from prior knowledge to its question and onward to the next; paragraphs interpret evidence rather than list papers and numbers.
 8. The report is self-contained for a reader without working files: it identifies the subject, audience, scope, terms, metrics, baselines, assumptions, and recommendation conditions; tables and figures are locally interpretable.
 9. Abstract, body, takeaways, limitations, and conclusion share the same final claim state; no resolved issue remains described as open and no dangling reference survives revision.
-10. Professional, user-friendly tone; **natural, idiomatic expression in the report language** (no translationese — compose directly in the target language, per `LANGUAGE.md` § Non-English Writing); register (`plain`/`academic`/`hybrid`) matches Gate P and stays stable.
-11. Non-English reports: technical terms are plainly defined and annotated at first mention as `译名（English Original, ABBR）`; use one translation per term report-wide.
-12. Per-chapter lenses completed; whole-document reverse outline + Narrative Audit completed; mandatory **Consistency & Polish pass** (`long-report.md` § Phase E.5) has no blocking findings.
-13. Gaps and limitations are present and tied to what would change the conclusions.
-14. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety scan clean.
-15. Optional wiki after Gate D (`--no-wiki` to skip).
+10. Professional, user-friendly tone; register (`plain`/`academic`/`hybrid`) matches Gate P and stays stable.
+11. **Reads as composed in the report language, not translated** (`narrative-coherence.md` companion: `native-expression.md`): metaphors pass the provenance test, headings use native style, sentence rhythm and punctuation follow the target language's habits, nominalizations are converted to verbs. `scripts/prose_lint.py` reports zero `high` findings.
+12. Non-English reports: technical terms are plainly defined and annotated at first mention as `译名（English Original, ABBR）`; use one translation per term report-wide.
+13. Per-chapter lenses completed; whole-document reverse outline + Narrative Audit completed; mandatory **Consistency & Polish pass** (`long-report.md` § Phase E.5) has no blocking findings.
+14. Gaps and limitations are present and tied to what would change the conclusions.
+15. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety and native-expression scans clean.
+16. Optional wiki after Gate D (`--no-wiki` to skip).
 
 ## Process (summary)
 
@@ -145,9 +146,9 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 3. Validate prerequisite order and taxonomy, then confirm the outline (or quick-pass).
 4. Loop: next chapter from report-state → chapter contract + semantic continuity pack + evidence slice → write from known to new → save → update reader state, bridges, claim state, terms, and repetition budget → mark done in JSON.
 5. Write comparative synthesis, limitations, conclusions, and a self-contained abstract last.
-6. Run per-chapter lenses → build reverse outline → run whole-document Narrative Audit → apply structural fixes → run the **Consistency & Polish pass** (`long-report.md` § Phase E.5).
+6. Run per-chapter lenses → build reverse outline → run whole-document Narrative Audit → apply structural fixes → run the **Consistency & Polish pass** (`long-report.md` § Phase E.5), including `prose_lint.py` until no `high` finding remains.
 7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
-8. LLM QA2 → `export_report.py` for DOCX/PDF/Markdown → inspect → Gate D.
+8. LLM QA2 → `export_report.py` for DOCX/PDF/Markdown → inspect → `report_lint.py` + `prose_lint.py` → Gate D.
 9. Deliver path + short summary; optional wiki.
 
 ## Presentation is LLM-driven (not baked into the script)
@@ -231,8 +232,10 @@ Quality review: passed
 - No chapter list before reader journey, argument spine, canonical dimensions, and concept ladder are explicit
 - No undefined report-specific subject, metric, baseline, taxonomy, or recommendation threshold
 - No taxonomy drift, dangling reference, stale claim state, or conclusion-before-premise at export
-- No translationese in non-English reports; compose directly in the report language; define and annotate terms at first mention, then keep one name
+- No calqued metaphors, coined English-derived compounds, or article-style CJK headings; compose directly in the report language and apply the metaphor provenance test
+- No English sentence rhythm in non-English prose: respect the length, punctuation, and passive budgets in `native-expression.md`
+- Define and annotate terms at first mention, then keep one name
 - No internal IDs / workflow terms in public chapters or export
 - Author `_document.json` for presentation — don't rely on the script to choose styling/structure
-- Do not export if the Narrative Audit, Consistency & Polish pass, or publication-safety scan has blocking findings
+- Do not export if the Narrative Audit, Consistency & Polish pass, publication-safety scan, or native-expression scan has blocking findings
 - Prefer continuing the chapter loop, but revise completed chapters immediately when taxonomy, argument order, or claim state changes

@@ -327,6 +327,7 @@ Position: after Gate A unlocks SYNTH; before SYNTH Phase A (outline).
 - [ ] Reader starting knowledge: what may be assumed vs what must be explained
 - [ ] Reader destination: understanding, comparison, decision, or action expected after reading
 - [ ] Register: `plain` (clear, direct, explain-like-I'm-five bar) / `academic` (formal scholarly prose) / `hybrid` — drives chapter writing rules (`SYNTH/long-report.md` § C2)
+- [ ] Non-English reports: confirm native-expression enforcement (`SYNTH/native-expression.md`) and note any field-standard terms to allowlist in `.omr/prose-lint-allow.txt`
 - [ ] Citation style: author–date vs numbered (consistent throughout)
 - [ ] Wiki yes/no (if not already specified)
 
@@ -343,7 +344,7 @@ Run **chapter-scoped** lenses during the writing loop, then a full narrative pas
 | Lens | Method |
 |------|--------|
 | **Structure** | Compare chapter contracts and a reverse outline to the argument spine; cut, merge, move, or add prerequisites until the reader dependency order is valid |
-| **Prose** | Check reasoning paragraphs, explicit antecedents, logical transitions, plain definitions, natural evidence-strength phrasing, and idiomatic target-language expression |
+| **Prose** | Check reasoning paragraphs, explicit antecedents, logical transitions, plain definitions, natural evidence-strength phrasing, and **native expression** — metaphor provenance, heading style, sentence rhythm, passive/dash budgets (`SYNTH/native-expression.md`) |
 | **Adversarial** | Force missing-angle and counterexample findings; empty list not allowed |
 | **Narrative Audit** | Mandatory full-report pass: progressive disclosure, taxonomy integrity, chapter bridges, local self-containment, repetition, and revision/claim-state consistency — see `SYNTH/narrative-coherence.md` |
 | **Consistency & Polish** | Mandatory after Narrative Audit: terminology, first mention, translationese, register, and all unresolved narrative findings — see `SYNTH/long-report.md` § Phase E.5 |
@@ -376,7 +377,9 @@ Process: announce → reverse outline + findings table → user accept/reject su
   - `repetition_discipline`: summaries and conclusions add orientation, synthesis, or implications rather than replaying the same claims
   - `terminology_consistency`: terms match the continuity brief's bilingual term table; one concept = one name report-wide
   - `first_mention_annotation` (non-English reports): each technical term is plainly defined and carries its English annotation at actual first occurrence only
-  - `register_adherence`: style matches Gate P with no drift or translationese
+  - `register_adherence`: style matches Gate P with no drift
+  - `native_expression`: `scripts/prose_lint.py --mode <mode>` reports **zero `high` findings** (calqued metaphor, coined compound, article-style CJK heading, wrong measure word); every `medium` finding is fixed or justified; allowlisted terms recorded with a reason
+  - `expression_budgets`: sentence length, 破折号 density, and passive density within `SYNTH/native-expression.md` § 2–3 budgets; headings read as native section titles
   - `narrative_audit`: `docs/<mode>/_narrative-audit.md` exists with a reverse outline, findings table, and resolution summary; no finding remains `open`
   - `consistency_polish_pass`: the Consistency & Polish pass (`SYNTH/long-report.md` § Phase E.5) ran after the Narrative Audit and its findings were resolved or explicitly accepted
 - [ ] All planned chapters complete in `.omr/report-state.json`
@@ -388,6 +391,7 @@ Process: announce → reverse outline + findings table → user accept/reject su
   - No single chapter file > 5,000 words (warn)
   - Report is not a single un-split `.md` file (fail, unless brief mode exception)
 - [ ] **Publication-safety lint passed (v1.4)**: `scripts/report_lint.py` run on all chapter files; no violations (or violations explicitly accepted in `scenario_note`)
+- [ ] **Native-expression lint passed (v1.7)**: `scripts/prose_lint.py` run on all chapter files; zero `high` findings; `medium` findings resolved or justified in `scenario_note`
 
 ---
 
@@ -406,7 +410,8 @@ Op: `qa qa2`. Evaluate chapters under `docs/<mode>/chapters/` (ignore `_*.md` wo
 | `repetition` | Takeaways, synthesis, conclusion, and abstract serve distinct roles rather than restating the same list |
 | `publication-safety` | No internal IDs, workflow/gate jargon (`OMR`, `THINK mode`, `Gate A`), grade labels, or private paths. Product attribution (`Powered by oh-my-research`) is allowed chrome. |
 | `self-contained` | Subject/system, audience, scope, terms, metrics, baselines, assumptions, findings, tables/figures, recommendation conditions, limitations, and references stand alone |
-| `language` | Consistent language and register; no mixed boilerplate or translationese; terminology matches the ledger and first mentions are defined/annotated |
+| `language` | Consistent language and register; no mixed boilerplate; terminology matches the ledger and first mentions are defined/annotated |
+| `native-expression` | Reads as composed in the report language: no calqued metaphors or coined compounds, native heading style, native sentence rhythm and punctuation habits; `prose_lint.py` clean of `high` findings |
 | `rendering` | After export: file exists, opens, typography acceptable |
 
 Write `.omr/quality-gates/QA2-pre-export.json`.

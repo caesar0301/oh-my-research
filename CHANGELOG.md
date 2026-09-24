@@ -13,6 +13,25 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [1.7.0] — 2026-09-24
+
+### Added
+
+- **Native Expression Protocol** (`references/SYNTH/native-expression.md`) — makes "no translationese" operational instead of declarative:
+  - **Metaphor provenance test**: verify a figure of speech exists in the report language before using it; never coin a compound by translating an English metaphor. Ships a curated calque catalogue with native repairs (问题的形状→问题的本质, 攻击面→着力点, 承重假设→关键前提, 判决性→决定性, 可核性→可核查性, 成本会计→成本核算, 机制地图→机制全景, 令牌侧→在令牌层面, 低垂的果实→唾手可得的收益 …).
+  - **Native heading rules**: no article-mimicking classifier openings (一个/一次/一条) in CJK headings; correct measure words (机制/方案/选项 take 类·个·项, not 条); headings must read aloud as native section titles.
+  - **Sentence-rhythm budgets**: one proposition per sentence; Chinese sentences mostly under ~60 chars and none over ~100; at most one 破折号 per paragraph and under ~5 per 1,000 chars; no 「的」-chains of four or more per clause; active/topic-comment over stacked passives.
+  - **Nominalization discipline** and **quoted-wording containment** (a source's English clause structure must not leak into surrounding prose).
+  - **Read-aloud test** per chapter, mandatory before saving.
+- **`scripts/prose_lint.py`** — mechanical translationese detector with zh/en rule packs: `article_calque`, `calqued_metaphor`, `side_calque`, `measure_word`, `de_chain`, `passive_stack`, `dash_stack`, `long_sentence`. Reports per-file budgets (avg sentence length, dash/1k, passive/1k), supports `--json`, `--strict`, and allowlisting via `.omr/prose-lint-allow.txt` for field-standard terms.
+
+### Changed
+
+- Chapter writing rules (`SYNTH/long-report.md` § C2) now carry the provenance test, heading style, rhythm budgets, verb-over-nominalization rule, and read-aloud test; the per-turn checklist and anti-pattern table were extended accordingly.
+- Consistency & Polish pass (§ Phase E.5) replaces the generic "translationese sweep" with a linter-backed **native expression sweep** plus explicit heading/rhythm budget checks.
+- Gate P records native-expression enforcement and term allowlisting; the **Prose lens**, **Gate D** (`native_expression`, `expression_budgets`, native-expression lint item), and **QA2** (`native-expression` check) now treat calques and English sentence rhythm as publication blockers rather than style preferences.
+- `LANGUAGE.md` § Non-English Writing points to the protocol and states that `high` findings block publication.
+
 ## [1.6.0] — 2026-09-24
 
 ### Added
