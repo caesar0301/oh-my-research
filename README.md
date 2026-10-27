@@ -98,8 +98,8 @@ Reports are written **chapter by chapter** (with resume if interrupted), then as
 
 - A research workspace (`AGENTS.md`, `.omr/` state, materials, indexes, plans)
 - Working artifacts: brief, evidence map, judgment (and optional plan / decision / ideas)
-- A **self-contained** survey or report under `docs/{survey,report,manuscript,brief}/`
-- Professional **Word, PDF, or Markdown** export with cover, TOC, and consistent formatting
+- A **self-contained** survey or report — drafts in `docs/{survey,report,manuscript,brief}/`, final document in `deliverables/`
+- Professional **Word, PDF, or Markdown** export with cover, TOC, and consistent formatting, written to the project-root `deliverables/` folder (the only surface meant to be shared)
 - Quality checkpoints before you publish (analyze gate + document lenses + publish gate)
 
 Internal IDs, gate names, and OMR workflow terms stay in private working files. The published document reads like a normal research report.

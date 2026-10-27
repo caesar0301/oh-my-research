@@ -47,7 +47,8 @@ The full decision tree — intention detection, workspace-state detection, and P
 | Decision (optional) | `decision-DEC-{nnn}.md` | `docs/plans/` |
 | Idea note | `YYYY-MM-DD-<slug>.md` | `docs/ideas/` |
 | Papers index | `papers-index.json` (+ `.md`) | `docs/index/` |
-| Synthesis | chapters under mode dir | `docs/{survey,report,manuscript,brief}/` |
+| Synthesis drafts | chapters + spec under mode dir | `docs/{survey,report,manuscript,brief}/` |
+| Deliverable (public) | `<topic>-<mode>-<lang>.<ext>` | `deliverables/` (optional `deliverables/wiki/`) |
 | Material IDs | `P-xxx` papers, `W-xxx` web, `G-xxx` github | indexes |
 | Full-text Markdown | `materials/<bucket>/<ID>.md` | papers: `materials/papers/`; also `web`, `github` |
 | Paper raw binaries | `materials/papers-raw/<ID>.<ext>` | same stem as the Markdown file |
@@ -90,12 +91,7 @@ Update after each op using graph rules in `GRAPH.md` (LLM edits `.omr/tree-state
 
 ## Template Variables
 
-Templates use `{{PLACEHOLDER}}` syntax:
-
-- `{{PROJECT_NAME}}`, `{{RESEARCH_QUESTION}}`, `{{TOPIC}}`
-- `{{DATE}}`, `{{AUTHOR}}`
-- `{{ACTIVE_PATTERN}}`, `{{STATUS}}`
-- `{{BRIEF_ID}}`, `{{EVIDENCE_ID}}`, `{{JUDGMENT_ID}}`
+Templates use `{{PLACEHOLDER}}` syntax. Each template file declares its own placeholders inline (e.g. `AGENTS.md.template` needs project/language fields, `judgment-template.md` needs evidence/confidence fields) — read the file you are filling instead of relying on a central list.
 
 ---
 

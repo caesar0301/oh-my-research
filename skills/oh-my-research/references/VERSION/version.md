@@ -32,7 +32,7 @@ version list
 | `tag` | Record label + timestamp + artifact hashes/paths under `.omr/versions/` |
 | `history` | List tags chronologically |
 | `diff` | Summarize file-level changes between two tags/backups |
-| `backup` | Timestamped copy of `docs/plans` + current synth mode dirs (+ optional wiki) into `.omr/backups/` |
+| `backup` | Timestamped copy of `docs/plans` + current synth mode dirs + `deliverables/` (including an optional `deliverables/wiki/`) into `.omr/backups/` |
 | `list` | List backups and tags |
 
 Script: `scripts/version_control.py` (mechanical tags/backups only).

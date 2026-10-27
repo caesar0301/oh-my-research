@@ -38,7 +38,7 @@ def _collect_paths(workspace: Path) -> list[Path]:
         "docs/report",
         "docs/manuscript",
         "docs/brief",
-        "wiki",
+        "deliverables",
     ):
         root = workspace / rel
         if root.is_dir():
@@ -82,7 +82,7 @@ def backup(workspace: Path) -> Path:
         "docs/report",
         "docs/manuscript",
         "docs/brief",
-        "wiki",
+        "deliverables",
     ):
         src = workspace / rel
         if src.exists():

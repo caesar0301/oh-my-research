@@ -47,7 +47,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 | `analyze` | materials + index | brief, evidence-map, judgment, optional plan |
 | `think` | target artifact | refined target (in place after confirm) |
 | `decide` | judgment (optional override) | `decision-DEC-*.md` |
-| `synth` | **judgment** (required) | `docs/<mode>/`, optional `wiki/` |
+| `synth` | **judgment** (required) | `docs/<mode>/` drafts + `deliverables/*`, optional `deliverables/wiki/` |
 | `reconcile` | existing plans/synth | archive + updated artifacts |
 
 ## Unlock Rules (tree-state)
@@ -74,7 +74,7 @@ The graph edges are **recommended** paths, but the agent must enforce **prerequi
 | THINK | `docs/plans/judgment-*.md` | (none) | Route to ANALYZE |
 | SYNTH | `docs/plans/judgment-*.md` | `gate-a.json` (pass) + `gate-p.json` | Route to ANALYZE → THINK → Gate A → Gate P |
 | DECIDE | `docs/plans/judgment-*.md` | (none) | Route to ANALYZE |
-| RECONCILE | `docs/{survey,report,manuscript,brief}/` content | (none) | Nothing to reconcile |
+| RECONCILE | `docs/{survey,report,manuscript,brief}/` content (or exported `deliverables/*`) | (none) | Nothing to reconcile |
 
 **Enforcement protocol:**
 

@@ -13,10 +13,12 @@ A deep report is often tens of thousands of words. Holding outline + all evidenc
 | `docs/<mode>/_outline.md` | no (working) | Chapter plan, word targets, evidence slices |
 | `docs/<mode>/_citation-map.md` | no | Internal ID → bibliographic entry + public cite key |
 | `docs/<mode>/_continuity.md` | no | Rolling brief: claims, terms, threads, cite ledger |
-| `docs/<mode>/chapters/*.md` | yes (body) | Reader-facing chapter files |
+| `docs/<mode>/chapters/*.md` | no (draft) | Reader-facing prose, internal until exported |
 | `docs/<mode>/_document.json` | no (working) | LLM-authored presentation spec (drives rendering) |
 | `.omr/report-state.json` | no | Progress machine for resume |
-| `docs/<mode>/deliverables/*` | yes | Final DOCX/PDF/Markdown |
+| `deliverables/*` | **yes** | Final DOCX/PDF/Markdown — the only shareable surface (optional `deliverables/wiki/`) |
+
+Public/private split: only files under `deliverables/` (project root) are handed to a reader. Drafts, working ledgers, and the presentation spec stay in `docs/<mode>/`.
 
 Underscore-prefixed working files are **excluded from export content** by `export_report.py` (chapters only). `_document.json` is read as the presentation spec, not rendered as content.
 
@@ -60,7 +62,7 @@ See `LLM-STATE.md`.
 
 Load: research question, intended audience, judgment summary (not full evidence dump), and themes from the evidence map. Follow `narrative-coherence.md`.
 
-Before naming chapters, write these into `docs/<mode>/_outline.md`:
+Before naming chapters, copy `assets/synth/_outline.md` to `docs/<mode>/_outline.md` and fill in:
 
 1. **Reader starting point and destination** — assume as little private or domain context as possible.
 2. **Central question and provisional bottom line** — one sentence each.
@@ -93,7 +95,7 @@ Split any chapter that would exceed ~2,500 words into `…-part-1` / `…-part-2
 
 ## Phase B — Citation map (one turn)
 
-From indexes + materials metadata, write `_citation-map.md`:
+From indexes + materials metadata, write `_citation-map.md` (start from `assets/synth/_citation-map.md`):
 
 ```markdown
 | Internal | Public cite | Full reference |
@@ -260,7 +262,7 @@ In `_document.json` set title/subtitle/author, fonts (including `eastasia`/`pdf_
 python scripts/export_report.py --mode survey --format docx --language en
 ```
 
-The renderer applies `_document.json` and reads `chapters/*.md` only (per spec order, else sorted). Other `_*.md` working files are not included. It never invents styling — tune the spec, not the script.
+Default output: `deliverables/<topic>-<mode>-<language>.<format>` at the project root (`--output` overrides). The renderer applies `_document.json` and reads `chapters/*.md` only (per spec order, else sorted). Other `_*.md` working files are not included. It never invents styling — tune the spec, not the script.
 
 Then QA2 + Gate D + visual inspect of DOCX/PDF.
 

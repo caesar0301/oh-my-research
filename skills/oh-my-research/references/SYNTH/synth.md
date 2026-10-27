@@ -135,7 +135,7 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 13. Per-chapter lenses completed; whole-document reverse outline + Narrative Audit completed; mandatory **Consistency & Polish pass** (`long-report.md` § Phase E.5) has no blocking findings.
 14. Gaps and limitations are present and tied to what would change the conclusions.
 15. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety and native-expression scans clean.
-16. Optional wiki after Gate D (`--no-wiki` to skip).
+16. Optional wiki under `deliverables/wiki/` after Gate D (`--no-wiki` to skip).
 
 ## Process (summary)
 
@@ -148,8 +148,8 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 5. Write comparative synthesis, limitations, conclusions, and a self-contained abstract last.
 6. Run per-chapter lenses → build reverse outline → run whole-document Narrative Audit → apply structural fixes → run the **Consistency & Polish pass** (`long-report.md` § Phase E.5), including `prose_lint.py` until no `high` finding remains.
 7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
-8. LLM QA2 → `export_report.py` for DOCX/PDF/Markdown → inspect → `report_lint.py` + `prose_lint.py` → Gate D.
-9. Deliver path + short summary; optional wiki.
+8. LLM QA2 → `export_report.py` renders DOCX/PDF/Markdown into `deliverables/` → inspect → `report_lint.py` + `prose_lint.py` → Gate D.
+9. Deliver the `deliverables/` path + short summary; optional `deliverables/wiki/`.
 
 ## Presentation is LLM-driven (not baked into the script)
 
@@ -169,25 +169,26 @@ Tune the spec to the report: e.g. a Chinese report sets `fonts.body.eastasia` + 
 ## Default deep-survey layout
 
 ```
-docs/survey/
+docs/survey/                  # private drafting workspace
 ├── _outline.md
 ├── _citation-map.md          # private; not exported
 ├── _continuity.md            # private semantic continuity contract; not exported
 ├── _narrative-audit.md       # private reverse outline + findings; not exported
 ├── _document.json            # LLM-authored presentation spec (drives rendering)
-├── chapters/
-│   ├── 00-title-abstract.md
-│   ├── 01-introduction.md
-│   ├── 02-background.md
-│   ├── 03-theme-a.md
-│   ├── 04-theme-b.md
-│   ├── 05-theme-c.md         # add themes as outline requires
-│   ├── 06-comparative-synthesis.md
-│   ├── 07-gaps-and-limitations.md
-│   ├── 08-conclusions.md
-│   └── 09-references.md
-└── deliverables/
-    └── <topic>-survey-<lang>.docx|pdf|md
+└── chapters/
+    ├── 00-title-abstract.md
+    ├── 01-introduction.md
+    ├── 02-background.md
+    ├── 03-theme-a.md
+    ├── 04-theme-b.md
+    ├── 05-theme-c.md         # add themes as outline requires
+    ├── 06-comparative-synthesis.md
+    ├── 07-gaps-and-limitations.md
+    ├── 08-conclusions.md
+    └── 09-references.md
+
+deliverables/                 # public hand-off (project root)
+└── <topic>-survey-<lang>.docx|pdf|md
 ```
 
 Brief mode may use fewer chapters; manuscript may use journal-style sections. Outline drives the actual file set.
@@ -217,7 +218,7 @@ Progress: 33%
 When finished:
 
 ```
-Report: docs/survey/deliverables/<topic>-survey-en.docx
+Report: deliverables/<topic>-survey-en.docx
 Language: English
 Chapters: 9
 Key findings: …

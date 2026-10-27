@@ -6,7 +6,7 @@
 - [ ] `AGENTS.md` written
 - [ ] `.omr/tree-state.json` + `pattern.json` (Evidence-Deep default)
 - [ ] `.omr/locale.json` (preferred BCP-47 language from timezone/locale; see `LANGUAGE.md`)
-- [ ] No empty content dirs scaffolded (`materials/`, `docs/`, `wiki/`, …)
+- [ ] No empty content dirs scaffolded (`materials/`, `docs/`, `deliverables/`, …)
 - [ ] User shown `collect` next step
 
 ## [COLLECT]
@@ -58,9 +58,9 @@
 - [ ] Gaps/limitations section present
 - [ ] Lenses run; accepted edits applied
 - [ ] Presentation spec authored: `docs/<mode>/_document.json` (title, fonts, cover, TOC, header/footer, chapter order per report/language)
-- [ ] LLM QA2 recorded; deliverable (DOCX/PDF/Markdown) exported (spec applied) and inspected
+- [ ] LLM QA2 recorded; deliverable (DOCX/PDF/Markdown) exported into `deliverables/` (spec applied) and inspected
 - [ ] Gate D passed
-- [ ] Wiki generated or skipped
+- [ ] Wiki generated under `deliverables/wiki/` or skipped
 - [ ] Chat: progress / summary only (no full chapters)
 
 ## [RECONCILE] (as needed)

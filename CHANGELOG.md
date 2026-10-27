@@ -13,6 +13,30 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [2.0.0] — 2026-10-27
+
+### Changed
+
+- **Public hand-off moved to the project root.** The final document now lands in `deliverables/` (`deliverables/<topic>-<mode>-<lang>.{docx,pdf,md}`) instead of `docs/<mode>/deliverables/`, so the only shareable surface is one obvious folder at the workspace root. `docs/<mode>/` keeps drafts, working ledgers, and `_document.json`; the optional wiki moves to `deliverables/wiki/`.
+  - `export_report.py`: default output is now `<workspace>/deliverables/…` (`--output` still overrides; `--emit-spec` keeps writing `docs/<mode>/_document.json`).
+  - `version_control.py`: workspace tags and backups cover `deliverables/`; the root-level `wiki/` entry is retired.
+  - Docs and templates state the public/private split explicitly: `SKILL.md` Default Paths, `REFERENCE.md`, `INIT/init.md`, `AGENTS.md.template`, `SYNTH/synth.md`, `SYNTH/long-report.md`, `LLM-STATE.md`, `GATES.md`, `GRAPH.md`, `WORKFLOW/workflow-phases.md`, `VERSION/version.md`, `RECONCILE/reconcile.md`, `scripts/README.md`.
+- `SYNTH/long-report.md` Phase A/B now point at the `assets/synth/_outline.md` and `_citation-map.md` starters, which were previously orphaned.
+
+### Removed
+
+- **Fixed chapter stencils** — `assets/synth/{00-overview,executive-summary,04-gaps-and-limitations,05-conclusions,references}.md` deleted. They encoded one chapter set, were referenced by nothing, and duplicated the Phase D rules in `SYNTH/long-report.md`, while the skill forbids fixed chapter templates.
+- **Stale template-variable list** in `REFERENCE.md` — it advertised `{{TOPIC}}` / `{{AUTHOR}}` (present in no template) and omitted most real placeholders. Each template now documents its own placeholders inline.
+
+### Fixed
+
+- `.omr/patterns/` is now defined (custom pattern JSON using the same schema as `patterns/*.json`) instead of being an unexplained path in `GRAPH.md` / `LLM-STATE.md`.
+
+### Migration
+
+- Existing workspaces: move previously exported files (`docs/<mode>/deliverables/*`) into `deliverables/`, or simply re-run `export_report.py`. Drafts and agent state need no change.
+- `wiki/` at the workspace root (if generated): move it to `deliverables/wiki/`.
+
 ## [1.7.0] — 2026-09-24
 
 ### Added

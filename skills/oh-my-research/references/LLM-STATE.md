@@ -88,6 +88,7 @@ When the user explicitly overrides, record `scenario_note: "prerequisite skipped
    - `docs/plans/brief-*.md`, `evidence-*.md`, `judgment-*.md` → ANALYZE completed
    - `.omr/quality-gates/gate-*.json` → corresponding gates passed
    - `docs/{survey,report,manuscript,brief}/chapters/` or report files → SYNTH in progress/completed
+   - `deliverables/*` → SYNTH exported (public hand-off present)
    - `.omr/report-state.json` → SYNTH resume state
 3. Compare disk reality against tree-state:
    - If disk has artifacts that tree-state doesn't reflect → **auto-correct** tree-state (mark stages completed, unlock next stages)
@@ -140,7 +141,7 @@ BCP-47 tags (`en`, `zh-CN`, `zh-TW`, `ja`, `de`, `pt-BR`, …). See `LANGUAGE.md
 { "name": "Evidence-Deep" }
 ```
 
-Or any pattern from `patterns/` / user-defined under `.omr/patterns/`.
+Or any pattern from `patterns/` / user-defined under `.omr/patterns/` — a custom pattern is a `.omr/patterns/<name>.json` file using the same schema as `patterns/*.json` (nodes, edges, optional `cycles[]`), agent-authored and optional; `pattern.json` simply names it.
 
 ### `.omr/report-state.json`
 
@@ -154,7 +155,7 @@ Agent evaluates checklists in `GATES.md` and writes results with rationale — s
 
 1. Create `AGENTS.md` from `assets/templates/AGENTS.md.template` (fill placeholders for this topic).
 2. Create `.omr/tree-state.json`, `.omr/pattern.json`, and `.omr/locale.json` (timezone→language; see `LANGUAGE.md` / `prefer_language.py --write-workspace`).
-3. **Never** pre-create empty `materials/`, `docs/`, `wiki/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`).
+3. **Never** pre-create empty `materials/`, `docs/`, `deliverables/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`).
 
 ## THINK without a registry script
 

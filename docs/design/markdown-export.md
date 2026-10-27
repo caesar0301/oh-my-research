@@ -43,7 +43,7 @@ chapters/*.md ──► assemble() ──► validate_publication() ──► re
 | `assemble()` | Reused verbatim — chapter `order` / `include` / `exclude` from the spec already apply |
 | `validate_publication()` | Reused verbatim — runs **before** format dispatch, so the `.md` deliverable is gated like any other |
 | `resolve_spec()` | Reused verbatim — presentation fields without Markdown semantics (`fonts`, `colors`, `page`, `line_spacing`) are silently ignored |
-| Output naming | Reused verbatim — `deliverables/{topic}-{mode}-{language}.md` falls out of the existing `args.format` interpolation |
+| Output naming | Reused verbatim — `{topic}-{mode}-{language}.md` falls out of the existing `args.format` interpolation; the `deliverables/` directory is resolved from the workspace root (see § Path convention below) |
 
 ---
 
@@ -218,7 +218,7 @@ DOCX and PDF paths are **unchanged**. A Mermaid fence enters the existing `code`
 
 | Aspect | Convention |
 |---|---|
-| Path | `docs/<mode>/deliverables/{topic}-{mode}-{language}.md` (existing naming, `.md` extension) |
+| Path | `deliverables/{topic}-{mode}-{language}.md` at the project root (existing naming, `.md` extension). v2.0.0 moved the hand-off folder out of `docs/<mode>/deliverables/` — see `CHANGELOG.md` |
 | Self-containment | Single file — Mermaid and tables are text, so no sidecar assets |
 | Encoding | UTF-8, trailing newline |
 | Chapter separator | `\n\n---\n\n` horizontal rule between chapters |

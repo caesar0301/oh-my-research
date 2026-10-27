@@ -13,6 +13,9 @@ hardcoded policy here. The script only:
 
 Author the spec at docs/<mode>/_document.json (or pass --spec). Generate a
 starter with --emit-spec, then edit it per report/scenario/language.
+
+Default output is the workspace-level public hand-off directory:
+<workspace>/deliverables/<topic>-<mode>-<language>.<format>
 """
 
 from __future__ import annotations
@@ -2342,7 +2345,13 @@ def main() -> None:
     )
     parser.add_argument("--title", default=None, help="Override spec title")
     parser.add_argument("--author", default="", help="Override spec author")
-    parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Output path (absolute, or relative to --workspace). "
+        "Default: <workspace>/deliverables/<topic>-<mode>-<language>.<format>",
+    )
     args = parser.parse_args()
 
     workspace = args.workspace.resolve()
@@ -2374,7 +2383,9 @@ def main() -> None:
     output = args.output
     if output is None:
         topic = slugify(spec.get("title") or args.mode)
-        output = root / "deliverables" / f"{topic}-{args.mode}-{language}.{args.format}"
+        output = (
+            workspace / "deliverables" / f"{topic}-{args.mode}-{language}.{args.format}"
+        )
     elif not output.is_absolute():
         output = workspace / output
 

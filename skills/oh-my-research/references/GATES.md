@@ -383,7 +383,7 @@ Process: announce → reverse outline + findings table → user accept/reject su
   - `narrative_audit`: `docs/<mode>/_narrative-audit.md` exists with a reverse outline, findings table, and resolution summary; no finding remains `open`
   - `consistency_polish_pass`: the Consistency & Polish pass (`SYNTH/long-report.md` § Phase E.5) ran after the Narrative Audit and its findings were resolved or explicitly accepted
 - [ ] All planned chapters complete in `.omr/report-state.json`
-- [ ] Final deliverable rendered (`export_report.py`) — DOCX/PDF visually inspected; for Markdown: lint clean, TOC anchors resolve, front-matter complete
+- [ ] Final deliverable rendered into `deliverables/` (`export_report.py`) — DOCX/PDF visually inspected; for Markdown: lint clean, TOC anchors resolve, front-matter complete
 - [ ] **Incremental writing compliance (v1.4)**:
   - `docs/<mode>/chapters/` directory exists with ≥1 `.md` file (unless brief mode < 3K words)
   - `.omr/report-state.json` exists with `chapters[]` array

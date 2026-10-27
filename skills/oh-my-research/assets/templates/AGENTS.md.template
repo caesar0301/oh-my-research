@@ -40,10 +40,13 @@ Override anytime with `synth --language <tag>` (e.g. `en`, `zh-CN`, `ja`, `de`) 
 | Search log / HF / failure | `materials/search|datasets|failed/<file>` only if used |
 | Idea note | `docs/ideas/<file>` |
 | Analyze / decide | `docs/plans/<file>` |
-| Synth chapters | `docs/<mode>/…` (outline, chapters, `_document.json`, deliverables) |
+| Synth drafts | `docs/<mode>/…` (outline, chapters, citation map, `_document.json`) |
 | QA / gates | `.omr/quality-gates/<file>` |
 | Version tag / backup | `.omr/versions/` or `.omr/backups/` |
-| Wiki | `wiki/` after Gate D if generated |
+| Exported deliverable | `deliverables/<topic>-<mode>-<language>.{docx,pdf,md}` |
+| Wiki | `deliverables/wiki/` after Gate D if generated |
+
+**Public vs private:** `deliverables/` is the only surface a reader or collaborator sees. Everything else (`materials/`, `docs/`, `.omr/`) is private working state — never hand it over, and never write final deliverables outside `deliverables/`.
 
 ## Ops (unified skill: oh-my-research)
 

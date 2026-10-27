@@ -25,7 +25,7 @@ Exit codes: 0 = clean or warnings only, 1 = high findings (or any with --strict)
 
 Usage:
   python3 scripts/prose_lint.py --mode report --workspace .
-  python3 scripts/prose_lint.py --file docs/report/deliverables/report-zh-CN.md
+  python3 scripts/prose_lint.py --file deliverables/report-zh-CN.md
   python3 scripts/prose_lint.py --mode report --json
   python3 scripts/prose_lint.py --mode report --allow .omr/prose-lint-allow.txt
 """
