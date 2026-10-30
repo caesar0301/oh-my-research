@@ -84,7 +84,7 @@ When the user explicitly overrides, record `scenario_note: "prerequisite skipped
 **Startup reconciliation (v1.4 new):** At the beginning of **every** op — before any other logic — the agent must perform a disk-vs-state reconciliation:
 
 1. Read `.omr/tree-state.json`
-2. Scan disk for actual artifacts:
+2. Scan disk for actual artifacts (all under the OMR working root `_omr/`):
    - `docs/plans/brief-*.md`, `evidence-*.md`, `judgment-*.md` → ANALYZE completed
    - `.omr/quality-gates/gate-*.json` → corresponding gates passed
    - `docs/{survey,report,manuscript,brief}/chapters/` or report files → SYNTH in progress/completed
@@ -155,7 +155,7 @@ Agent evaluates checklists in `GATES.md` and writes results with rationale — s
 
 1. Create `AGENTS.md` from `assets/templates/AGENTS.md.template` (fill placeholders for this topic).
 2. Create `.omr/tree-state.json`, `.omr/pattern.json`, and `.omr/locale.json` (timezone→language; see `LANGUAGE.md` / `prefer_language.py --write-workspace`).
-3. **Never** pre-create empty `materials/`, `docs/`, `deliverables/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`).
+3. **Never** pre-create empty `materials/`, `docs/`, `deliverables/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`). All such dirs live under the OMR working root `_omr/`.
 
 ## THINK without a registry script
 

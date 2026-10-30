@@ -24,10 +24,10 @@ Exit codes: 0 = clean or warnings only, 1 = high findings (or any with --strict)
 2 = usage error.
 
 Usage:
-  python3 scripts/prose_lint.py --mode report --workspace .
-  python3 scripts/prose_lint.py --file deliverables/report-zh-CN.md
+  python3 scripts/prose_lint.py --mode report
+  python3 scripts/prose_lint.py --file _omr/deliverables/report-zh-CN.md
   python3 scripts/prose_lint.py --mode report --json
-  python3 scripts/prose_lint.py --mode report --allow .omr/prose-lint-allow.txt
+  python3 scripts/prose_lint.py --mode report --allow _omr/.omr/prose-lint-allow.txt
 """
 
 from __future__ import annotations
@@ -407,7 +407,12 @@ def load_allowlist(workspace: Path, explicit: Path | None) -> list[str]:
 
 def main() -> int:
     p = argparse.ArgumentParser(description="OMR native-expression linter")
-    p.add_argument("--workspace", type=Path, default=Path.cwd())
+    p.add_argument(
+        "--workspace",
+        type=Path,
+        default=None,
+        help="OMR working root (default: <cwd>/_omr)",
+    )
     p.add_argument("--mode", default=None, help="survey/report/manuscript/brief")
     p.add_argument("--file", type=Path, default=None, help="lint a specific file")
     p.add_argument("--lang", default=None, help="zh or en (default: auto-detect)")
@@ -417,7 +422,7 @@ def main() -> int:
     p.add_argument("--json", action="store_true", help="machine-readable output")
     args = p.parse_args()
 
-    ws = args.workspace.resolve()
+    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
     files = find_files(ws, args.mode, args.file)
     if not files:
         if args.json:

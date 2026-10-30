@@ -24,7 +24,7 @@ Also: after collect when contradictions vs judgment/decision/synth are detected.
 
 ## Archive / rollback
 
-- `--archive` — snapshot current plans + synth + `deliverables/` (+ `deliverables/wiki/` optional)
+- `--archive` — snapshot current plans + synth + `deliverables/` (+ `deliverables/wiki/` optional). All paths relative to the OMR working root `_omr/`.
 - `--list` — list snapshots
 - `--rollback` — restore snapshot (confirm first)
 - `--review` — show drift summary without writing

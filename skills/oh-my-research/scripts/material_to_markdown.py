@@ -14,18 +14,18 @@ Pipeline (per source):
      - Preferred: `@firecrawl/anydoc` CLI (Node 20+, no install)
      - Fallback: `pymupdf` (PDF), `pdfplumber` (PDF), `markdownify`+`bs4` (HTML)
      - Last resort: record `.failed.txt` with the reason
-  3. For papers: persist the binary at `materials/papers-raw/<ID>.<ext>` and write
-     full-text Markdown to `materials/papers/<ID>.md` (same stem, different suffix).
-     Other buckets still write `materials/<bucket>/<ID>.md`.
+  3. For papers: persist the binary at `_omr/materials/papers-raw/<ID>.<ext>` and write
+     full-text Markdown to `_omr/materials/papers/<ID>.md` (same stem, different suffix).
+     Other buckets still write `_omr/materials/<bucket>/<ID>.md`.
 
 The script is mechanical: no semantic analysis, no summarization. It only turns
 bytes on disk into Markdown text that ANALYZE then reads in full.
 
 Usage:
-  python3 material_to_markdown.py <source> --id P-001 [--workspace .]
+  python3 material_to_markdown.py <source> --id P-001
   python3 material_to_markdown.py <source> --id P-001 --bucket papers
   python3 material_to_markdown.py --index            # convert all indexed sources
-  python3 material_to_markdown.py --convert-dir materials/papers-raw  # batch convert raw papers
+  python3 material_to_markdown.py --convert-dir _omr/materials/papers-raw  # batch convert raw papers
 
 Exit codes: 0 success, 1 conversion failed (see .failed.txt), 2 usage error.
 """
@@ -655,7 +655,12 @@ def main() -> int:
     p.add_argument(
         "--bucket", default="papers", help="materials bucket (papers/web/github)"
     )
-    p.add_argument("--workspace", type=Path, default=Path.cwd())
+    p.add_argument(
+        "--workspace",
+        type=Path,
+        default=None,
+        help="OMR working root (default: <cwd>/_omr)",
+    )
     p.add_argument("--title", default=None)
     p.add_argument(
         "--index", action="store_true", help="convert all indexed sources lacking .md"
@@ -668,7 +673,7 @@ def main() -> int:
     )
     args = p.parse_args()
 
-    ws = args.workspace.resolve()
+    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
 
     if args.convert_dir is not None:
         results = process_dir(

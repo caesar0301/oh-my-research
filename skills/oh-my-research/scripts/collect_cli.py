@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Lightweight collect CLI: record sources into materials/ + papers-index.json.
+"""Lightweight collect CLI: record sources into _omr/materials/ + papers-index.json.
 
 Creates only the directories needed for the files being written — never a full
 empty materials/ tree. After recording a source, optionally invokes
 `material_to_markdown.py` to download + convert the source into a full-text
 Markdown file so ANALYZE can read the entire paper, not just the abstract.
 
-Papers persist the raw binary at `materials/papers-raw/<ID>.<ext>` and the
-converted Markdown at `materials/papers/<ID>.md` (same stem, different suffix).
-Other buckets still write `materials/<bucket>/<ID>.md`.
+Papers persist the raw binary at `_omr/materials/papers-raw/<ID>.<ext>` and the
+converted Markdown at `_omr/materials/papers/<ID>.md` (same stem, different suffix).
+Other buckets still write `_omr/materials/<bucket>/<ID>.md`.
 
 Parallel COLLECT: bucket workers pass `--id` + `--bucket` + `--inbox` to write
-`docs/index/inbox/<ID>.json` without touching `papers-index.json`. The
+`_omr/docs/index/inbox/<ID>.json` without touching `papers-index.json`. The
 coordinator then runs `--merge-inbox`.
 """
 
@@ -375,7 +375,12 @@ def merge_inbox(workspace: Path) -> dict[str, Any]:
 def main() -> None:
     p = argparse.ArgumentParser(description="OMR collect CLI (index + placeholders)")
     p.add_argument("sources", nargs="*", help="URLs, DOIs, or search queries")
-    p.add_argument("--workspace", type=Path, default=Path.cwd())
+    p.add_argument(
+        "--workspace",
+        type=Path,
+        default=None,
+        help="OMR working root (default: <cwd>/_omr)",
+    )
     p.add_argument("--title", default=None)
     p.add_argument(
         "--id", dest="material_id", default=None, help="pre-assigned material ID"
@@ -402,7 +407,7 @@ def main() -> None:
         help="download + convert each source to full-text Markdown via anydoc (default: on)",
     )
     args = p.parse_args()
-    ws = args.workspace.resolve()
+    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
 
     if args.merge_inbox:
         print(json.dumps(merge_inbox(ws), indent=2))

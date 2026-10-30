@@ -484,13 +484,13 @@ def main() -> None:
         "--write-workspace",
         type=Path,
         default=None,
-        help="Write .omr/locale.json under this workspace",
+        help="Write .omr/locale.json under this workspace (default: <cwd>/_omr)",
     )
     parser.add_argument(
         "--workspace",
         type=Path,
         default=None,
-        help="Prefer language from .omr/locale.json if present",
+        help="OMR working root to read .omr/locale.json from (default: <cwd>/_omr)",
     )
     parser.add_argument(
         "--language",
@@ -507,9 +507,11 @@ def main() -> None:
         )
         return
 
+    default_workspace = Path.cwd() / "_omr"
+    ws_for_read = (args.workspace or default_workspace).resolve()
     result = resolve_language(
         explicit=args.language,
-        workspace=args.workspace.resolve() if args.workspace else None,
+        workspace=ws_for_read,
         timezone=args.timezone,
     )
     if args.write_workspace is not None:

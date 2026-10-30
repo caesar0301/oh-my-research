@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -100,7 +100,7 @@ Before routing to a stage, **read `.omr/tree-state.json`** and check whether the
 | COLLECT | `collect <url\|query\|…>` | Default **papers+web+github+search** (parallel bucket agents) → materials + indexes + full-text Markdown | `references/COLLECT/collect.md` |
 | ANALYZE | `analyze` | Brief, evidence-map, judgment; reads full-text Markdown; Gate M before, Gate A / QA1 after, Gate T after THINK | `references/ANALYZE/analyze.md` |
 | THINK | `think [method]` | Methodology-driven elicitation on research artifacts (never code); stamps `hardened`/`refined`/`unchanged`/`killed` | `references/THINK/think.md`, `references/THINK/methods/` |
-| SYNTH | `synth [--mode] [--format docx\|pdf\|md] [--language] [--resume] [--chapter] [--no-wiki]` | Incremental long reports in preferred language; Gate P confirms prefs; never one-shot a deep report; exports land in `deliverables/` | `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md` |
+| SYNTH | `synth [--mode] [--format docx\|pdf\|md] [--language] [--resume] [--chapter] [--no-wiki]` | Incremental long reports in preferred language; Gate P confirms prefs; never one-shot a deep report; exports land in `_omr/deliverables/` | `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md` |
 | IDEA | `idea "…"` | Capture speculative notes (optional) | `references/IDEA/idea.md` |
 | DECIDE | `decide` | Stance / claim framing with ≥3 alternatives; Gate B (optional) | `references/DECIDE/decide.md` |
 | RECONCILE | `reconcile` | Contradiction blast-radius, archive, rollback | `references/RECONCILE/reconcile.md` |
@@ -127,20 +127,20 @@ Default **semi-automated** (pause for confirm). Support "no confirmations" / qui
 
 ## Default Paths
 
-Paths below are **logical destinations**. Create a folder only when writing the first file into it (see `references/INIT/init.md`).
+The OMR working root is **`_omr/` under the current project root** (not the project root itself). All research artifacts — state, materials, docs, and deliverables — live under `_omr/`. Paths below are **logical destinations**. Create a folder only when writing the first file into it (see `references/INIT/init.md`).
 
-**Two surfaces.** `deliverables/` at the project root is the only public, reader-facing surface — everything a user reads or shares lands there. `materials/`, `docs/`, and `.omr/` are private working state and never leave the workspace.
+**Two surfaces.** `_omr/deliverables/` is the only public, reader-facing surface — everything a user reads or shares lands there. `_omr/materials/`, `_omr/docs/`, and `_omr/.omr/` are private working state and never leave the workspace.
 
 | Artifact | Path (when content exists) |
 |----------|------|
-| State (private) | `.omr/` (tree-state, pattern, locale; other JSON as needed) |
-| Materials (private) | `materials/{papers-raw,papers,web,github,datasets,search,failed}/` — papers: raw binaries in `papers-raw/`, Markdown in `papers/` (same stem); other buckets only when they receive files |
-| Indexes (private) | `docs/index/` (`papers-index.json`; workers use `docs/index/inbox/` then merge) |
-| Plans (private) | `docs/plans/` |
-| Ideas (private) | `docs/ideas/` |
-| Report drafts (private) | `docs/{survey,report,manuscript,brief}/` — outline, chapters, citation map, continuity, presentation spec |
-| **Deliverables (public)** | **`deliverables/`** — exported `<topic>-<mode>-<lang>.docx\|pdf\|md`; optional `deliverables/wiki/` |
-| Archive (private) | `docs/archive/` |
+| State (private) | `_omr/.omr/` (tree-state, pattern, locale; other JSON as needed) |
+| Materials (private) | `_omr/materials/{papers-raw,papers,web,github,datasets,search,failed}/` — papers: raw binaries in `papers-raw/`, Markdown in `papers/` (same stem); other buckets only when they receive files |
+| Indexes (private) | `_omr/docs/index/` (`papers-index.json`; workers use `_omr/docs/index/inbox/` then merge) |
+| Plans (private) | `_omr/docs/plans/` |
+| Ideas (private) | `_omr/docs/ideas/` |
+| Report drafts (private) | `_omr/docs/{survey,report,manuscript,brief}/` — outline, chapters, citation map, continuity, presentation spec |
+| **Deliverables (public)** | **`_omr/deliverables/`** — exported `<topic>-<mode>-<lang>.docx\|pdf\|md`; optional `_omr/deliverables/wiki/` |
+| Archive (private) | `_omr/docs/archive/` |
 
 Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `references/REFERENCE.md`.
 

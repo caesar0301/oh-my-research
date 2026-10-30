@@ -30,11 +30,12 @@ From the skill scripts directory (or with an explicit path):
 
 ```bash
 python3 scripts/collect_cli.py "<source>" \
-  --workspace <root> \
   --id <ID> \
   --bucket <papers|web|github|search|datasets> \
   --inbox
 ```
+
+`--workspace` defaults to `_omr/` under cwd; pass `--workspace <root>` to override.
 
 `--no-convert` only for github/search (and datasets cards). Papers and web convert by default.
 

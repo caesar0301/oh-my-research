@@ -15,8 +15,8 @@ report file) for internal terminology that must not appear in public deliverable
 Exit codes: 0 = clean, 1 = violations found, 2 = usage error.
 
 Usage:
-  python3 scripts/report_lint.py --mode survey --workspace .
-  python3 scripts/report_lint.py --file docs/survey/ego-end-to-end-pipeline.md
+  python3 scripts/report_lint.py --mode survey
+  python3 scripts/report_lint.py --file _omr/docs/survey/ego-end-to-end-pipeline.md
   python3 scripts/report_lint.py --mode survey --json  # machine-readable output
 """
 
@@ -189,13 +189,18 @@ def find_report_files(
 
 def main() -> int:
     p = argparse.ArgumentParser(description="OMR publication-safety linter")
-    p.add_argument("--workspace", type=Path, default=Path.cwd())
+    p.add_argument(
+        "--workspace",
+        type=Path,
+        default=None,
+        help="OMR working root (default: <cwd>/_omr)",
+    )
     p.add_argument("--mode", default=None, help="survey/report/manuscript/brief")
     p.add_argument("--file", type=Path, default=None, help="lint a specific file")
     p.add_argument("--json", action="store_true", help="machine-readable output")
     args = p.parse_args()
 
-    ws = args.workspace.resolve()
+    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
     files = find_report_files(ws, args.mode, args.file)
 
     if not files:

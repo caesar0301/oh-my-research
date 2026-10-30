@@ -16,6 +16,9 @@ starter with --emit-spec, then edit it per report/scenario/language.
 
 Default output is the workspace-level public hand-off directory:
 <workspace>/deliverables/<topic>-<mode>-<language>.<format>
+
+The default workspace is `<cwd>/_omr` (the OMR working root). Override with
+`--workspace`.
 """
 
 from __future__ import annotations
@@ -2327,7 +2330,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Spec-driven publication-safe report renderer"
     )
-    parser.add_argument("--workspace", type=Path, default=Path.cwd())
+    parser.add_argument(
+        "--workspace",
+        type=Path,
+        default=None,
+        help="OMR working root (default: <cwd>/_omr)",
+    )
     parser.add_argument("--mode", default="survey", choices=MODES)
     parser.add_argument("--format", default="docx", choices=["docx", "pdf", "md"])
     parser.add_argument(
@@ -2350,11 +2358,12 @@ def main() -> None:
         type=Path,
         default=None,
         help="Output path (absolute, or relative to --workspace). "
-        "Default: <workspace>/deliverables/<topic>-<mode>-<language>.<format>",
+        "Default: <workspace>/deliverables/<topic>-<mode>-<language>.<format> "
+        "(workspace defaults to <cwd>/_omr)",
     )
     args = parser.parse_args()
 
-    workspace = args.workspace.resolve()
+    workspace = (args.workspace or (Path.cwd() / "_omr")).resolve()
     language = args.language or default_language(workspace)
     root = workspace / "docs" / args.mode
     if args.emit_spec:

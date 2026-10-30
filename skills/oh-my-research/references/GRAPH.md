@@ -41,7 +41,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 
 | Node | Requires | Produces |
 |------|----------|----------|
-| `init` | — | `AGENTS.md`, `.omr/tree-state.json` |
+| `init` | — | `AGENTS.md`, `.omr/tree-state.json` (under `_omr/`) |
 | `collect` | workspace | `materials/**`, `docs/index/*` (inbox merge), `.omr/collect-batch.json`, Gate M result (with diversity report) |
 | `idea` | workspace | `docs/ideas/*` |
 | `analyze` | materials + index | brief, evidence-map, judgment, optional plan |
@@ -49,6 +49,8 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 | `decide` | judgment (optional override) | `decision-DEC-*.md` |
 | `synth` | **judgment** (required) | `docs/<mode>/` drafts + `deliverables/*`, optional `deliverables/wiki/` |
 | `reconcile` | existing plans/synth | archive + updated artifacts |
+
+All artifact paths above are relative to the OMR working root `_omr/`.
 
 ## Unlock Rules (tree-state)
 
@@ -75,6 +77,8 @@ The graph edges are **recommended** paths, but the agent must enforce **prerequi
 | SYNTH | `docs/plans/judgment-*.md` | `gate-a.json` (pass) + `gate-p.json` | Route to ANALYZE → THINK → Gate A → Gate P |
 | DECIDE | `docs/plans/judgment-*.md` | (none) | Route to ANALYZE |
 | RECONCILE | `docs/{survey,report,manuscript,brief}/` content (or exported `deliverables/*`) | (none) | Nothing to reconcile |
+
+Artifact paths are relative to the OMR working root `_omr/`.
 
 **Enforcement protocol:**
 

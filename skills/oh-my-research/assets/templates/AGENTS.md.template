@@ -16,10 +16,10 @@
 
 ## Workspace Structure
 
-INIT creates **only** the files below. Every other path appears when the first real file is written there — never as an empty folder.
+The OMR working root is **`_omr/` under the current project root** (not the project root itself). INIT creates **only** the files below. Every other path appears when the first real file is written there — never as an empty folder.
 
 ```
-{{PROJECT_NAME}}/
+<project-root>/_omr/
 ├── AGENTS.md
 └── .omr/
     ├── tree-state.json
@@ -34,19 +34,19 @@ Override anytime with `synth --language <tag>` (e.g. `en`, `zh-CN`, `ja`, `de`) 
 
 | When | Path created |
 |------|----------------|
-| Collect a paper | `materials/papers-raw/<ID>.<ext>` + `materials/papers/<ID>.md` (+ `docs/index/` when indexing) |
-| Collect a web page | `materials/web/<file>` |
-| Collect a GitHub URL | `materials/github/<file>` |
-| Search log / HF / failure | `materials/search|datasets|failed/<file>` only if used |
-| Idea note | `docs/ideas/<file>` |
-| Analyze / decide | `docs/plans/<file>` |
-| Synth drafts | `docs/<mode>/…` (outline, chapters, citation map, `_document.json`) |
-| QA / gates | `.omr/quality-gates/<file>` |
-| Version tag / backup | `.omr/versions/` or `.omr/backups/` |
-| Exported deliverable | `deliverables/<topic>-<mode>-<language>.{docx,pdf,md}` |
-| Wiki | `deliverables/wiki/` after Gate D if generated |
+| Collect a paper | `_omr/materials/papers-raw/<ID>.<ext>` + `_omr/materials/papers/<ID>.md` (+ `_omr/docs/index/` when indexing) |
+| Collect a web page | `_omr/materials/web/<file>` |
+| Collect a GitHub URL | `_omr/materials/github/<file>` |
+| Search log / HF / failure | `_omr/materials/search\|datasets\|failed/<file>` only if used |
+| Idea note | `_omr/docs/ideas/<file>` |
+| Analyze / decide | `_omr/docs/plans/<file>` |
+| Synth drafts | `_omr/docs/<mode>/…` (outline, chapters, citation map, `_document.json`) |
+| QA / gates | `_omr/.omr/quality-gates/<file>` |
+| Version tag / backup | `_omr/.omr/versions/` or `_omr/.omr/backups/` |
+| Exported deliverable | `_omr/deliverables/<topic>-<mode>-<language>.{docx,pdf,md}` |
+| Wiki | `_omr/deliverables/wiki/` after Gate D if generated |
 
-**Public vs private:** `deliverables/` is the only surface a reader or collaborator sees. Everything else (`materials/`, `docs/`, `.omr/`) is private working state — never hand it over, and never write final deliverables outside `deliverables/`.
+**Public vs private:** `_omr/deliverables/` is the only surface a reader or collaborator sees. Everything else (`_omr/materials/`, `_omr/docs/`, `_omr/.omr/`) is private working state — never hand it over, and never write final deliverables outside `_omr/deliverables/`.
 
 ## Ops (unified skill: oh-my-research)
 

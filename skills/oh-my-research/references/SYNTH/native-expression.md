@@ -103,7 +103,7 @@ Rewrite those passages before saving the chapter.
 Run the linter during the Consistency & Polish pass and before Gate D:
 
 ```bash
-python3 scripts/prose_lint.py --mode <mode> --workspace .
+python3 scripts/prose_lint.py --mode <mode>
 python3 scripts/prose_lint.py --mode <mode> --json      # machine-readable
 python3 scripts/prose_lint.py --file <deliverable.md>   # final check
 ```

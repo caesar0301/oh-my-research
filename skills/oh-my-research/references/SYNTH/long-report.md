@@ -8,6 +8,8 @@ A deep report is often tens of thousands of words. Holding outline + all evidenc
 
 ## Artifacts (on disk)
 
+All paths are relative to the OMR working root `_omr/`.
+
 | File | Public? | Role |
 |------|---------|------|
 | `docs/<mode>/_outline.md` | no (working) | Chapter plan, word targets, evidence slices |
@@ -18,7 +20,7 @@ A deep report is often tens of thousands of words. Holding outline + all evidenc
 | `.omr/report-state.json` | no | Progress machine for resume |
 | `deliverables/*` | **yes** | Final DOCX/PDF/Markdown — the only shareable surface (optional `deliverables/wiki/`) |
 
-Public/private split: only files under `deliverables/` (project root) are handed to a reader. Drafts, working ledgers, and the presentation spec stay in `docs/<mode>/`.
+Public/private split: only files under `_omr/deliverables/` are handed to a reader. Drafts, working ledgers, and the presentation spec stay in `_omr/docs/<mode>/`.
 
 Underscore-prefixed working files are **excluded from export content** by `export_report.py` (chapters only). `_document.json` is read as the presentation spec, not rendered as content.
 
@@ -262,7 +264,7 @@ In `_document.json` set title/subtitle/author, fonts (including `eastasia`/`pdf_
 python scripts/export_report.py --mode survey --format docx --language en
 ```
 
-Default output: `deliverables/<topic>-<mode>-<language>.<format>` at the project root (`--output` overrides). The renderer applies `_document.json` and reads `chapters/*.md` only (per spec order, else sorted). Other `_*.md` working files are not included. It never invents styling — tune the spec, not the script.
+Default output: `deliverables/<topic>-<mode>-<language>.<format>` at the OMR working root (`--output` overrides). The renderer applies `_document.json` and reads `chapters/*.md` only (per spec order, else sorted). Other `_*.md` working files are not included. It never invents styling — tune the spec, not the script.
 
 Then QA2 + Gate D + visual inspect of DOCX/PDF.
 

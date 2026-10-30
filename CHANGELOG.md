@@ -13,6 +13,20 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [2.1.0] — 2026-10-30
+
+### Changed
+
+- **OMR working root moved to `_omr/` under the current project root** (no longer the project root itself). All research artifacts — state (`.omr/`), materials, docs, and deliverables — now live under `_omr/`. This keeps the host project root clean: only one `_omr/` folder appears instead of `AGENTS.md`, `.omr/`, `materials/`, `docs/`, and `deliverables/` scattered at the root.
+  - `INIT/init.md`: workspace structure is now `<project-root>/_omr/{AGENTS.md, .omr/*.json}`.
+  - `SKILL.md` Default Paths, `REFERENCE.md`, `AGENTS.md.template`: every artifact path is now scoped under `_omr/` (e.g. `_omr/deliverables/`, `_omr/materials/`, `_omr/docs/`, `_omr/.omr/`).
+  - `SYNTH/synth.md` + `long-report.md`, `LLM-STATE.md`, `GRAPH.md`, `GATES.md`, `COLLECT/collect.md` + `bucket-worker.md`, `VERSION/version.md`, `RECONCILE/reconcile.md`, `WORKFLOW/workflow-phases.md`, `scripts/README.md`: path references and examples updated.
+  - Scripts (`export_report.py`, `collect_cli.py`, `material_to_markdown.py`, `prose_lint.py`, `report_lint.py`, `version_control.py`, `prefer_language.py`): `--workspace` now defaults to `Path.cwd() / "_omr"` instead of `Path.cwd()`. Pass `--workspace <path>` to override.
+
+### Removed
+
+- The `<project-id>/` workspace-root layout (artifacts directly at the project root) is retired in favor of the `_omr/` working root.
+
 ## [2.0.0] — 2026-10-27
 
 ### Changed

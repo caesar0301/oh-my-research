@@ -107,7 +107,12 @@ def diff_tags(workspace: Path, a: str, b: str) -> dict[str, Any]:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="OMR version control")
-    p.add_argument("--workspace", type=Path, default=Path.cwd())
+    p.add_argument(
+        "--workspace",
+        type=Path,
+        default=None,
+        help="OMR working root (default: <cwd>/_omr)",
+    )
     sub = p.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("tag")
     t.add_argument("label")
@@ -118,7 +123,7 @@ def main() -> None:
     d.add_argument("a")
     d.add_argument("b")
     args = p.parse_args()
-    ws = args.workspace.resolve()
+    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
     if args.cmd == "tag":
         print(json.dumps(tag(ws, args.label), indent=2))
     elif args.cmd in ("history", "list"):
