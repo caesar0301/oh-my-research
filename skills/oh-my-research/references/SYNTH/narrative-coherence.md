@@ -106,9 +106,30 @@ Make every section, table, and figure understandable without private artifacts a
 - define row/column dimensions and scoring direction;
 - state the comparison baseline and conditions;
 - add a sentence after it that interprets the result;
-- replace opaque chapter references with a short restatement plus the reference when useful.
+- replace opaque chapter references with a short restatement plus the reference when useful;
+- **never send the reader to external materials to follow the report's own reasoning** — every premise needed for an inference is restated locally; citations support claims but never carry an argument step, and phrases such as “详见文献 [3]”, “see the referenced report for details” do not substitute for the premise itself.
 
 Self-contained does not mean repeating whole explanations. Restate only the premise needed at the point of use.
+
+### 起承转合 — the four-move flow
+
+Every section, and the report as a whole, follows 起承转合 (open → develop → turn → close). The anchor → gap → move opening is the 起; the rest is not optional padding:
+
+1. **起 (open)** — restate the established premise and raise this section's question, so the reader knows why the section exists.
+2. **承 (develop)** — carry the question forward in the order the reader needs it: mechanism, reasoning, evidence, example. Each step consumes exactly what the previous step produced.
+3. **转 (turn)** — the pivot that keeps the logic honest: boundary conditions, counterexamples, the case where the pattern breaks, the stronger competitor, the cost, the confound. Place the turn where the argument actually bends, not as ritual hedging at the end. A section with no 转 reads as one-sided advocacy.
+4. **合 (close)** — resolve the guiding question with one explicit answer, state what residue remains, and hand that residue to the next section as its 起.
+
+The same flow governs the whole report: the introduction sets the question (起), the body develops it (承), the synthesis turns to compare and confront limits (转), and the conclusion closes (合) by answering the question the introduction opened.
+
+### Mutual echo (照应)
+
+The report is one continuous argument, not a sequence of adjacent chapters:
+
+- **Plant-and-payoff**: every question, term, figure, or tension set up earlier is answered, reused, or resolved later; no orphan setups and no payoffs arriving unannounced.
+- The conclusion echoes the introduction's central question in its own words; abstract, body, takeaways, limitations, and conclusion share one claim state.
+- Comparisons framed early reappear in synthesis on the same canonical dimensions; recommendations trace back to the evidence chapters that support them.
+- Transitions name the logical relation between sections — cause, contrast, qualification, consequence, change of level — so the argument reads as fluent prose rather than assembled blocks. Logic must be airtight: every inference step is either stated or genuinely shared knowledge; nothing is skipped, and nothing is asserted twice from scratch.
 
 ## 4. Preserve one taxonomy and one argument
 
@@ -197,4 +218,6 @@ Treat these as Gate D failures, not stylistic suggestions:
 - a resolved issue still presented elsewhere as open;
 - a report-specific system, metric, score, or threshold used without enough explanation to interpret it;
 - recommendations that cannot be traced through the body argument;
-- sections that are predominantly lists of studies or numbers without synthesis.
+- sections that are predominantly lists of studies or numbers without synthesis;
+- an inference whose premise exists only in a cited external source, or any instruction that sends the reader to another document to follow the report's argument;
+- a section that violates the 起承转合 flow: an unanswered setup (no 合), an unearned answer (no 承), or an argument presented with its counter-case suppressed (no 转).

@@ -326,14 +326,14 @@ Position: after Gate A unlocks SYNTH; before SYNTH Phase A (outline).
 - [ ] Audience + intended length/depth
 - [ ] Reader starting knowledge: what may be assumed vs what must be explained
 - [ ] Reader destination: understanding, comparison, decision, or action expected after reading
-- [ ] Register: `plain` (clear, direct, explain-like-I'm-five bar) / `academic` (formal scholarly prose) / `hybrid` — drives chapter writing rules (`SYNTH/long-report.md` § C2)
+- [ ] Register: `plain` (clear, direct, explain-like-I'm-five bar — **default when the user has not specified**) / `academic` (formal scholarly or professional technical prose) / `hybrid` — drives chapter writing rules (`SYNTH/long-report.md` § C2)
 - [ ] Non-English reports: confirm native-expression enforcement (`SYNTH/native-expression.md`) and note any field-standard terms to allowlist in `.omr/prose-lint-allow.txt`
 - [ ] Citation style: author–date vs numbered (consistent throughout)
 - [ ] Wiki yes/no (if not already specified)
 
 **Outcomes:** **confirm** → SYNTH outline | **adjust** → re-collect preferences.
 
-Consolidates the previously scattered "synth mode if ambiguous" ask and the `--language/--format/--mode` flags into one checkpoint. Quick-pass uses defaults (pattern mode, auto-detected language, `docx`) and records them.
+Consolidates the previously scattered "synth mode if ambiguous" ask and the `--language/--format/--mode` flags into one checkpoint. Quick-pass uses defaults (pattern mode, auto-detected language, `docx`, register `plain`) and records them.
 
 ---
 
@@ -346,7 +346,7 @@ Run **chapter-scoped** lenses during the writing loop, then a full narrative pas
 | **Structure** | Compare chapter contracts and a reverse outline to the argument spine; cut, merge, move, or add prerequisites until the reader dependency order is valid |
 | **Prose** | Check reasoning paragraphs, explicit antecedents, logical transitions, plain definitions, natural evidence-strength phrasing, and **native expression** — metaphor provenance, heading style, sentence rhythm, passive/dash budgets (`SYNTH/native-expression.md`) |
 | **Adversarial** | Force missing-angle and counterexample findings; empty list not allowed |
-| **Narrative Audit** | Mandatory full-report pass: progressive disclosure, taxonomy integrity, chapter bridges, local self-containment, repetition, and revision/claim-state consistency — see `SYNTH/narrative-coherence.md` |
+| **Narrative Audit** | Mandatory full-report pass: progressive disclosure, taxonomy integrity, chapter bridges, 起承转合 flow and mutual echo, local self-containment (no reliance on external materials), repetition, and revision/claim-state consistency — see `SYNTH/narrative-coherence.md` |
 | **Consistency & Polish** | Mandatory after Narrative Audit: terminology, first mention, translationese, register, and all unresolved narrative findings — see `SYNTH/long-report.md` § Phase E.5 |
 
 Process: announce → reverse outline + findings table → user accept/reject substantive reframing (quick-pass applies high-confidence repairs) → apply → rerun affected checks. Gate D remains blocked while any blocking narrative finding is open.
@@ -408,7 +408,7 @@ Op: `qa qa2`. Evaluate chapters under `docs/<mode>/chapters/` (ignore `_*.md` wo
 | `coherence` | No orphan sections, source catalogues, dead-end closings, dangling antecedents, or empty cross-references; chapter bridges carry the argument |
 | `revision-integrity` | No resolved claim remains open elsewhere; abstract, body, takeaways, limitations, and conclusion agree on final claim state |
 | `repetition` | Takeaways, synthesis, conclusion, and abstract serve distinct roles rather than restating the same list |
-| `publication-safety` | No internal IDs, workflow/gate jargon (`OMR`, `THINK mode`, `Gate A`), grade labels, or private paths. Product attribution (`Powered by oh-my-research`) is allowed chrome. |
+| `publication-safety` | No internal IDs, workflow/gate jargon (`OMR`, `THINK mode`, `Gate A`), grade labels, or private paths — checked in chapters **and** in the `_document.json` presentation spec (title/subtitle/author/header/footer), which reaches the cover and headers. Product attribution (`Powered by oh-my-research`) is allowed chrome. |
 | `self-contained` | Subject/system, audience, scope, terms, metrics, baselines, assumptions, findings, tables/figures, recommendation conditions, limitations, and references stand alone |
 | `language` | Consistent language and register; no mixed boilerplate; terminology matches the ledger and first mentions are defined/annotated |
 | `native-expression` | Reads as composed in the report language: no calqued metaphors or coined compounds, native heading style, native sentence rhythm and punctuation habits; `prose_lint.py` clean of `high` findings |

@@ -13,6 +13,21 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [Unreleased]
+
+### Added
+
+- **Report writing principles** (`SYNTH/narrative-coherence.md`): every section and the whole report now follows the 起承转合 four-move flow (open → develop → turn → close) with mutual echo (照应) — plant-and-payoff setups, conclusion echoing the introduction, transitions naming the logical relation.
+- **Register default is `plain` (explain-like-I'm-five)**: Gate P, `long-report.md` § C2, and `synth.md` hard rules now default to the ELI5 bar; academic/technical style only on explicit user or genre choice.
+
+### Changed
+
+- **Stronger self-containment**: reports must never send the reader to external materials to follow their own argument; every inference premise is restated locally and citations support but never carry an argument step (now a Gate D blocking signature).
+
+### Fixed
+
+- **`report_lint.py` now scans the presentation spec**: `_document.json` string fields (title, subtitle, author, header/footer) are linted with the same publication-safety patterns and reported with a `field=` path. Previously an internal term hidden in the author/title leaked onto the exported cover unflagged (found in E2E test). Exit codes unchanged (0 clean / 1 violations).
+
 ## [2.1.0] — 2026-10-30
 
 ### Changed

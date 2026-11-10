@@ -54,6 +54,7 @@ Write `.omr/report-state.json` yourself from the outline. **Do not** call a fixe
 
 Rules:
 - Derive `chapters` from `_outline.md` (slug IDs from real theme names).
+- `register` defaults to `plain` (explain-like-I'm-five); record the Gate P choice once and keep it stable.
 - Put abstract/executive-summary ids in `writing_order` **last** (often `00-…`).
 - Each turn: set `current`, write the file, set that chapter to `done`, clear `current`, bump `updated_at`.
 - Resume: open report-state; continue first not-done id in `writing_order`.
@@ -130,6 +131,7 @@ Before drafting, verify that every concept the chapter assumes is either in `rea
 - Proceed from familiar context to specialized mechanism, then evidence, boundary, and implication.
 - Use reader-facing prose and conventional citations from the map.
 - Express evidence strength naturally.
+- Follow the **起承转合 four-move flow** (`narrative-coherence.md` § 3): 起 = anchor + question, 承 = mechanism/reasoning/evidence in dependency order, 转 = the pivot where the argument bends (boundaries, counterexamples, costs), 合 = an explicit answer plus the residue that becomes the next bridge.
 - End with a short synthesis paragraph that answers the guiding question and creates the next bridge.
 - Add **Chapter takeaways** only when they improve navigation. Keep 2–4 bullets, each stating what the chapter changed in the argument; never replay every subsection.
 
@@ -146,9 +148,9 @@ Before drafting, verify that every concept the chapter assumes is either in `rea
 
 **Expression quality rules (mandatory — see `native-expression.md` and `LANGUAGE.md` § Non-English Writing):**
 
-1. **Register**: write in the register confirmed at Gate P (`plain` | `academic` | `hybrid`) and keep it stable across chapters.
-   - `plain`: clear and direct, explain each term where it first appears, prefer short sentences, use analogies to anchor hard concepts ("explain like I'm five" bar — simple wording, never dumbed-down content)
-   - `academic`: formal scholarly register, precise claims, appropriate hedging — but **still natural prose**, not stiff translationese
+1. **Register**: write in the register confirmed at Gate P (`plain` | `academic` | `hybrid`) and keep it stable across chapters. `plain` is the **default** — use `academic` or `hybrid` only when the user or the genre asks for it.
+   - `plain` (**default**): the explain-like-I'm-five bar — every hard concept gets a plain-language definition and a concrete example or analogy beside its technical treatment; simple wording, never dumbed-down content. Write each section so a motivated non-specialist can follow it without consulting any outside material
+   - `academic`: formal scholarly or professional technical register, precise claims, appropriate hedging — but **still natural prose**, not stiff translationese, and still defining every term at first use
    - `hybrid`: plain narration with academic rigor in method/results discussion
 2. **Compose, don't translate** (hard rule): build each sentence in the report language from the start. Never plan the sentence in English and render it.
 3. **Metaphor provenance test** (`native-expression.md` § 1): before using any figurative expression, verify the metaphor exists in the report language. If it does not, use a native metaphor or state the idea plainly — never coin a compound by translating an English metaphor (問題の形/问题的形状, attack surface/攻击面, load-bearing/承重).
@@ -291,6 +293,8 @@ Never restart from outline unless the user asks to re-outline.
 | Let source/discovery order determine the report | Build a reader dependency graph and concept ladder |
 | Call stages, axes, mechanisms, and candidates all “routes” | Define canonical dimensions and type each label |
 | Stack model names, metrics, and citations | State the claim, explain the mechanism, then interpret evidence and limits |
+| Assume the reader will consult a cited source or another document for a premise | Restate the needed premise locally; citations support, never carry, an argument step |
+| Write one-sided sections with no counter-case | Apply the 起承转合 flow and put the 转 where the argument bends |
 | Use “as above” or a chapter number as the premise | Restate the needed proposition beside the cross-reference |
 | Write abstract first | Write a self-contained abstract last, in body argument order |
 | Repeat every conclusion in every takeaway | Track a repetition budget and give each recurrence a distinct role |

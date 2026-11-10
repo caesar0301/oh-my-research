@@ -12,6 +12,12 @@ report file) for internal terminology that must not appear in public deliverable
   - Private paths: docs/plans/, .omr/, tree-state.json
   - THINK ledger tables or outcome stamps in public prose
 
+Also scans the LLM-authored presentation spec `docs/<mode>/_document.json`
+(title, subtitle, author, header/footer text, and every other string field):
+an internal term hidden in those fields reaches the cover/headers of the
+exported deliverable, so it must be caught before export. Allowed chrome:
+product attribution such as "Powered by oh-my-research".
+
 Exit codes: 0 = clean, 1 = violations found, 2 = usage error.
 
 Usage:
@@ -149,6 +155,76 @@ def lint_text(text: str) -> list[dict[str, Any]]:
     return violations
 
 
+# Fields of _document.json that land on the cover or every page
+SPEC_KEY_FIELDS = {"title", "subtitle", "author", "header", "footer", "toc", "cover"}
+
+
+def _iter_strings(value: Any, path: str = "") -> list[tuple[str, str]]:
+    """Yield (field path, string) for every string in a JSON structure."""
+    items: list[tuple[str, str]] = []
+    if isinstance(value, str):
+        items.append((path or "(root)", value))
+    elif isinstance(value, dict):
+        for k, v in value.items():
+            child = f"{path}.{k}" if path else str(k)
+            items.extend(_iter_strings(v, child))
+    elif isinstance(value, list):
+        for i, v in enumerate(value):
+            child = f"{path}[{i}]"
+            items.extend(_iter_strings(v, child))
+    return items
+
+
+def lint_document_spec(spec_path: Path) -> list[dict[str, Any]]:
+    """Lint the presentation spec _document.json.
+
+    Key cover/page fields are always scanned; other string fields are
+    scanned too (they may surface in wiki/TOC chrome). Attribution text
+    such as "Powered by oh-my-research" is allowed chrome.
+    """
+    violations: list[dict[str, Any]] = []
+    try:
+        spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        violations.append(
+            {
+                "type": "spec_unreadable",
+                "line": 0,
+                "match": str(e)[:60],
+                "description": "Presentation spec could not be read/parsed",
+                "context": str(spec_path),
+                "field": "(file)",
+            }
+        )
+        return violations
+
+    for field_path, text in _iter_strings(spec):
+        for label, pattern, description in ALL_PATTERNS:
+            for match in pattern.finditer(text):
+                violations.append(
+                    {
+                        "type": label,
+                        "line": 0,
+                        "match": match.group(0),
+                        "description": description,
+                        "context": text[:120],
+                        "field": field_path,
+                    }
+                )
+    return violations
+
+
+def find_document_specs(workspace: Path, mode: str | None) -> list[Path]:
+    """Find docs/<mode>/_document.json files to lint."""
+    modes = [mode] if mode else ["survey", "report", "manuscript", "brief"]
+    specs: list[Path] = []
+    for m in modes:
+        candidate = workspace / "docs" / m / "_document.json"
+        if candidate.exists():
+            specs.append(candidate)
+    return specs
+
+
 def find_report_files(
     workspace: Path, mode: str | None, file_path: Path | None
 ) -> list[Path]:
@@ -202,8 +278,9 @@ def main() -> int:
 
     ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
     files = find_report_files(ws, args.mode, args.file)
+    spec_files = find_document_specs(ws, args.mode)
 
-    if not files:
+    if not files and not spec_files:
         if args.json:
             print(json.dumps({"files": [], "violations": [], "total": 0}))
         else:
@@ -225,6 +302,22 @@ def main() -> int:
             }
         )
         all_violations.extend(violations)
+
+    for spec_path in spec_files:
+        spec_violations = lint_document_spec(spec_path)
+        rel_spec = (
+            str(spec_path.relative_to(ws))
+            if spec_path.is_relative_to(ws)
+            else str(spec_path)
+        )
+        file_results.append(
+            {
+                "file": rel_spec,
+                "violations": spec_violations,
+                "count": len(spec_violations),
+            }
+        )
+        all_violations.extend(spec_violations)
 
     total = len(all_violations)
 

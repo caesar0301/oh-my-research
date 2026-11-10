@@ -126,8 +126,8 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 4. The outline records a reader journey, argument spine, concept ladder, canonical dimensions, and chapter contracts; the report follows them or records justified revisions.
 5. The report progresses from situation and essential concepts to framework, evidence, synthesis, uncertainty, and implications. No necessary premise appears after the conclusion that depends on it.
 6. Taxonomy is stable: pipeline stages, optimization goals, mechanisms, candidates, and evaluation criteria are not conflated under shifting labels.
-7. Every chapter has a logical bridge from prior knowledge to its question and onward to the next; paragraphs interpret evidence rather than list papers and numbers.
-8. The report is self-contained for a reader without working files: it identifies the subject, audience, scope, terms, metrics, baselines, assumptions, and recommendation conditions; tables and figures are locally interpretable.
+7. Every chapter follows the 起承转合 four-move flow — anchor and question, development, a turn at boundaries and counterpoints, an explicit answer — with a logical bridge from prior knowledge to its question and onward to the next (`narrative-coherence.md` § 3); setups and payoffs echo across chapters (照应); paragraphs interpret evidence rather than list papers and numbers.
+8. The report is self-contained for a reader without working files or external materials: it identifies the subject, audience, scope, terms, metrics, baselines, assumptions, and recommendation conditions; every premise needed for an inference is restated locally, so citations support claims but never carry an argument step; tables and figures are locally interpretable.
 9. Abstract, body, takeaways, limitations, and conclusion share the same final claim state; no resolved issue remains described as open and no dangling reference survives revision.
 10. Professional, user-friendly tone; register (`plain`/`academic`/`hybrid`) matches Gate P and stays stable.
 11. **Reads as composed in the report language, not translated** (`narrative-coherence.md` companion: `native-expression.md`): metaphors pass the provenance test, headings use native style, sentence rhythm and punctuation follow the target language's habits, nominalizations are converted to verbs. `scripts/prose_lint.py` reports zero `high` findings.
@@ -139,7 +139,7 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 
 ## Process (summary)
 
-**Gate P first** — confirm language / format / mode / audience / register (plain, academic, or hybrid) / citations before outlining (see `GATES.md`); record once and keep stable.
+**Gate P first** — confirm language / format / mode / audience / register / citations before outlining (see `GATES.md`); record once and keep stable. Register defaults to `plain` (explain-like-I'm-five); `academic` or `hybrid` only on explicit user choice or genre requirement.
 
 1. Load judgment + evidence-map + brief + indexes (slim — not wholesale every turn).
 2. LLM: design reader journey → argument spine → canonical dimensions → concept ladder → chapter contracts; write outline + citation map + `.omr/report-state.json` (`long-report.md`, `narrative-coherence.md`, `LLM-STATE.md`).
@@ -232,6 +232,8 @@ Quality review: passed
 - No single-shot full-report generation
 - No pasting full chapters into chat
 - No over-claiming; limitations always present
+- Register defaults to `plain` (explain-like-I'm-five); switch to `academic`/`hybrid` only on explicit choice, then keep it stable
+- No argument step that depends on a premise found only in a cited source or another document; sections follow the 起承转合 flow with mutual echo
 - No chapter list before reader journey, argument spine, canonical dimensions, and concept ladder are explicit
 - No undefined report-specific subject, metric, baseline, taxonomy, or recommendation threshold
 - No taxonomy drift, dangling reference, stale claim state, or conclusion-before-premise at export
