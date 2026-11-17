@@ -132,7 +132,9 @@ yaml-check: ## Check YAML formatting with prettier (skip if no files)
 		exit 1; \
 	fi
 
-install-format-tools: ## Install ruff (pip) — prettier is npm: npm i -g prettier
-	$(PYTHON) -m pip install -U ruff
+RUFF_VERSION ?= 0.15.22
+
+install-format-tools: ## Install pinned ruff (pip) — prettier is npm: npm i -g prettier
+	$(PYTHON) -m pip install ruff==$(RUFF_VERSION)
 	@echo "Optional: npm install -g prettier   # JSON/YAML/Markdown"
 	@echo "Optional: jq                        # JSON fallback (apt/brew)"
