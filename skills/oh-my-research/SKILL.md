@@ -74,7 +74,9 @@ flowchart TD
     INT -- none --> STATE[Inspect workspace state]
 
     COLLECT --> GATEM[Run Gate M:<br/>source diversity + sufficiency]
-    GATEM --> ANALYZE
+    GATEM --> GATEMASK{User decision<br/>default: pause}
+    GATEMASK -- proceed --> ANALYZE
+    GATEMASK -- collect more --> COLLECT
 
     SYNTHGUARD -- Yes --> SYNTH[SYNTH mode]
     SYNTHGUARD -- No, missing --> BLOCKSYNTH[Show PHASE-GUARD<br/>offer ANALYZE first]
@@ -98,17 +100,19 @@ flowchart TD
     ANALYZE --> GATEA
 ```
 
+In semi-automated mode, every gate decision node is a **real pause**: show the gate report, end the turn, and wait for the next user message. Quick-pass and Rapid skip the pause only after `gate_cli.py set` has stored an explicit user request or the Rapid pattern; the gate JSON must still be recorded.
+
 **Always show a phase label** at the start of each action: `[INIT]`, `[COLLECT]`, `[ANALYZE]`, `[THINK]`, `[SYNTH]`, `[RECONCILE]`, `[FINISHED]` (plus `[DECIDE]` / `[IDEA]` when used).
 
 ## Phase-Guard: Cross-Stage Jump Protection
 
-Before routing to a stage, resolve the active workspace first (see Workspace resolution), then **read `<active-workspace>/.omr/tree-state.json`** and check whether the target stage is `unlocked`, `ready`, or `completed`. If `locked`, verify the required **prerequisite artifacts** exist on disk before proceeding. This prevents silent stage-skipping (e.g. user says "write report" → SYNTH keyword detected → but no `judgment-*.md` exists).
+Before routing to a stage, resolve the active workspace first (see Workspace resolution), **run `gate_cli.py validate` for the target stage**, then **read `<active-workspace>/.omr/tree-state.json`** and check whether the target stage is `unlocked`, `ready`, or `completed`. If `locked`, verify the required **prerequisite artifacts** exist on disk before proceeding. A gate validation failure blocks the stage just like a missing artifact. This prevents silent stage-skipping (e.g. user says "write report" → SYNTH keyword detected → but no `judgment-*.md` exists).
 
 | Target stage | Required prerequisite artifacts | Required gate JSON | If missing |
 |---|---|---|---|
-| ANALYZE | `materials/` with ≥1 source + `docs/index/` entry | `gate-m.json` (source diversity + sufficiency, run during ANALYZE) | Route to COLLECT first |
+| ANALYZE | `materials/` with ≥1 source + `docs/index/` entry | `gate-m.json` + `gate_cli.py validate --stage analyze` exit 0 | Route to COLLECT first |
 | THINK | `docs/plans/judgment-*.md` or `docs/plans/evidence-*.md` | (none) | Route to ANALYZE first |
-| SYNTH | `docs/plans/judgment-*.md` | `gate-a.json` (pass) + `gate-p.json` | Route to ANALYZE → THINK → Gate A → Gate P first |
+| SYNTH | `docs/plans/judgment-*.md` | `gate-a.json` (pass) + `gate-p.json` + `gate_cli.py validate --stage synth` exit 0 | Route to ANALYZE → THINK → Gate A → Gate P first |
 | DECIDE | `docs/plans/judgment-*.md` | (none) | Route to ANALYZE first |
 
 **Blocking by default.** The agent must not proceed past a missing prerequisite without either (a) satisfying the prerequisites or (b) receiving an explicit user override (e.g. "I know, just write the report" or "skip guard"). A general instruction like "write the report" does **not** count as an override. When overridden, record `scenario_note: "prerequisite skipped by user override"` in the next gate JSON for auditability.
@@ -129,7 +133,7 @@ Before routing to a stage, resolve the active workspace first (see Workspace res
 | RECONCILE | `reconcile` | Contradiction blast-radius, archive, rollback | `references/RECONCILE/reconcile.md` |
 | VERSION | — | Workspace artifact versioning: tag, history, diff, backup, list | `references/VERSION/version.md` |
 | WORKFLOW | `workflow [--pattern P]` | Graph-driven multi-step Evidence-Deep (or other pattern) | `references/WORKFLOW/workflow-overview.md` |
-| QA | `qa qa1\|qa2\|all\|state-check` | LLM QA checklists; `state-check` reconciles disk vs tree-state in the active workspace | `references/GATES.md` |
+| QA | `qa qa1\|qa2\|all\|state-check` | LLM QA checklists; `state-check` reconciles disk vs tree-state and runs `gate_cli.py validate` in the active workspace | `references/GATES.md` |
 
 Every op acts on the resolved active workspace. When calling mechanical scripts directly, add `--workspace <active-workspace>`; the built-in default `<cwd>/_omr` is the container, not a topic root.
 
@@ -149,6 +153,18 @@ Default **semi-automated** (pause for confirm). Support "no confirmations" / qui
 | D / QA2 | Before publishing SYNTH |
 
 **Post-Step Routing Menu** (after Gate M / IDEA / Gate A / THINK proceed / Gate T / Gate B): (1) Pause at each gate (default) · (2) Quick pass · (3) Continue recommended (next graph edge) · (4) Run THINK · (5) Switch pattern · (6) Stop.
+
+## Gate confirmation enforcement (blocking)
+
+Gate quality is still LLM-evaluated, but **confirmation is mechanically validated** by `scripts/gate_cli.py`. The script never judges research quality; it only enforces the persisted mode, the gate record shape, and chain completeness.
+
+- INIT runs `gate_cli.py init --workspace <active-workspace>` to persist `.omr/gate-mode.json` with `mode: "semi-automated"`. This file is authoritative; `patterns/*.json` `recommendations.agency` is advisory only.
+- Changing mode requires `gate_cli.py set --mode quick-pass --user-request "<verbatim user phrase>"`. Accepted phrases include `quick-pass`, `no confirmations`, `不要确认`, `无需确认`, `自动继续`, and similar explicit instructions. Without a stored phrase, validation fails. Rapid pattern uses `set --mode fully-automated --pattern rapid`.
+- **Semi-automated (default):** show the gate report, then **end the turn**. Do not record the gate or continue in the same turn. On the next user message, write the gate JSON with `gate_cli.py record --gate M --decision-source user --user-decision "<user reply>" --confirmed-at <ISO-8601> ...`. The record carries `pause: true`.
+- **Quick-pass:** gates are still recorded via `gate_cli.py record`, with `decision_source: "agent"`, `pause: false`, and a `scenario_note` mentioning quick-pass; no user pause is required.
+- **Fully-automated (Rapid):** gates may be absent.
+- Before ANALYZE run `gate_cli.py validate --workspace <active-workspace> --stage analyze`; before SYNTH `--stage synth`; before export `--stage all`. A non-zero exit blocks the next stage with the same blocking rule as Phase-Guard.
+- All gate JSONs must be written through `gate_cli.py record`. Hand-written gate JSONs missing `decision_source`, `pause`, `user_decision`, or `confirmed_at` fail validation.
 
 ## Default Paths
 
@@ -188,12 +204,13 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 15. Run document lenses and visually inspect the rendered file before Gate D
 16. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
 17. **Resolve the active workspace before any op** — scan the default root for an existing topic workspace, resume a match instead of re-initializing, create a topic subdirectory only when no match exists, and pass its path as `--workspace` to scripts
+18. **Never self-authorize a gate pause** — keep `.omr/gate-mode.json` at `semi-automated` unless the user explicitly asks for quick-pass; show the gate, end the turn, record the user reply, and run `gate_cli.py validate` before the next stage
 
 ## Dependencies
 
 - Read/write project workspace; all mechanical scripts accept `--workspace <active-workspace>` (script default `<cwd>/_omr` is the container, not a topic root)
 - Agent-authored state under `<active-workspace>/.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF/Markdown renderer applying LLM-authored `_document.json`; the Markdown deliverable passes Mermaid figures and GFM tables through verbatim), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py`; `--id`/`--bucket`/`--inbox` for parallel workers, `--merge-inbox` for the coordinator), `material_to_markdown.py` (downloads source via arxiv/DOI/preprint hosts (ACL Anthology, bioRxiv, medRxiv, OpenReview, Zenodo, SSRN, HAL)/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--index` batch-converts/retries every indexed source lacking a `.md`, `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters and the `_document.json` presentation spec (title/subtitle/author/header/footer string fields) for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths), `prose_lint.py` (native-expression linter: flags calqued metaphors, English-derived coinages, article-style CJK headings, wrong measure words, 的-chains, passive/em-dash stacking, and over-long sentences; `--strict` fails on medium findings, `.omr/prose-lint-allow.txt` allowlists field-standard terms)
+- Mechanical scripts only: `gate_cli.py` (gate mode, confirmation fields, and gate-chain validation; no quality judgment), `export_report.py` (thin, spec-driven DOCX/PDF/Markdown renderer applying LLM-authored `_document.json`; the Markdown deliverable passes Mermaid figures and GFM tables through verbatim), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py`; `--id`/`--bucket`/`--inbox` for parallel workers, `--merge-inbox` for the coordinator), `material_to_markdown.py` (downloads source via arxiv/DOI/preprint hosts (ACL Anthology, bioRxiv, medRxiv, OpenReview, Zenodo, SSRN, HAL)/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--index` batch-converts/retries every indexed source lacking a `.md`, `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters and the `_document.json` presentation spec (title/subtitle/author/header/footer string fields) for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths), `prose_lint.py` (native-expression linter: flags calqued metaphors, English-derived coinages, article-style CJK headings, wrong measure words, 的-chains, passive/em-dash stacking, and over-long sentences; `--strict` fails on medium findings, `.omr/prose-lint-allow.txt` allowlists field-standard terms)
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export; **anydoc** (`npx -y @firecrawl/anydoc`, Node 20+) for material → Markdown conversion; optional `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` as fallbacks if anydoc is unavailable
 
 ## Deep Dive

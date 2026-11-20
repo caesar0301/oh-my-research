@@ -17,6 +17,7 @@ Workspace research tags/backups are separate — see `references/VERSION/version
 
 ### Added
 
+- **Blocking gate confirmation enforcement**: `scripts/gate_cli.py` persists `.omr/gate-mode.json` (`init`), changes mode only from an explicit user phrase (`set`), writes gate JSONs with `decision_source` / `pause` / `user_decision` / `confirmed_at` (`record`), and validates mode, chain, and confirmations before ANALYZE / SYNTH / export (`validate`). The decision-tree diagram now contains real user-decision nodes, and `SKILL.md`, `GATES.md`, `INIT/init.md`, `LLM-STATE.md`, `GRAPH.md`, `WORKFLOW/workflow-overview.md`, `ANALYZE/analyze.md`, `SYNTH/synth.md`, `SYNTH/long-report.md`, and `scripts/README.md` state that semi-automated gates end the turn. 10 unittest cases cover the validator; they live in repo-level `tests/` and are excluded from the packaged skill.
 - **Multi-topic workspace resolution**: `_omr/` is now the default working root (container), and each topic gets a parallel subdirectory `_omr/<topic-slug>/`. Before any op the agent scans the working root for an existing topic workspace (directory with `AGENTS.md` + `.omr/tree-state.json`) and resumes a match instead of re-initializing; a new subdirectory is created only when no topic matches. `SKILL.md` (Workspace resolution, Phase-Guard, ops table, Best Practices), `INIT/init.md`, `AGENTS.md.template`, `LLM-STATE.md`, `REFERENCE.md`, `GRAPH.md`, and `scripts/README.md` now state this contract; other reference docs use the generic "active workspace root".
 - **Report writing principles** (`SYNTH/narrative-coherence.md`): every section and the whole report now follows the 起承转合 four-move flow (open → develop → turn → close) with mutual echo (照应) — plant-and-payoff setups, conclusion echoing the introduction, transitions naming the logical relation.
 - **Register default is `plain` (explain-like-I'm-five)**: Gate P, `long-report.md` § C2, and `synth.md` hard rules now default to the ELI5 bar; academic/technical style only on explicit user or genre choice.
@@ -27,6 +28,7 @@ Workspace research tags/backups are separate — see `references/VERSION/version
 
 ### Fixed
 
+- **Gates could be self-approved**: `quick-pass` was previously an agent-declared `scenario_note` with no persisted mode, no confirmation fields, and no validator, so a task-oriented request such as "deep research …" could silently skip every user pause. The default is now persisted as `semi-automated`; changing it requires an explicit verbatim user request, and missing confirmation fields block the next stage. `GATES.md` no longer claims "No quality-gate Python runner" without qualification: `gate_cli.py` is a narrow confirmation validator, while research judgment remains agent-side.
 - **`report_lint.py` now scans the presentation spec**: `_document.json` string fields (title, subtitle, author, header/footer) are linted with the same publication-safety patterns and reported with a `field=` path. Previously an internal term hidden in the author/title leaked onto the exported cover unflagged (found in E2E test). Exit codes unchanged (0 clean / 1 violations).
 
 ## [2.1.0] — 2026-10-30

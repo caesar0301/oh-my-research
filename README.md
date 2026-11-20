@@ -136,8 +136,11 @@ For contributors working in this repo:
 ```bash
 make help
 make format          # python + json + yaml
-make check           # CI: format checks + lint
+make test            # repo-level development tests
+make check           # CI: format checks + lint + tests
 ```
+
+Development tests live in repo-level `tests/`; they are not part of the installed skill package under `skills/oh-my-research/`.
 
 Package version lives in [`skills/oh-my-research/SKILL.md`](skills/oh-my-research/SKILL.md) (`metadata.version`); history in [`CHANGELOG.md`](CHANGELOG.md). CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 

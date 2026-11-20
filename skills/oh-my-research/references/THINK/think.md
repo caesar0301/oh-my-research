@@ -67,7 +67,7 @@ Select a thinking method to deepen the judgment:
   4. Pre-mortem Analysis        — imagine peer-review failure, work backward
   5. Thesis Defense Simulation  — committee stress-tests conclusions
 
-Enter 1-5, or type a method name. (quick-pass: agent selects best-fit)
+Enter 1-5, or type a method name. (quick-pass: agent selects best-fit — only after `gate_cli.py set` stored an explicit user request)
 ```
 
 The agent must **show this menu** — not silently skip to Gate A. If the user types "skip" or "proceed", record `scenario_note: "THINK skipped by user override"` in the gate JSON, but the menu must have been presented.

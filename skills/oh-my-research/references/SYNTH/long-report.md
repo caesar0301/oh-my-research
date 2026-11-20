@@ -83,7 +83,7 @@ Then validate the outline as a reader dependency graph:
 - Taxonomy labels keep one meaning from overview through conclusion.
 - Chapter order follows explanatory need, not discovery order, paper chronology, or source buckets.
 
-Confirm with the user unless quick-pass. Then write matching `.omr/report-state.json`. Create `docs/<mode>/chapters/` only when writing the first chapter file (and other `docs/<mode>/` files only when writing them).
+Confirm with the user unless quick-pass (semi-automated mode ends the turn; quick-pass requires a stored explicit user request and `gate_cli.py validate --stage synth`). Then write matching `.omr/report-state.json`. Create `docs/<mode>/chapters/` only when writing the first chapter file (and other `docs/<mode>/` files only when writing them).
 
 **Starter shapes (customize freely):**
 

@@ -16,6 +16,8 @@
 - [ ] Indexes updated with stable IDs (`docs/index/` created on first write)
 - [ ] Failures logged
 - [ ] `analyze` marked ready when ≥1 usable source (Gate M confirms source diversity & sufficiency before the deep scan)
+- [ ] Gate M report shown; in semi-automated mode the turn ends and `gate_cli.py record --gate M` waits for the next user reply
+- [ ] `gate_cli.py validate --stage analyze` exit 0 before ANALYZE starts
 
 ## [ANALYZE]
 
@@ -49,6 +51,7 @@
 ## [SYNTH]
 
 - [ ] **Gate P** passed — language / format / mode / audience / citations confirmed
+- [ ] `gate_cli.py validate --stage synth` exit 0 before outlining; `--stage all` exit 0 before export
 - [ ] Outline + citation map + topic-specific `.omr/report-state.json` (LLM-authored)
 - [ ] Chapters written one-at-a-time under `docs/<mode>/chapters/`
 - [ ] Continuity brief updated and pruned after each chapter

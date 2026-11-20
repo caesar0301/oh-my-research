@@ -51,6 +51,8 @@ Resolve the **active workspace** first (see `SKILL.md` § Workspace resolution):
 | Papers index | `papers-index.json` (+ `.md`) | `docs/index/` |
 | Synthesis drafts | chapters + spec under mode dir | `docs/{survey,report,manuscript,brief}/` |
 | Deliverable (public) | `<topic>-<mode>-<lang>.<ext>` | `deliverables/` (optional `deliverables/wiki/`) |
+| Gate confirmation mode | `gate-mode.json` | `.omr/` (written by `gate_cli.py init`) |
+| Gate / QA results | `gate-*.json`, `QA1-*.json`, `QA2-*.json` | `.omr/quality-gates/` (written by `gate_cli.py record`) |
 | Material IDs | `P-xxx` papers, `W-xxx` web, `G-xxx` github | indexes |
 | Full-text Markdown | `materials/<bucket>/<ID>.md` | papers: `materials/papers/`; also `web`, `github` |
 | Paper raw binaries | `materials/papers-raw/<ID>.<ext>` | same stem as the Markdown file |

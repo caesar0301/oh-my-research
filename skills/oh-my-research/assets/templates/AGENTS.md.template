@@ -24,7 +24,8 @@
 └── .omr/
     ├── tree-state.json
     ├── pattern.json
-    └── locale.json
+    ├── locale.json
+    └── gate-mode.json      # default semi-automated gate confirmation
 ```
 
 **Preferred language**: {{PREFERRED_LANGUAGE}} (source: {{LANGUAGE_SOURCE}}; timezone: {{TIMEZONE}})
@@ -66,8 +67,8 @@ Default **Evidence-Deep**: collect → analyze ⟲ think → synth (survey/repor
 
 ## Gates
 
-- Gate A / QA1 after analyze
-- Gate D / QA2 / document lenses before publish
+- Gate mode defaults to `semi-automated` (`.omr/gate-mode.json`); gates pause for user confirmation and `gate_cli.py validate` must pass before the next stage. Quick-pass requires an explicit stored user request.
+- Gate M after collect, Gate T after think, Gate A / QA1 after analyze, Gate P before synth, Gate D / QA2 / document lenses before publish
 - Gate L when Loop active
 - Gate B only if `decide` runs
 

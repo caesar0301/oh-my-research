@@ -41,6 +41,22 @@ Update after each op using unlock rules in `GRAPH.md`. Example shape:
 
 Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if unused. Gate M result is recorded under `.omr/quality-gates/gate-m.json` and summarized in tree-state for quick reference.
 
+### `.omr/gate-mode.json` (script-owned)
+
+Written by `scripts/gate_cli.py init`, never edited by hand. It is the authoritative gate confirmation mode; `patterns/*.json` `recommendations.agency` is advisory only.
+
+```json
+{
+  "mode": "semi-automated",
+  "source": "default|user|pattern",
+  "set_at": "ISO-8601 or null",
+  "user_request": "verbatim phrase, or null",
+  "pattern": "rapid, or null"
+}
+```
+
+Gate JSONs written by `gate_cli.py record` carry `decision_source`, `pause`, `user_decision`, and `confirmed_at`. In semi-automated mode the agent shows the gate, ends the turn, and records the next user reply. Quick-pass requires `source: "user"` plus a stored explicit phrase; fully-automated is reserved for the Rapid pattern. `gate_cli.py validate --stage <analyze|synth|all>` must pass before the corresponding stage starts.
+
 ### Tree-state pre-flight check (v1.4 — blocking by default)
 
 **Before executing any op, resolve the active workspace (see `SKILL.md` § Workspace resolution), then read `<active-workspace>/.omr/tree-state.json` and verify the target stage is permitted.** This is a mandatory pre-flight check, not optional.
@@ -49,10 +65,11 @@ Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if un
 
 1. Resolve the active workspace, then read `<active-workspace>/.omr/tree-state.json` (create defaults if file missing)
 2. **Startup reconciliation** (v1.4): scan disk for actual artifacts and auto-correct stale tree-state (see § Startup reconciliation below)
-3. Check if the target stage is in `unlocked`, `ready`, or `completed`
-4. If `locked`, check if required prerequisite artifacts exist on disk (see `GRAPH.md` § Cross-Stage Jump Protection)
-5. If prerequisites are met, update tree-state to unlock the stage, then proceed
-6. If prerequisites are missing, show `[PHASE-GUARD]` notice and **block** — do not proceed unless the user explicitly overrides
+3. **Gate validation** (blocking): run `gate_cli.py validate --workspace <active-workspace> --stage <analyze|synth|all>` for the target stage. Exit 1 blocks the stage; do not proceed with a self-written gate JSON
+4. Check if the target stage is in `unlocked`, `ready`, or `completed`
+5. If `locked`, check if required prerequisite artifacts exist on disk (see `GRAPH.md` § Cross-Stage Jump Protection)
+6. If prerequisites are met, update tree-state to unlock the stage, then proceed
+7. If prerequisites are missing, show `[PHASE-GUARD]` notice and **block** — do not proceed unless the user explicitly overrides
 
 **v1.4 change — blocking by default:** The Phase-Guard is now **blocking by default**. The agent must not proceed past a missing prerequisite without an explicit user override. An override is only recognized when the user uses explicit language such as "I know, skip to SYNTH" or "override phase-guard" — a general task instruction like "write the report" does **not** count as an override.
 
@@ -103,7 +120,7 @@ This reconciliation prevents the common failure mode where an agent runs an op b
 qa state-check
 ```
 
-This runs the full disk-vs-state reconciliation in the active workspace, proposes a corrected `tree-state.json`, and lists missing gates/artifacts. When several topics coexist, run it once per topic workspace; never let one topic's disk artifacts repair another topic's state. Use this when resuming an interrupted workspace or auditing workflow compliance.
+This runs the full disk-vs-state reconciliation in the active workspace, runs `gate_cli.py validate`, proposes a corrected `tree-state.json`, and lists missing gates/artifacts or invalid confirmation fields. When several topics coexist, run it once per topic workspace; never let one topic's disk artifacts repair another topic's state. Use this when resuming an interrupted workspace or auditing workflow compliance.
 
 ### `.omr/loop-state.json`
 

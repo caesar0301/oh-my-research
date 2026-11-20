@@ -84,7 +84,7 @@ workflow --pattern Evidence-Deep
 workflow --pattern Rapid
 ```
 
-Runs recommended next steps along the active graph, pausing at gates unless user requested quick-pass / no confirmations.
+Runs recommended next steps along the active graph, pausing at gates by default. Quick-pass requires `gate_cli.py set --user-request "<verbatim phrase>"`; `gate_cli.py validate` blocks the next stage when confirmations are missing.
 
 ## Alternate patterns (short)
 
@@ -102,7 +102,7 @@ Runs recommended next steps along the active graph, pausing at gates unless user
 - **Gate M**: enough materials before analyzing? (source diversity report — collect more types?)
 - **Gate T**: after THINK, collect more from surfaced gaps?
 - **Gate P**: language / format / mode / audience / citations before synth
-- Other gate confirmations (unless quick-pass)
+- Other gate confirmations (end the turn; quick-pass only after an explicit user request)
 - THINK method choice when menu shown
 
 ## Phase files

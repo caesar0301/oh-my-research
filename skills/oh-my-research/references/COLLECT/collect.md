@@ -152,7 +152,7 @@ If conversion failed, `markdown_status: "failed"` and `markdown_failure_reason` 
 - Graceful fallback: record failure, continue other inputs
 - After successful collect with ≥1 material → run **Gate M** (Materials Sufficiency & Source Diversity) before marking `analyze` ready
 - Gate M checks: minimum count, source-type diversity (papers/web/github/datasets/models), topic coverage, recency, obvious gaps, full-text availability
-- Gate M shows a **diversity report** to the user and asks: collect more source types or proceed to analyze?
+- Gate M shows a **diversity report** to the user and asks: collect more source types or proceed to analyze? In semi-automated mode this is a real pause: end the turn after the report and wait for the next user message.
 - If a paper conversion failed, warn the user that ANALYZE will run on abstract-only for that paper (degraded mode)
 - **Post-collect validation (mandatory remediation, v1.5):** after COLLECT, verify that for every convertible file in `materials/papers-raw/`, a corresponding `materials/papers/<stem>.md` exists, and that every indexed papers/web entry has `markdown_status: "converted"`. If not, **run the batch converter before Gate M** — do not leave sources downloaded but never converted (this is the common failure mode where ANALYZE silently runs in degraded abstract-only mode):
 
@@ -195,8 +195,8 @@ Suggested missing types: [list relevant to topic]
 - **warn** → suggest specific source types to collect; user decides: collect more or proceed
 - **fail** → do not unlock analyze; recommend specific collect actions
 
-Write result to `.omr/quality-gates/gate-m.json`.
+Write result with `gate_cli.py record --gate M ...` to `.omr/quality-gates/gate-m.json`. In semi-automated mode use `--decision-source user --user-decision "<next user reply>" --confirmed-at <ISO-8601>`; quick-pass requires a stored explicit user request. Then run `gate_cli.py validate --stage analyze` before ANALYZE.
 
 ## Chat reply
 
-List saved paths, new IDs, conversion status (method used / failures), **Gate M diversity report**, Gate M status, recommended next: `analyze` (if pass) or `collect <suggested sources>` (if warn/fail).
+List saved paths, new IDs, conversion status (method used / failures), **Gate M diversity report**, and the decision question. In semi-automated mode stop here and wait for the user's decision; do not start ANALYZE or write `gate-m.json` in the same turn.

@@ -10,7 +10,7 @@ analyze
 
 Also: “analyze these papers”, “map evidence”, “now what” after collect.
 
-**Requires:** ≥1 material under `materials/` and `docs/index/papers-index.json` (or other indexes with entries) **and Gate M passed** (or quick-pass / Rapid pattern).
+**Requires:** ≥1 material under `materials/` and `docs/index/papers-index.json` (or other indexes with entries), **Gate M passed**, and `gate_cli.py validate --workspace <active-workspace> --stage analyze` exit 0 (Rapid pattern exempt when fully-automated).
 
 > **Gate M prerequisite:** Before running ANALYZE, Gate M (Materials Sufficiency & Source Diversity) must have passed. If Gate M has not run, run it first (see `COLLECT/collect.md` and `GATES.md`). Gate M checks source-type diversity (papers, web, github, datasets, models), minimum count, topic coverage, recency, and full-text Markdown availability. If Gate M warns or fails, collect more sources before analyzing.
 
@@ -131,7 +131,7 @@ The ledger starts as an empty table (header only). After each THINK pass, add a 
 7. Record the pass in the judgment's THINK ledger — append a row to the `## THINK Ledger` table (see template in §5). The row must have: pass number, method name, date (ISO-8601), outcome stamp (`hardened`/`refined`/`unchanged`/`killed`). Gate A will validate this table exists and has ≥1 row.
 8. Re-save judgment / evidence-map if edits accepted.
 
-**Gate A cannot pass without at least one THINK pass recorded in the judgment's THINK ledger.** If the user explicitly skips THINK (quick-pass or "just proceed"), record `scenario_note: "THINK skipped by user override"` in `gate-a.json` — but the agent must still ask, not silently skip.
+**Gate A cannot pass without at least one THINK pass recorded in the judgment's THINK ledger.** If the user explicitly skips THINK (quick-pass or "just proceed"), record `scenario_note: "THINK skipped by user override"` in `gate-a.json` — but the agent must still ask, not silently skip. Write the gate with `gate_cli.py record`; in semi-automated mode stop the turn and use the next user reply as `--user-decision`.
 
 ### 6a. Gate T — collect more?
 

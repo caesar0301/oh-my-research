@@ -1,9 +1,12 @@
 # OMR Scripts
 
-**Scripts are mechanical only.** Judgment, outlines, gates, THINK method choice, and progress tracking are LLM-driven — see `references/LLM-STATE.md` and `references/GATES.md`.
+**Scripts are mechanical only.** Research judgment, outlines, gate quality checks, THINK method choice, and progress tracking are LLM-driven. `gate_cli.py` is the narrow exception: it validates gate mode, confirmation fields, and chain order without judging quality — see `references/GATES.md` and `references/LLM-STATE.md`.
+
+Development tests live at repo root `tests/`; this `skills/oh-my-research/` directory is the production skill package and must not contain test files. Run them with `make test`.
 
 | Script | Role |
 |--------|------|
+| `gate_cli.py` | Persist `.omr/gate-mode.json` (`init`), change mode only from an explicit user request (`set`), write gate JSONs with confirmation fields (`record`), and validate mode/chain/confirmations before ANALYZE / SYNTH / export (`validate`). Never judges research quality. Default `--workspace` is `<cwd>/_omr`. |
 | `export_report.py` | Thin, spec-driven renderer: applies the LLM-authored `docs/<mode>/_document.json` to turn `chapters/` into publication-safe DOCX/PDF/Markdown. No hardcoded styling. Default output is the public hand-off `<workspace>/deliverables/<topic>-<mode>-<language>.<format>` (`--output` overrides; `--workspace` defaults to `<cwd>/_omr`). Default `--language` follows timezone/workspace via `prefer_language.py`. |
 | `prose_lint.py` | Native-expression linter: detects translationese — calqued metaphors, English-derived coinages, article-style CJK headings (一个…), wrong measure words, 的-chains, passive/em-dash stacking, over-long sentences. Reports per-file budgets (avg sentence length, dash/1k, passive/1k). Exit 1 on `high` findings; `--strict` also fails on `medium`; allowlist via `--allow` or `_omr/.omr/prose-lint-allow.txt`. |
 | `prefer_language.py` | Detect preferred BCP-47 language from timezone/locale; optional `.omr/locale.json` write; `--list` dumps timezone map |
@@ -52,6 +55,10 @@ python3 scripts/material_to_markdown.py "https://arxiv.org/abs/…" --id P-001
 python3 scripts/material_to_markdown.py --index            # convert all indexed sources lacking .md
 python3 scripts/material_to_markdown.py --convert-dir _omr/materials/papers-raw   # batch convert raw PDFs → _omr/materials/papers/<stem>.md
 python3 scripts/collect_cli.py "https://arxiv.org/abs/…" --workspace _omr/veya-tracing   # explicit topic root
+python3 scripts/gate_cli.py init --workspace _omr/veya-tracing
+python3 scripts/gate_cli.py set --workspace _omr/veya-tracing --mode quick-pass --user-request "no confirmations"
+python3 scripts/gate_cli.py record --workspace _omr/veya-tracing --gate M --decision-source user --user-decision "proceed" --checks '[{"id":"coverage","status":"pass","details":"ok"}]'
+python3 scripts/gate_cli.py validate --workspace _omr/veya-tracing --stage analyze
 python3 scripts/report_lint.py --mode survey               # (v1.4) lint report chapters
 python3 scripts/report_lint.py --file _omr/docs/survey/my-report.md --json     # (v1.4) lint a single file, JSON output
 ```

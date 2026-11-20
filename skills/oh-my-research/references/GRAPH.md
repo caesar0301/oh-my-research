@@ -82,7 +82,7 @@ Artifact paths are relative to the active OMR workspace root; apply every guard 
 
 **Enforcement protocol:**
 
-1. Before executing a stage, read `.omr/tree-state.json` and check if the stage is in `unlocked`, `ready`, or `completed`.
+1. Before executing a stage, read `.omr/tree-state.json` in the active workspace and run `gate_cli.py validate --workspace <active-workspace> --stage <analyze|synth|all>`; a non-zero exit blocks the stage.
 2. If the stage is `locked`, check if the required artifacts exist on disk.
 3. If artifacts exist but tree-state is stale, update tree-state and proceed.
 4. If artifacts are missing, show `[PHASE-GUARD]` notice and offer to run the prerequisite stage.

@@ -1,6 +1,6 @@
 # Quality Gates (Report-First)
 
-Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists below with scenario judgment, writes results under `.omr/quality-gates/`, and asks the user to confirm (unless quick-pass). See also `LLM-STATE.md`.
+Gate quality is **LLM-evaluated**. The agent reads artifacts, applies the checklists below with scenario judgment, and asks the user to confirm (unless quick-pass). Confirmation, mode, and chain completeness are **mechanically validated** by `scripts/gate_cli.py`; see `SKILL.md` § Gate confirmation enforcement. See also `LLM-STATE.md`.
 
 ## Overview
 
@@ -17,7 +17,7 @@ Gates are **LLM-evaluated**. The agent reads artifacts, applies the checklists b
 | **D** | Before publishing SYNTH | Traceable, no over-claiming? | judgment (+ optional decision) |
 | **QA2** | Pre-export (`qa qa2`) | Structure, citations, coherence, safety | chapters + deliverable |
 
-**Removed:** Gate C and experiment-design checks. **No quality-gate Python runner** — judgment is agent-side.
+**Removed:** Gate C and experiment-design checks. **No quality-judgment Python runner** — research judgment stays agent-side. `gate_cli.py` is a narrow confirmation validator (mode, gate record shape, chain order); it never decides whether evidence is good enough.
 
 ## Gate Chain Enforcement (v1.4 — self-enforcing chain)
 
@@ -36,6 +36,7 @@ Gate M → [ANALYZE] → THINK pass → Gate T → Gate A/QA1 → Gate P → [SY
 3. **Gate P checks for Gate A**: Gate P verifies that `gate-a.json` exists and has `status: "pass"`. If not, Gate P refuses to proceed.
 4. **SYNTH checks for Gate P**: SYNTH verifies that `gate-p.json` exists before starting the outline. If not, SYNTH runs Gate P first.
 5. **Gate D checks for Gate P + Lenses**: Gate D verifies that `gate-p.json` exists and lenses were run. If not, Gate D fails.
+6. **Confirmation is validated, not assumed**: every gate JSON is written by `gate_cli.py record`, carries `decision_source` / `pause` / `user_decision` / `confirmed_at`, and passes `gate_cli.py validate --workspace <active-workspace> --stage <analyze|synth|all>`. A missing confirmation field blocks the next stage.
 
 **Gate chain completeness check (v1.4 — self-enforcing):**
 
@@ -69,22 +70,40 @@ If the agent detects that the user wants to jump from COLLECT directly to SYNTH 
 
 ## Enforcement Modes
 
-| Mode | Behavior |
-|------|----------|
-| **Semi-automated** (default) | User confirms at each gate |
-| **Quick-pass / no confirmations** | Agent still runs checks and records JSON; skips user pause |
-| **Fully-automated** | Same as quick-pass |
+| Mode | Behavior | How it is set |
+|------|----------|---------------|
+| **Semi-automated** (default) | User confirms at each gate; the turn ends after the gate report | `gate_cli.py init` |
+| **Quick-pass / no confirmations** | Agent still runs checks and records JSON; skips user pause | `gate_cli.py set --mode quick-pass --user-request "<verbatim phrase>"` |
+| **Fully-automated** | Gates may be absent (Rapid pattern) | `gate_cli.py set --mode fully-automated --pattern rapid` |
+
+`quick-pass` is never inferred from a task-oriented instruction such as "write the report" or "do deep research". The user must use explicit language (`quick-pass`, `no confirmations`, `不要确认`, `无需确认`, `自动继续`, …). The verbatim phrase is stored in `.omr/gate-mode.json` and validated.
+
+## Confirmation enforcement
+
+| Command | When |
+|---------|------|
+| `gate_cli.py init --workspace <ws>` | INIT: persist the default `semi-automated` mode |
+| `gate_cli.py show --workspace <ws>` | Inspect the authoritative mode |
+| `gate_cli.py set --workspace <ws> --mode quick-pass --user-request "…"` | Only after an explicit user request |
+| `gate_cli.py record --workspace <ws> --gate M --decision-source user --user-decision "…" --confirmed-at <ISO-8601> --checks '[…]'` | Semi-automated: write the gate JSON from the **next user message** |
+| `gate_cli.py validate --workspace <ws> --stage analyze\|synth\|all` | Before ANALYZE, before SYNTH, before export; exit 1 blocks the stage |
+
+In semi-automated mode `record` refuses `decision_source=agent`, requires a non-empty `--user-decision`, and writes `pause: true`. In quick-pass mode it writes `decision_source: "agent"`, `pause: false`, and a `scenario_note` mentioning quick-pass. `validate` also checks prerequisite gate files and rejects hand-written gate JSONs without the required fields.
 
 ## How to record a gate/QA result
 
-Write JSON (not a fixed script schema beyond this shape):
+Write JSON **through `gate_cli.py record`** (not by hand). The validator requires these fields:
 
 ```json
 {
   "gate": "QA1",
   "run_at": "ISO-8601",
-  "status": "pass|warn|fail",
+  "status": "pass",
   "scenario_note": "e.g. narrow 4-paper deep dive — coverage bar lowered deliberately",
+  "decision_source": "user|agent",
+  "pause": true,
+  "user_decision": "verbatim user reply, or null",
+  "confirmed_at": "ISO-8601, or null",
   "checks": [
     {
       "id": "coverage",
@@ -95,7 +114,7 @@ Write JSON (not a fixed script schema beyond this shape):
 }
 ```
 
-Paths: `.omr/quality-gates/QA1-evidence-analysis.json`, `QA2-pre-export.json`, or `gate-a.json`, etc.
+Paths: `.omr/quality-gates/QA1-evidence-analysis.json`, `QA2-pre-export.json`, or `gate-a.json`, etc. In `semi-automated` mode `decision_source` must be `user`, `pause` true, and both `user_decision` and `confirmed_at` non-empty. Quick-pass uses `decision_source: "agent"`, `pause: false`, and null confirmation fields.
 
 ---
 
@@ -156,16 +175,20 @@ Suggested missing types: [list relevant to topic]
 - All materials failed Markdown conversion → suggest re-running collect
 - Unconverted paper entries present and pre-flight remediation (`material_to_markdown.py --index`) not yet run → **fail**; run remediation, then re-check (v1.5)
 
-A 1-paper deep dive passes with an explicit "narrow corpus" note; a broad survey with one paper fails and asks the user to collect more. Quick-pass skips the pause but still records the check.
+A 1-paper deep dive passes with an explicit "narrow corpus" note; a broad survey with one paper fails and asks the user to collect more. Quick-pass skips the pause but still records the check, and is allowed only after `gate_cli.py set` stored the user's explicit phrase.
 
-Write `.omr/quality-gates/gate-m.json`:
+Write `.omr/quality-gates/gate-m.json` with `gate_cli.py record`:
 
 ```json
 {
   "gate": "M",
   "run_at": "ISO-8601",
-  "status": "pass|warn|fail",
+  "status": "pass",
   "scenario_note": "e.g. 6 web syntheses + 0 papers — broad but lacks primary sources",
+  "decision_source": "user",
+  "pause": true,
+  "user_decision": "proceed to analyze",
+  "confirmed_at": "ISO-8601",
   "checks": [
     {
       "id": "minimum_count",
@@ -212,7 +235,7 @@ Write `.omr/quality-gates/gate-m.json`:
 }
 ```
 
-**Semi-automated (default):** pause for user decision after showing the diversity report. **Quick-pass:** record JSON, unlock analyze, no pause.
+**Semi-automated (default):** show the diversity report and **end the turn**. On the next user message, run `gate_cli.py record --gate M --decision-source user --user-decision "<reply>" ...`, then `gate_cli.py validate --stage analyze` before starting ANALYZE. **Quick-pass:** only after a stored explicit user request; record JSON with `pause: false`, no user pause.
 
 ---
 
@@ -333,7 +356,7 @@ Position: after Gate A unlocks SYNTH; before SYNTH Phase A (outline).
 
 **Outcomes:** **confirm** → SYNTH outline | **adjust** → re-collect preferences.
 
-Consolidates the previously scattered "synth mode if ambiguous" ask and the `--language/--format/--mode` flags into one checkpoint. Quick-pass uses defaults (pattern mode, auto-detected language, `docx`, register `plain`) and records them.
+Consolidates the previously scattered "synth mode if ambiguous" ask and the `--language/--format/--mode` flags into one checkpoint. In semi-automated mode, preferences are confirmed by the user and recorded with `decision_source: "user"`. Quick-pass uses defaults (pattern mode, auto-detected language, `docx`, register `plain`) only after `gate_cli.py set` stored an explicit user request. Run `gate_cli.py validate --stage synth` before outlining.
 
 ---
 

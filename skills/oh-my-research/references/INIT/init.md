@@ -38,14 +38,16 @@ Also: new project, start research, initialize workspace, or first message with a
 └── .omr/
     ├── tree-state.json
     ├── pattern.json
-    └── locale.json      # preferred language from timezone/locale (BCP-47 tag)
+    ├── locale.json      # preferred language from timezone/locale (BCP-47 tag)
+    └── gate-mode.json   # default semi-automated confirmation mode
 ```
 
 3. Fill `AGENTS.md` from `assets/templates/AGENTS.md.template` with this topic’s placeholders. Describe on-demand paths as documentation — do not mkdir them.
 4. Write `.omr/tree-state.json` appropriate to the start (typically unlock collect/idea/think; lock synth until analysis). Adjust if the user starts mid-stream (e.g. materials already present).
 5. Write `.omr/pattern.json` — default `{ "name": "Evidence-Deep" }` unless the user chose another pattern.
 6. Detect preferred language from timezone/locale (`LANGUAGE.md` / `scripts/prefer_language.py --write-workspace <active-workspace>`; note that `--workspace` alone is read-only) and write `.omr/locale.json`. Mention it in the INIT reply; user can override.
-7. Show next steps tailored to the topic.
+7. Run `scripts/gate_cli.py init --workspace <active-workspace>` to persist `.omr/gate-mode.json` with the default `semi-automated` confirmation mode. Do not set `quick-pass` unless the user has already used explicit language; record such a request with `gate_cli.py set --user-request "<verbatim phrase>"`.
+8. Show next steps tailored to the topic.
 
 ## No coding dirs
 
@@ -53,4 +55,4 @@ Do not create `src/` or evaluation folders.
 
 ## Chat reply
 
-`[INIT] Workspace: <active-workspace>. Topic: … Pattern: Evidence-Deep. Language: ja (timezone Asia/Tokyo). Next: collect <url|query>.`
+`[INIT] Workspace: <active-workspace>. Topic: … Pattern: Evidence-Deep. Language: ja (timezone Asia/Tokyo). Gate mode: semi-automated. Next: collect <url|query>.`

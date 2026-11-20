@@ -139,16 +139,16 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 
 ## Process (summary)
 
-**Gate P first** — confirm language / format / mode / audience / register / citations before outlining (see `GATES.md`); record once and keep stable. Register defaults to `plain` (explain-like-I'm-five); `academic` or `hybrid` only on explicit user choice or genre requirement.
+**Gate P first** — confirm language / format / mode / audience / register / citations before outlining (see `GATES.md`); record once with `gate_cli.py record` and keep stable. In semi-automated mode end the turn and use the next user reply as the gate decision. Register defaults to `plain` (explain-like-I'm-five); `academic` or `hybrid` only on explicit user choice or genre requirement.
 
 1. Load judgment + evidence-map + brief + indexes (slim — not wholesale every turn).
 2. LLM: design reader journey → argument spine → canonical dimensions → concept ladder → chapter contracts; write outline + citation map + `.omr/report-state.json` (`long-report.md`, `narrative-coherence.md`, `LLM-STATE.md`).
-3. Validate prerequisite order and taxonomy, then confirm the outline (or quick-pass).
+3. Run `gate_cli.py validate --workspace <active-workspace> --stage synth` (non-zero exit blocks), validate prerequisite order and taxonomy, then confirm the outline (or quick-pass).
 4. Loop: next chapter from report-state → chapter contract + semantic continuity pack + evidence slice → write from known to new → save → update reader state, bridges, claim state, terms, and repetition budget → mark done in JSON.
 5. Write comparative synthesis, limitations, conclusions, and a self-contained abstract last.
 6. Run per-chapter lenses → build reverse outline → run whole-document Narrative Audit → apply structural fixes → run the **Consistency & Polish pass** (`long-report.md` § Phase E.5), including `prose_lint.py` until no `high` finding remains.
 7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
-8. LLM QA2 → `export_report.py` renders DOCX/PDF/Markdown into `_omr/deliverables/` → inspect → `report_lint.py` + `prose_lint.py` → Gate D.
+8. LLM QA2 → `gate_cli.py validate --workspace <active-workspace> --stage all` → `export_report.py` renders DOCX/PDF/Markdown into `<active-workspace>/deliverables/` → inspect → `report_lint.py` + `prose_lint.py` → Gate D.
 9. Deliver the `_omr/deliverables/` path + short summary; optional `_omr/deliverables/wiki/`.
 
 ## Presentation is LLM-driven (not baked into the script)

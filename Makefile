@@ -11,14 +11,14 @@
 #   make check
 
 .PHONY: help format format-python format-json format-yaml format-md \
-	lint check format-check json-check yaml-check install-format-tools
+	lint check format-check json-check yaml-check test install-format-tools
 
 PYTHON ?= python3
 RUFF ?= ruff
 PRETTIER ?= prettier
 
-# Skill package + any future top-level scripts
-PYTHON_PATHS := skills
+# Skill package (production) + repo-level development tests
+PYTHON_PATHS := skills tests
 
 # JSON / YAML / Markdown under the repo (exclude caches / venvs)
 FIND_PRUNE := \( -path './.git/*' -o -path './.venv/*' -o -path './venv/*' \
@@ -88,7 +88,10 @@ lint: ## Lint Python with ruff
 	@command -v $(RUFF) >/dev/null || { echo "ruff not found. Try: make install-format-tools"; exit 1; }
 	$(RUFF) check $(PYTHON_PATHS)
 
-check: format-check json-check yaml-check lint ## CI: verify format + lint (no write)
+test: ## Run repo-level development tests (not part of the skill package)
+	$(PYTHON) -m unittest discover -s tests -v
+
+check: format-check json-check yaml-check lint test ## CI: verify format + lint + tests (no write)
 
 format-check: ## Check Python formatting without writing
 	@command -v $(RUFF) >/dev/null || { echo "ruff not found. Try: make install-format-tools"; exit 1; }
