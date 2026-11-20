@@ -1,6 +1,6 @@
 # VERSION Mode
 
-Script: `scripts/version_control.py` (mechanical tags/backups only). All paths are relative to the OMR working root `_omr/`.
+Script: `scripts/version_control.py` (mechanical tags/backups only). All paths are relative to the active OMR workspace root.
 
 Two distinct version tracks:
 

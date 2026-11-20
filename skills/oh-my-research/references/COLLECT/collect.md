@@ -2,7 +2,7 @@
 
 User URLs plus **default four-bucket discovery**. After each source is recorded, **download + convert it to full-text Markdown** so ANALYZE can read the entire paper — not just the abstract.
 
-All artifact paths below are relative to the OMR working root `_omr/` (created under the current project root). Scripts default `--workspace` to `Path.cwd()/_omr`.
+All artifact paths below are relative to the active OMR workspace root. Scripts default `--workspace` to `Path.cwd()/_omr` (the container); pass the topic root explicitly when a topic lives in `_omr/<topic-slug>/`.
 
 ## Trigger
 

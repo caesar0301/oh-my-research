@@ -34,6 +34,29 @@ COLLECT materials → [Gate M] → ANALYZE (deep evidence + THINK) → [Gate A] 
 
 Optional: IDEA, DECIDE (stance), RECONCILE. Default pattern: **Evidence-Deep**. See `references/GRAPH.md` and `patterns/`.
 
+## Workspace resolution (multi-topic)
+
+`_omr/` is the **default OMR working root (a container)**, not necessarily the active workspace. The active workspace is the topic root that every op reads and writes.
+
+1. If the user explicitly passes `--workspace <path>` or names a workspace, use it verbatim as the active workspace. Do **not** append a topic slug.
+2. Otherwise resolve `<project-root>/_omr/` as the working root and **scan it before INIT**:
+   - A topic workspace is any directory containing `AGENTS.md` **and** `.omr/tree-state.json`. The working root itself counts for legacy single-topic workspaces.
+   - Match the new request against topic slug, `AGENTS.md` research question/title, and existing deliverable names. Exactly one match → resume that workspace. Several matches → ask the user. No match → INIT a new `<working-root>/<topic-slug>/`.
+3. Set the active workspace to the resolved topic root. All state reads (`.omr/tree-state.json`, gates, report-state) and all mechanical scripts use this root. Script defaults (`<cwd>/_omr`) point at the container, so pass `--workspace <topic-root>` explicitly whenever the active workspace is a topic subdirectory.
+
+```
+<project-root>/_omr/                       # default working root (container)
+├── AGENTS.md, .omr/...                    # legacy single-topic workspace (still supported)
+├── yolo-vs-rfdetr/                        # topic workspace A
+│   ├── AGENTS.md, .omr/...
+│   └── deliverables/
+└── veya-tracing/                          # topic workspace B
+    ├── AGENTS.md, .omr/...
+    └── deliverables/
+```
+
+Never re-INIT a matched topic root; resume its tree-state instead. Never write into a sibling topic while working on another topic.
+
 ## Auto-Detection Decision Tree
 
 The agent runs **intention detection first**, then falls back to **workspace-state detection**. Canonical op names (`init`, `collect`, `analyze`, `think`, `synth`, `decide`, `idea`, `reconcile`, `workflow`, `qa`) **always win** over keyword routing.
@@ -56,7 +79,7 @@ flowchart TD
     SYNTHGUARD -- Yes --> SYNTH[SYNTH mode]
     SYNTHGUARD -- No, missing --> BLOCKSYNTH[Show PHASE-GUARD<br/>offer ANALYZE first]
 
-    STATE --> S1{No AGENTS.md<br/>and no .omr/?}
+    STATE --> S1{No AGENTS.md<br/>and no .omr/<br/>in active workspace?}
     S1 -- Yes --> INIT[INIT]
     S1 -- No --> S2{Materials present,<br/>no judgment?}
     S2 -- Yes --> GATEM
@@ -79,7 +102,7 @@ flowchart TD
 
 ## Phase-Guard: Cross-Stage Jump Protection
 
-Before routing to a stage, **read `.omr/tree-state.json`** and check whether the target stage is `unlocked`, `ready`, or `completed`. If `locked`, verify the required **prerequisite artifacts** exist on disk before proceeding. This prevents silent stage-skipping (e.g. user says "write report" → SYNTH keyword detected → but no `judgment-*.md` exists).
+Before routing to a stage, resolve the active workspace first (see Workspace resolution), then **read `<active-workspace>/.omr/tree-state.json`** and check whether the target stage is `unlocked`, `ready`, or `completed`. If `locked`, verify the required **prerequisite artifacts** exist on disk before proceeding. This prevents silent stage-skipping (e.g. user says "write report" → SYNTH keyword detected → but no `judgment-*.md` exists).
 
 | Target stage | Required prerequisite artifacts | Required gate JSON | If missing |
 |---|---|---|---|
@@ -96,17 +119,19 @@ Before routing to a stage, **read `.omr/tree-state.json`** and check whether the
 
 | Mode | Op | One-line | Detail |
 |------|----|----------|--------|
-| INIT | `init "<topic>"` | Bootstrap workspace (only `AGENTS.md` + `.omr/*.json`; no empty folders) | `references/INIT/init.md` |
+| INIT | `init "<topic>" [--workspace <path>]` | Bootstrap a topic workspace (only `AGENTS.md` + `.omr/*.json`; no empty folders). Scan the working root for an existing topic first | `references/INIT/init.md` |
 | COLLECT | `collect <url\|query\|…>` | Default **papers+web+github+search** (parallel bucket agents) → materials + indexes + full-text Markdown | `references/COLLECT/collect.md` |
 | ANALYZE | `analyze` | Brief, evidence-map, judgment; reads full-text Markdown; Gate M before, Gate A / QA1 after, Gate T after THINK | `references/ANALYZE/analyze.md` |
 | THINK | `think [method]` | Methodology-driven elicitation on research artifacts (never code); stamps `hardened`/`refined`/`unchanged`/`killed` | `references/THINK/think.md`, `references/THINK/methods/` |
-| SYNTH | `synth [--mode] [--format docx\|pdf\|md] [--language] [--resume] [--chapter] [--no-wiki]` | Incremental long reports in preferred language; Gate P confirms prefs; never one-shot a deep report; exports land in `_omr/deliverables/` | `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md` |
+| SYNTH | `synth [--mode] [--format docx\|pdf\|md] [--language] [--resume] [--chapter] [--no-wiki] [--workspace <path>]` | Incremental long reports in preferred language; Gate P confirms prefs; never one-shot a deep report; exports land in `<active-workspace>/deliverables/` | `references/SYNTH/synth.md`, `references/SYNTH/long-report.md`, `references/LANGUAGE.md` |
 | IDEA | `idea "…"` | Capture speculative notes (optional) | `references/IDEA/idea.md` |
 | DECIDE | `decide` | Stance / claim framing with ≥3 alternatives; Gate B (optional) | `references/DECIDE/decide.md` |
 | RECONCILE | `reconcile` | Contradiction blast-radius, archive, rollback | `references/RECONCILE/reconcile.md` |
 | VERSION | — | Workspace artifact versioning: tag, history, diff, backup, list | `references/VERSION/version.md` |
 | WORKFLOW | `workflow [--pattern P]` | Graph-driven multi-step Evidence-Deep (or other pattern) | `references/WORKFLOW/workflow-overview.md` |
-| QA | `qa qa1\|qa2\|all\|state-check` | LLM QA checklists; `state-check` reconciles disk vs tree-state | `references/GATES.md` |
+| QA | `qa qa1\|qa2\|all\|state-check` | LLM QA checklists; `state-check` reconciles disk vs tree-state in the active workspace | `references/GATES.md` |
+
+Every op acts on the resolved active workspace. When calling mechanical scripts directly, add `--workspace <active-workspace>`; the built-in default `<cwd>/_omr` is the container, not a topic root.
 
 ## Confirmation Gates
 
@@ -127,20 +152,20 @@ Default **semi-automated** (pause for confirm). Support "no confirmations" / qui
 
 ## Default Paths
 
-The OMR working root is **`_omr/` under the current project root** (not the project root itself). All research artifacts — state, materials, docs, and deliverables — live under `_omr/`. Paths below are **logical destinations**. Create a folder only when writing the first file into it (see `references/INIT/init.md`).
+`<workspace>` below means the **active workspace root** resolved by Workspace resolution: an explicit `--workspace` path, otherwise a topic root under the default container `<project-root>/_omr/<topic-slug>/` (legacy single-topic workspaces at `<project-root>/_omr/` remain valid). All research artifacts — state, materials, docs, and deliverables — live under `<workspace>`. Paths below are **logical destinations**. Create a folder only when writing the first file into it (see `references/INIT/init.md`).
 
-**Two surfaces.** `_omr/deliverables/` is the only public, reader-facing surface — everything a user reads or shares lands there. `_omr/materials/`, `_omr/docs/`, and `_omr/.omr/` are private working state and never leave the workspace.
+**Two surfaces.** `<workspace>/deliverables/` is the only public, reader-facing surface — everything a user reads or shares lands there. `<workspace>/materials/`, `<workspace>/docs/`, and `<workspace>/.omr/` are private working state and never leave the workspace.
 
 | Artifact | Path (when content exists) |
 |----------|------|
-| State (private) | `_omr/.omr/` (tree-state, pattern, locale; other JSON as needed) |
-| Materials (private) | `_omr/materials/{papers-raw,papers,web,github,datasets,search,failed}/` — papers: raw binaries in `papers-raw/`, Markdown in `papers/` (same stem); other buckets only when they receive files |
-| Indexes (private) | `_omr/docs/index/` (`papers-index.json`; workers use `_omr/docs/index/inbox/` then merge) |
-| Plans (private) | `_omr/docs/plans/` |
-| Ideas (private) | `_omr/docs/ideas/` |
-| Report drafts (private) | `_omr/docs/{survey,report,manuscript,brief}/` — outline, chapters, citation map, continuity, presentation spec |
-| **Deliverables (public)** | **`_omr/deliverables/`** — exported `<topic>-<mode>-<lang>.docx\|pdf\|md`; optional `_omr/deliverables/wiki/` |
-| Archive (private) | `_omr/docs/archive/` |
+| State (private) | `<workspace>/.omr/` (tree-state, pattern, locale; other JSON as needed) |
+| Materials (private) | `<workspace>/materials/{papers-raw,papers,web,github,datasets,search,failed}/` — papers: raw binaries in `papers-raw/`, Markdown in `papers/` (same stem); other buckets only when they receive files |
+| Indexes (private) | `<workspace>/docs/index/` (`papers-index.json`; workers use `<workspace>/docs/index/inbox/` then merge) |
+| Plans (private) | `<workspace>/docs/plans/` |
+| Ideas (private) | `<workspace>/docs/ideas/` |
+| Report drafts (private) | `<workspace>/docs/{survey,report,manuscript,brief}/` — outline, chapters, citation map, continuity, presentation spec |
+| **Deliverables (public)** | **`<workspace>/deliverables/`** — exported `<topic>-<mode>-<lang>.docx\|pdf\|md`; optional `<workspace>/deliverables/wiki/` |
+| Archive (private) | `<workspace>/docs/archive/` |
 
 Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `references/REFERENCE.md`.
 
@@ -162,11 +187,12 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 14. Write full reports to disk; reply in chat with summary only
 15. Run document lenses and visually inspect the rendered file before Gate D
 16. **Update `.omr/tree-state.json` after every op** — move completed stages to `completed`, unlock next stages; never leave tree-state stale
+17. **Resolve the active workspace before any op** — scan the default root for an existing topic workspace, resume a match instead of re-initializing, create a topic subdirectory only when no match exists, and pass its path as `--workspace` to scripts
 
 ## Dependencies
 
-- Read/write project workspace
-- Agent-authored state under `.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
+- Read/write project workspace; all mechanical scripts accept `--workspace <active-workspace>` (script default `<cwd>/_omr` is the container, not a topic root)
+- Agent-authored state under `<active-workspace>/.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
 - Mechanical scripts only: `export_report.py` (thin, spec-driven DOCX/PDF/Markdown renderer applying LLM-authored `_document.json`; the Markdown deliverable passes Mermaid figures and GFM tables through verbatim), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py`; `--id`/`--bucket`/`--inbox` for parallel workers, `--merge-inbox` for the coordinator), `material_to_markdown.py` (downloads source via arxiv/DOI/preprint hosts (ACL Anthology, bioRxiv, medRxiv, OpenReview, Zenodo, SSRN, HAL)/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--index` batch-converts/retries every indexed source lacking a `.md`, `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters and the `_document.json` presentation spec (title/subtitle/author/header/footer string fields) for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths), `prose_lint.py` (native-expression linter: flags calqued metaphors, English-derived coinages, article-style CJK headings, wrong measure words, 的-chains, passive/em-dash stacking, and over-long sentences; `--strict` fails on medium findings, `.omr/prose-lint-allow.txt` allowlists field-standard terms)
 - `python-docx` / `reportlab` via `scripts/requirements.txt` for export; **anydoc** (`npx -y @firecrawl/anydoc`, Node 20+) for material → Markdown conversion; optional `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` as fallbacks if anydoc is unavailable
 

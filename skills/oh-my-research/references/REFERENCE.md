@@ -38,7 +38,7 @@ The full decision tree — intention detection, workspace-state detection, and P
 
 ## Artifact Naming
 
-The OMR working root is **`_omr/` under the current project root**. All paths below are relative to `_omr/`.
+Resolve the **active workspace** first (see `SKILL.md` § Workspace resolution): an explicit `--workspace` path, otherwise `<project-root>/_omr/<topic-slug>/` (legacy workspaces at `<project-root>/_omr/` remain valid). All paths below are relative to the active workspace root.
 
 | Artifact | Pattern | Location |
 |----------|---------|----------|
@@ -57,7 +57,7 @@ The OMR working root is **`_omr/` under the current project root**. All paths be
 
 `{id}` default: `R-001` for first research thread (increment if multiple threads).
 
-**Layout rule:** locations above are destinations for real files (under `_omr/`). Never create those directories empty — write the file (parent dirs appear as a side effect). INIT only creates `AGENTS.md` + `.omr/*.json`. See `INIT/init.md`.
+**Layout rule:** locations above are destinations for real files under the active workspace. Never create those directories empty — write the file (parent dirs appear as a side effect). INIT only creates `AGENTS.md` + `.omr/*.json`. See `INIT/init.md`.
 
 ---
 

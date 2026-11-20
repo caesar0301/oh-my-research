@@ -16,10 +16,10 @@
 
 ## Workspace Structure
 
-The OMR working root is **`_omr/` under the current project root** (not the project root itself). INIT creates **only** the files below. Every other path appears when the first real file is written there — never as an empty folder.
+`<workspace>` is the active workspace root for this topic: an explicit `--workspace` path, otherwise `<project-root>/_omr/<topic-slug>/` under the default OMR working root (legacy single-topic workspaces at `<project-root>/_omr/` remain valid). Parallel topics live in sibling subdirectories and never share state. INIT creates **only** the files below. Every other path appears when the first real file is written there — never as an empty folder.
 
 ```
-<project-root>/_omr/
+<workspace>/
 ├── AGENTS.md
 └── .omr/
     ├── tree-state.json
@@ -34,19 +34,19 @@ Override anytime with `synth --language <tag>` (e.g. `en`, `zh-CN`, `ja`, `de`) 
 
 | When | Path created |
 |------|----------------|
-| Collect a paper | `_omr/materials/papers-raw/<ID>.<ext>` + `_omr/materials/papers/<ID>.md` (+ `_omr/docs/index/` when indexing) |
-| Collect a web page | `_omr/materials/web/<file>` |
-| Collect a GitHub URL | `_omr/materials/github/<file>` |
-| Search log / HF / failure | `_omr/materials/search\|datasets\|failed/<file>` only if used |
-| Idea note | `_omr/docs/ideas/<file>` |
-| Analyze / decide | `_omr/docs/plans/<file>` |
-| Synth drafts | `_omr/docs/<mode>/…` (outline, chapters, citation map, `_document.json`) |
-| QA / gates | `_omr/.omr/quality-gates/<file>` |
-| Version tag / backup | `_omr/.omr/versions/` or `_omr/.omr/backups/` |
-| Exported deliverable | `_omr/deliverables/<topic>-<mode>-<language>.{docx,pdf,md}` |
-| Wiki | `_omr/deliverables/wiki/` after Gate D if generated |
+| Collect a paper | `<workspace>/materials/papers-raw/<ID>.<ext>` + `<workspace>/materials/papers/<ID>.md` (+ `<workspace>/docs/index/` when indexing) |
+| Collect a web page | `<workspace>/materials/web/<file>` |
+| Collect a GitHub URL | `<workspace>/materials/github/<file>` |
+| Search log / HF / failure | `<workspace>/materials/search\|datasets\|failed/<file>` only if used |
+| Idea note | `<workspace>/docs/ideas/<file>` |
+| Analyze / decide | `<workspace>/docs/plans/<file>` |
+| Synth drafts | `<workspace>/docs/<mode>/…` (outline, chapters, citation map, `_document.json`) |
+| QA / gates | `<workspace>/.omr/quality-gates/<file>` |
+| Version tag / backup | `<workspace>/.omr/versions/` or `<workspace>/.omr/backups/` |
+| Exported deliverable | `<workspace>/deliverables/<topic>-<mode>-<language>.{docx,pdf,md}` |
+| Wiki | `<workspace>/deliverables/wiki/` after Gate D if generated |
 
-**Public vs private:** `_omr/deliverables/` is the only surface a reader or collaborator sees. Everything else (`_omr/materials/`, `_omr/docs/`, `_omr/.omr/`) is private working state — never hand it over, and never write final deliverables outside `_omr/deliverables/`.
+**Public vs private:** `<workspace>/deliverables/` is the only surface a reader or collaborator sees. Everything else (`<workspace>/materials/`, `<workspace>/docs/`, `<workspace>/.omr/`) is private working state — never hand it over, and never write final deliverables outside `<workspace>/deliverables/`.
 
 ## Ops (unified skill: oh-my-research)
 

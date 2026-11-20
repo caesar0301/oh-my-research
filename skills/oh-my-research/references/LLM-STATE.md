@@ -43,11 +43,11 @@ Adapt freely: unlock `synth` early for Rapid; keep `decide` locked forever if un
 
 ### Tree-state pre-flight check (v1.4 — blocking by default)
 
-**Before executing any op, the agent must read `.omr/tree-state.json` and verify the target stage is permitted.** This is a mandatory pre-flight check, not optional.
+**Before executing any op, resolve the active workspace (see `SKILL.md` § Workspace resolution), then read `<active-workspace>/.omr/tree-state.json` and verify the target stage is permitted.** This is a mandatory pre-flight check, not optional.
 
 **Check procedure:**
 
-1. Read `.omr/tree-state.json` (create defaults if file missing)
+1. Resolve the active workspace, then read `<active-workspace>/.omr/tree-state.json` (create defaults if file missing)
 2. **Startup reconciliation** (v1.4): scan disk for actual artifacts and auto-correct stale tree-state (see § Startup reconciliation below)
 3. Check if the target stage is in `unlocked`, `ready`, or `completed`
 4. If `locked`, check if required prerequisite artifacts exist on disk (see `GRAPH.md` § Cross-Stage Jump Protection)
@@ -81,10 +81,10 @@ When the user explicitly overrides, record `scenario_note: "prerequisite skipped
 
 **Never leave tree-state stale** — if the agent runs an op but forgets to update tree-state, the next op's pre-flight check will detect the inconsistency (artifacts exist but tree-state doesn't reflect them) and auto-correct.
 
-**Startup reconciliation (v1.4 new):** At the beginning of **every** op — before any other logic — the agent must perform a disk-vs-state reconciliation:
+**Startup reconciliation (v1.4 new):** At the beginning of **every** op — before any other logic — the agent must perform a disk-vs-state reconciliation in the **active workspace only**:
 
-1. Read `.omr/tree-state.json`
-2. Scan disk for actual artifacts (all under the OMR working root `_omr/`):
+1. Read `<active-workspace>/.omr/tree-state.json`
+2. Scan disk for actual artifacts (all under the active workspace root):
    - `docs/plans/brief-*.md`, `evidence-*.md`, `judgment-*.md` → ANALYZE completed
    - `.omr/quality-gates/gate-*.json` → corresponding gates passed
    - `docs/{survey,report,manuscript,brief}/chapters/` or report files → SYNTH in progress/completed
@@ -103,7 +103,7 @@ This reconciliation prevents the common failure mode where an agent runs an op b
 qa state-check
 ```
 
-This runs the full disk-vs-state reconciliation, proposes a corrected `tree-state.json`, and lists missing gates/artifacts. Use this when resuming an interrupted workspace or auditing workflow compliance.
+This runs the full disk-vs-state reconciliation in the active workspace, proposes a corrected `tree-state.json`, and lists missing gates/artifacts. When several topics coexist, run it once per topic workspace; never let one topic's disk artifacts repair another topic's state. Use this when resuming an interrupted workspace or auditing workflow compliance.
 
 ### `.omr/loop-state.json`
 
@@ -155,7 +155,7 @@ Agent evaluates checklists in `GATES.md` and writes results with rationale — s
 
 1. Create `AGENTS.md` from `assets/templates/AGENTS.md.template` (fill placeholders for this topic).
 2. Create `.omr/tree-state.json`, `.omr/pattern.json`, and `.omr/locale.json` (timezone→language; see `LANGUAGE.md` / `prefer_language.py --write-workspace`).
-3. **Never** pre-create empty `materials/`, `docs/`, `deliverables/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`). All such dirs live under the OMR working root `_omr/`.
+3. **Never** pre-create empty `materials/`, `docs/`, `deliverables/`, or other content dirs — mkdir only as the parent of a real file write (see `INIT/init.md`). All such dirs live under the active workspace root.
 
 ## THINK without a registry script
 

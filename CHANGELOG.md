@@ -17,6 +17,7 @@ Workspace research tags/backups are separate — see `references/VERSION/version
 
 ### Added
 
+- **Multi-topic workspace resolution**: `_omr/` is now the default working root (container), and each topic gets a parallel subdirectory `_omr/<topic-slug>/`. Before any op the agent scans the working root for an existing topic workspace (directory with `AGENTS.md` + `.omr/tree-state.json`) and resumes a match instead of re-initializing; a new subdirectory is created only when no topic matches. `SKILL.md` (Workspace resolution, Phase-Guard, ops table, Best Practices), `INIT/init.md`, `AGENTS.md.template`, `LLM-STATE.md`, `REFERENCE.md`, `GRAPH.md`, and `scripts/README.md` now state this contract; other reference docs use the generic "active workspace root".
 - **Report writing principles** (`SYNTH/narrative-coherence.md`): every section and the whole report now follows the 起承转合 four-move flow (open → develop → turn → close) with mutual echo (照应) — plant-and-payoff setups, conclusion echoing the introduction, transitions naming the logical relation.
 - **Register default is `plain` (explain-like-I'm-five)**: Gate P, `long-report.md` § C2, and `synth.md` hard rules now default to the ELI5 bar; academic/technical style only on explicit user or genre choice.
 

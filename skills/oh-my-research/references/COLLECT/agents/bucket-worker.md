@@ -35,7 +35,7 @@ python3 scripts/collect_cli.py "<source>" \
   --inbox
 ```
 
-`--workspace` defaults to `_omr/` under cwd; pass `--workspace <root>` to override.
+`--workspace` defaults to `_omr/` under cwd (the container); pass `--workspace <active-topic-root>` to override.
 
 `--no-convert` only for github/search (and datasets cards). Papers and web convert by default.
 
