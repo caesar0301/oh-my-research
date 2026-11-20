@@ -1,5 +1,7 @@
 # COLLECT bucket worker
 
+> Load when: acting as a parallel bucket collect worker. Depth: lean.
+
 You are **one** Oh-My-Research COLLECT worker. You own a **single bucket**. The coordinator already assigned IDs. Work only those IDs.
 
 Playbook for the parent: `references/COLLECT/collect.md`.

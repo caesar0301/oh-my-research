@@ -1,5 +1,7 @@
 # Literature Review Personas — Playbook
 
+> Load when: running the Literature Review Personas THINK method. Depth: lean.
+
 ## Purpose
 
 Re-read the sources through three lenses — an optimist, a skeptic, and a synthesizer — to break a one-sided reading of polarized literature.

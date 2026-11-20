@@ -1,5 +1,7 @@
 # Inversion Analysis — Playbook
 
+> Load when: running the Inversion Analysis THINK method. Depth: lean.
+
 ## Purpose
 
 Ask how the survey/report would *guarantee* being wrong, then check whether the artifact is doing any of those things. Reveals blind spots by approaching from failure.

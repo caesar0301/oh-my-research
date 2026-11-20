@@ -1,5 +1,19 @@
 # Native Expression Protocol
 
+> Load when: writing non-English chapters or fixing prose_lint findings. Depth: deep.
+
+## Contents
+
+- [Why the rule "avoid translationese" is not enough](#why-the-rule-avoid-translationese-is-not-enough)
+- [1. Metaphor provenance test](#1-metaphor-provenance-test)
+- [2. Heading rules](#2-heading-rules)
+- [3. Sentence rhythm](#3-sentence-rhythm)
+- [4. Abstract-noun discipline](#4-abstract-noun-discipline)
+- [5. Quoted and borrowed wording](#5-quoted-and-borrowed-wording)
+- [6. Read-aloud test (mandatory per chapter)](#6-read-aloud-test-mandatory-per-chapter)
+- [7. Mechanical scan](#7-mechanical-scan)
+- [8. Anti-patterns](#8-anti-patterns)
+
 Apply to every chapter in every non-English report, and to English reports for the sentence-rhythm and heading rules. This protocol makes "no translationese" operational: it names the failure patterns, gives repair recipes, sets measurable budgets, and is enforced by `scripts/prose_lint.py`.
 
 ## Why the rule "avoid translationese" is not enough

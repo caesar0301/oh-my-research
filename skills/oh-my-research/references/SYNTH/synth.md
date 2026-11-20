@@ -1,5 +1,22 @@
 # SYNTH Mode — Deep Research Report
 
+> Load when: starting the SYNTH op — mode, language, quality bar, layout, chat replies. Depth: deep.
+
+## Contents
+
+- [Trigger](#trigger)
+- [Mode defaults](#mode-defaults)
+- [Hard constraint: context-safe writing](#hard-constraint-context-safe-writing)
+- [Private working layer vs public report](#private-working-layer-vs-public-report)
+- [Language](#language)
+- [Quality bar (before Gate D)](#quality-bar-before-gate-d)
+- [Process (summary)](#process-summary)
+- [Presentation is LLM-driven (not baked into the script)](#presentation-is-llm-driven-not-baked-into-the-script)
+- [Default deep-survey layout](#default-deep-survey-layout)
+- [Final document presentation](#final-document-presentation)
+- [Chat reply templates](#chat-reply-templates)
+- [Hard rules](#hard-rules)
+
 **Primary deliverable.** Write a self-contained, publication-quality survey/report (or manuscript/brief) from private research artifacts. Preferred output: professionally formatted **Word (`.docx`), PDF, or Markdown (`.md`)**, in the auto-detected or user-selected language (see `LANGUAGE.md`).
 
 Long deep reports **must not** be generated in a single model turn. Write **incrementally to disk**, one chapter (or chapter section) at a time, then assemble the final document.

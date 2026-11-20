@@ -1,5 +1,7 @@
 # RECONCILE Mode
 
+> Load when: new evidence contradicts published claims, or archive/rollback is requested (RECONCILE op). Depth: lean.
+
 Update research state when new evidence contradicts existing artifacts, or when the user requests archive/rollback.
 
 ## Trigger

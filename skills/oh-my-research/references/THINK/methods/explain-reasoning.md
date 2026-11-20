@@ -1,5 +1,7 @@
 # Explain Reasoning — Playbook
 
+> Load when: running the Explain Reasoning THINK method. Depth: lean.
+
 ## Purpose
 
 Walk through step-by-step how a judgment reached its conclusion, so the chain is transparent and any opaque jump is exposed.

@@ -1,5 +1,16 @@
 # ANALYZE Mode — Deep Analysis
 
+> Load when: running the ANALYZE op — brief → evidence map → judgment → THINK ledger. Depth: deep.
+
+## Contents
+
+- [Trigger](#trigger)
+- [Mandatory Output Artifacts (Non-negotiable)](#mandatory-output-artifacts-non-negotiable)
+- [Pipeline](#pipeline)
+- [Outputs](#outputs)
+- [Chat reply](#chat-reply)
+- [Templates](#templates)
+
 Transform collected materials into a research brief, evidence map, judgment summary, and optional research plan. **Centerpiece** of Oh-My-Research. Enforces evidence boundaries and a THINK depth checkpoint before Gate A unlocks SYNTH.
 
 ## Trigger

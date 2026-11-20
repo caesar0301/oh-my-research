@@ -1,5 +1,7 @@
 # DECIDE Mode (optional)
 
+> Load when: running the DECIDE op — research stance with ≥3 alternatives (Gate B). Depth: lean.
+
 Frame a **research stance or claim set** with ≥3 alternatives, rationale, risks, and evidence refs. **Not** architecture-for-coding and **not** required on the Evidence-Deep path.
 
 Gate B applies only when this mode runs.

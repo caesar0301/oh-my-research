@@ -1,5 +1,26 @@
 # Quality Gates (Report-First)
 
+> Load when: running any gate (M/L/T/A/B/P/D), any QA check, or recording/validating gate JSONs. Depth: deep.
+
+## Contents
+
+- [Overview](#overview)
+- [Gate Chain Enforcement (v1.4 — self-enforcing chain)](#gate-chain-enforcement-v14--self-enforcing-chain)
+- [Enforcement Modes](#enforcement-modes)
+- [Confirmation enforcement](#confirmation-enforcement)
+- [How to record a gate/QA result](#how-to-record-a-gateqa-result)
+- [Gate M — Materials Sufficiency & Source Diversity (before ANALYZE)](#gate-m--materials-sufficiency--source-diversity-before-analyze)
+- [Gate L — Iterate or Advance (Loop only)](#gate-l--iterate-or-advance-loop-only)
+- [Gate A — Within ANALYZE](#gate-a--within-analyze)
+- [QA1 — Post-Analysis Quality (LLM)](#qa1--post-analysis-quality-llm)
+- [Gate T — Collect-Decision (after THINK)](#gate-t--collect-decision-after-think)
+- [Gate B — Before finishing DECIDE (optional)](#gate-b--before-finishing-decide-optional)
+- [Gate P — Synthesis Preferences (before SYNTH)](#gate-p--synthesis-preferences-before-synth)
+- [Document Lenses (before Gate D)](#document-lenses-before-gate-d)
+- [Gate D — Before Publication](#gate-d--before-publication)
+- [QA2 — Pre-Export (LLM)](#qa2--pre-export-llm)
+- [Failure → Options](#failure--options)
+
 Gate quality is **LLM-evaluated**. The agent reads artifacts, applies the checklists below with scenario judgment, and asks the user to confirm (unless quick-pass). Confirmation, mode, and chain completeness are **mechanically validated** by `scripts/gate_cli.py`; see `SKILL.md` § Gate confirmation enforcement. See also `LLM-STATE.md`.
 
 ## Overview

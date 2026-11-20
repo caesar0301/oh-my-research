@@ -1,5 +1,7 @@
 # INIT Mode
 
+> Load when: bootstrapping a new topic workspace (INIT) or scanning the working root for an existing topic. Depth: lean.
+
 Initialize a **minimal** Oh-My-Research workspace. **LLM-driven** — create files directly (no init script). See `LLM-STATE.md`.
 
 ## Trigger

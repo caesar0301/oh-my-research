@@ -1,5 +1,7 @@
 # Second-Order Thinking — Playbook
 
+> Load when: running the Second-Order Thinking THINK method. Depth: deep.
+
 ## Purpose
 
 Trace a claim or recommendation beyond its immediate consequence to the cascading, second-order effects — so the report flags downstream implications that a first-order reading misses.

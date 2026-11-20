@@ -1,5 +1,7 @@
 # THINK Method Playbooks
 
+> Load when: THINK method playbook index and output-contract anatomy. Depth: lean.
+
 Per-method playbooks that drive the `analyze ⟲ think` loop. Load **only the method being run** (slim-context — see `SYNTH/long-report.md`).
 
 ## Index

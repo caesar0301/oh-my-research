@@ -1,5 +1,7 @@
 # Steelmanning — Playbook
 
+> Load when: running the Steelmanning THINK method. Depth: deep.
+
 ## Purpose
 
 Construct the strongest possible version of the position that opposes the artifact's conclusion, then rebut that version honestly. Catches the strawman — where a conclusion "wins" only because the counter-argument was never stated at full strength.

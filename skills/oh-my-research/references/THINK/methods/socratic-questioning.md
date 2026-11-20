@@ -1,5 +1,7 @@
 # Socratic Questioning — Playbook
 
+> Load when: running the Socratic Questioning THINK method. Depth: lean.
+
 ## Purpose
 
 Reveal hidden assumptions in a claim by asking a chain of targeted "why?" / "how do you know?" questions until the unstated premise surfaces.

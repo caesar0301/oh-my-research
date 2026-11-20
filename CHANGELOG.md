@@ -15,8 +15,15 @@ Workspace research tags/backups are separate — see `references/VERSION/version
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-11-20
+
 ### Added
 
+- **Progressive-disclosure structure for the doc tree** (agent adaptation / accuracy / efficiency, per Anthropic skill-authoring best practices):
+  - **File Index** in `references/REFERENCE.md`: a grep-able catalog of every loadable doc (role, keywords, lean/deep depth); `SKILL.md` Deep Dive points at it and now references `THINK/methods/README.md` directly, so no doc is reachable only through a second-level reference.
+  - **`> Load when:` lines**: every doc under `references/` plus `scripts/README.md` declares its load condition and depth directly under its H1, so the agent can judge relevance before reading.
+  - **`## Contents` TOCs** on the 13 reference docs longer than 100 lines — a partial (head-N) read now reveals the full section scope instead of silently missing later sections.
+  - **`scripts/skill_lint.py`**: structural lint that mechanically enforces these rules (SKILL.md ≤ 500 lines + frontmatter description limits, single H1 on line 1, no heading-level skips, Load when present, TOC for >100-line docs, SKILL.md reference paths exist, no orphan docs outside the File Index). It never judges content quality. Wired into `make lint` / `make check` via the new `make skill-lint` target; 16 unittest cases live in repo-level `tests/test_skill_lint.py` (excluded from the packaged skill).
 - **Blocking gate confirmation enforcement**: `scripts/gate_cli.py` persists `.omr/gate-mode.json` (`init`), changes mode only from an explicit user phrase (`set`), writes gate JSONs with `decision_source` / `pause` / `user_decision` / `confirmed_at` (`record`), and validates mode, chain, and confirmations before ANALYZE / SYNTH / export (`validate`). The decision-tree diagram now contains real user-decision nodes, and `SKILL.md`, `GATES.md`, `INIT/init.md`, `LLM-STATE.md`, `GRAPH.md`, `WORKFLOW/workflow-overview.md`, `ANALYZE/analyze.md`, `SYNTH/synth.md`, `SYNTH/long-report.md`, and `scripts/README.md` state that semi-automated gates end the turn. 10 unittest cases cover the validator; they live in repo-level `tests/` and are excluded from the packaged skill.
 - **Multi-topic workspace resolution**: `_omr/` is now the default working root (container), and each topic gets a parallel subdirectory `_omr/<topic-slug>/`. Before any op the agent scans the working root for an existing topic workspace (directory with `AGENTS.md` + `.omr/tree-state.json`) and resumes a match instead of re-initializing; a new subdirectory is created only when no topic matches. `SKILL.md` (Workspace resolution, Phase-Guard, ops table, Best Practices), `INIT/init.md`, `AGENTS.md.template`, `LLM-STATE.md`, `REFERENCE.md`, `GRAPH.md`, and `scripts/README.md` now state this contract; other reference docs use the generic "active workspace root".
 - **Report writing principles** (`SYNTH/narrative-coherence.md`): every section and the whole report now follows the 起承转合 four-move flow (open → develop → turn → close) with mutual echo (照应) — plant-and-payoff setups, conclusion echoing the introduction, transitions naming the logical relation.
@@ -24,6 +31,11 @@ Workspace research tags/backups are separate — see `references/VERSION/version
 
 ### Changed
 
+- **SKILL.md de-duplicated** (21.0 KB → ~19 KB, same routing content): the per-script Dependencies detail now lives only in `scripts/README.md` (which absorbed the preprint-host list, the anydoc Node 20+ note, Mermaid/GFM verbatim passthrough, and `_document.json` lint coverage), and gate CLI syntax / accepted phrases only in `GATES.md` § Confirmation enforcement. Best Practices items are compressed to one-liners pointing at their reference docs.
+
+### Moved
+
+- **Repo-maintenance scripts out of the production skill package**: `skill_lint.py` and `skill_version.py` moved from `skills/oh-my-research/scripts/` to repo-root `scripts/`. The packaged skill now ships only the eight runtime scripts the agent invokes inside a research workspace (`gate_cli`, `export_report`, `collect_cli`, `material_to_markdown`, `prefer_language`, `version_control`, `report_lint`, `prose_lint`) plus `requirements.txt` and `scripts/README.md`. `skill_version.py` no longer supports installed-package layouts (the installed copy does not ship it); `VERSION/version.md`, `LLM-STATE.md`, and `scripts/README.md` point maintainers at the repo-root location.
 - **Stronger self-containment**: reports must never send the reader to external materials to follow their own argument; every inference premise is restated locally and citations support but never carry an argument step (now a Gate D blocking signature).
 
 ### Fixed

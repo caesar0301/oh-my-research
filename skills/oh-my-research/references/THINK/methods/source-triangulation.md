@@ -1,5 +1,7 @@
 # Source Triangulation — Playbook
 
+> Load when: running the Source Triangulation THINK method. Depth: deep.
+
 ## Purpose
 
 Refuse to rest a claim on a single source type. Require at least three independent source types (quantitative, qualitative, expert/independent) before a claim earns its grade. Guards against single-source bias and echo-chamber anchors.

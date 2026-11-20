@@ -7,8 +7,9 @@ Synced (when present):
   - .claude-plugin/marketplace.json  (metadata.version + plugins[].version)
   - CHANGELOG.md                     (prepended on set/bump)
 
-Works in repo checkouts and installed skill packages (e.g.
-~/.agents/skills/oh-my-research); marketplace sync is skipped when absent.
+Works in repo checkouts; the skill package always lives at
+<repo>/skills/oh-my-research. This is a repo-maintenance tool — it is not
+part of the installed skill package.
 
 Commands:
   show                         Print metadata.version from SKILL.md
@@ -33,11 +34,6 @@ SKILL_VERSION_RE = re.compile(
 )
 
 
-def skill_package_root() -> Path:
-    """Directory that contains SKILL.md (scripts/ → parent)."""
-    return Path(__file__).resolve().parent.parent
-
-
 def repo_root(explicit: Path | None = None) -> Path | None:
     """Repo root containing .claude-plugin/marketplace.json, if any."""
     if explicit is not None:
@@ -50,28 +46,23 @@ def repo_root(explicit: Path | None = None) -> Path | None:
 
 
 def paths(root: Path | None = None) -> dict[str, Path | None]:
-    skill = skill_package_root()
-    skill_md = skill / "SKILL.md"
-    if not skill_md.exists() and root is not None:
-        skill_md = root / "skills" / "oh-my-research" / "SKILL.md"
-        skill = skill_md.parent
+    repo = repo_root(root)
+    if repo is None:
+        raise SystemExit(
+            "Cannot locate the repo root (.claude-plugin/marketplace.json missing); "
+            "pass --root <repo>"
+        )
+    skill_md = repo / "skills" / "oh-my-research" / "SKILL.md"
+    if not skill_md.exists():
+        raise SystemExit(f"Missing SKILL.md: {skill_md}")
 
-    repo = repo_root(root) if root is not None else repo_root()
-    marketplace = (
-        (repo / ".claude-plugin" / "marketplace.json") if repo is not None else None
-    )
-    changelog = None
-    if repo is not None and (repo / "CHANGELOG.md").exists():
-        changelog = repo / "CHANGELOG.md"
-    elif (skill / "CHANGELOG.md").exists():
-        changelog = skill / "CHANGELOG.md"
-    elif repo is not None:
-        changelog = repo / "CHANGELOG.md"
+    marketplace = repo / ".claude-plugin" / "marketplace.json"
+    changelog = repo / "CHANGELOG.md"
 
     return {
         "skill": skill_md,
-        "marketplace": marketplace if marketplace and marketplace.exists() else None,
-        "changelog": changelog,
+        "marketplace": marketplace if marketplace.exists() else None,
+        "changelog": changelog if changelog.exists() else None,
     }
 
 
@@ -258,7 +249,7 @@ def main() -> None:
         "--root",
         type=Path,
         default=None,
-        help="Optional repo root (auto-detected; not required for installed skills)",
+        help="Optional repo root (auto-detected from .claude-plugin/marketplace.json)",
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 

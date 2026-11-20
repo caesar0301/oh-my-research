@@ -1,5 +1,7 @@
 # Pre-mortem Analysis — Playbook
 
+> Load when: running the Pre-mortem Analysis THINK method. Depth: deep.
+
 ## Purpose
 
 Assume the report has already failed peer review (or the judgment is already wrong) and work backward to the causes. Surfaces failure modes that optimistic review never reaches.

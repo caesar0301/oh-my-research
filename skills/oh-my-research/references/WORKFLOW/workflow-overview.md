@@ -1,5 +1,17 @@
 # Workflow Overview — Evidence-Deep
 
+> Load when: running the multi-step workflow op or comparing patterns. Depth: lean.
+
+## Contents
+
+- [Objective](#objective)
+- [Phase visibility](#phase-visibility)
+- [End-to-end path](#end-to-end-path)
+- [workflow op](#workflow-op)
+- [Alternate patterns (short)](#alternate-patterns-short)
+- [When to ask the user](#when-to-ask-the-user)
+- [Phase files](#phase-files)
+
 ## Objective
 
 Run the default report-first lifecycle with clear phase visibility:

@@ -1,5 +1,7 @@
 # Feynman Technique — Playbook
 
+> Load when: running the Feynman Technique THINK method. Depth: lean.
+
 ## Purpose
 
 Explain a dense section in the simplest possible terms; wherever the simple explanation breaks down, that's the gap in understanding or evidence.

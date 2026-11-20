@@ -1,5 +1,18 @@
 # Narrative Coherence and Self-Containment Protocol
 
+> Load when: designing the reader journey, writing chapter contracts, or running the Narrative Audit. Depth: deep.
+
+## Contents
+
+- [Quality target](#quality-target)
+- [1. Design the reader journey before chapter titles](#1-design-the-reader-journey-before-chapter-titles)
+- [2. Give every chapter a contract](#2-give-every-chapter-a-contract)
+- [3. Write from known to new](#3-write-from-known-to-new)
+- [4. Preserve one taxonomy and one argument](#4-preserve-one-taxonomy-and-one-argument)
+- [5. Control repetition](#5-control-repetition)
+- [6. Run the narrative audit](#6-run-the-narrative-audit)
+- [7. Blocking failure signatures](#7-blocking-failure-signatures)
+
 Apply this protocol to every `survey`, `report`, and `manuscript`; use a compressed version for `brief`.
 
 ## Quality target

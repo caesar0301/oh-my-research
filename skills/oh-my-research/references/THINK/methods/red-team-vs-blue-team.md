@@ -1,5 +1,7 @@
 # Red Team vs Blue Team — Playbook
 
+> Load when: running the Red Team vs Blue Team THINK method. Depth: deep.
+
 ## Purpose
 
 Attack the artifact's conclusion as an adversary would, then defend it with graded evidence — hardening it where it survives and weakening it where it doesn't. A structured attack/defend pass for contested or load-bearing claims.

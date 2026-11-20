@@ -1,5 +1,7 @@
 # Assumption Audit — Playbook
 
+> Load when: running the Assumption Audit THINK method. Depth: deep.
+
 ## Purpose
 
 Explicitly list every assumption under a plan or judgment, rate each by confidence × impact, then stress-test the weakest high-impact ones. Prevents building a report on foundations nobody checked.

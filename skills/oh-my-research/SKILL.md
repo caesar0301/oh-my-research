@@ -3,7 +3,7 @@ name: oh-my-research
 description: Intelligent orchestrator for high-quality deep research reports from collected materials and evidence. Auto-detects intent and workspace state, then routes to init, collect, deep analyze (with THINK paradigms such as first principles), optional decide/idea, synthesize survey/report, reconcile, or version. Single entry point for the report-first research lifecycle.
 license: Apache-2.0
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
   author: "Xiaming Chen"
   category: "workflow"
 ---
@@ -156,15 +156,13 @@ Default **semi-automated** (pause for confirm). Support "no confirmations" / qui
 
 ## Gate confirmation enforcement (blocking)
 
-Gate quality is still LLM-evaluated, but **confirmation is mechanically validated** by `scripts/gate_cli.py`. The script never judges research quality; it only enforces the persisted mode, the gate record shape, and chain completeness.
+Gate quality is LLM-evaluated; **confirmation is mechanically validated** by `scripts/gate_cli.py` (persisted mode, gate record shape, chain order — never research quality). `.omr/gate-mode.json` is authoritative; `patterns/*.json` `recommendations.agency` is advisory only.
 
-- INIT runs `gate_cli.py init --workspace <active-workspace>` to persist `.omr/gate-mode.json` with `mode: "semi-automated"`. This file is authoritative; `patterns/*.json` `recommendations.agency` is advisory only.
-- Changing mode requires `gate_cli.py set --mode quick-pass --user-request "<verbatim user phrase>"`. Accepted phrases include `quick-pass`, `no confirmations`, `不要确认`, `无需确认`, `自动继续`, and similar explicit instructions. Without a stored phrase, validation fails. Rapid pattern uses `set --mode fully-automated --pattern rapid`.
-- **Semi-automated (default):** show the gate report, then **end the turn**. Do not record the gate or continue in the same turn. On the next user message, write the gate JSON with `gate_cli.py record --gate M --decision-source user --user-decision "<user reply>" --confirmed-at <ISO-8601> ...`. The record carries `pause: true`.
-- **Quick-pass:** gates are still recorded via `gate_cli.py record`, with `decision_source: "agent"`, `pause: false`, and a `scenario_note` mentioning quick-pass; no user pause is required.
-- **Fully-automated (Rapid):** gates may be absent.
-- Before ANALYZE run `gate_cli.py validate --workspace <active-workspace> --stage analyze`; before SYNTH `--stage synth`; before export `--stage all`. A non-zero exit blocks the next stage with the same blocking rule as Phase-Guard.
-- All gate JSONs must be written through `gate_cli.py record`. Hand-written gate JSONs missing `decision_source`, `pause`, `user_decision`, or `confirmed_at` fail validation.
+- Default mode is `semi-automated`: show the gate report, then **end the turn**; on the next user message record the gate with `gate_cli.py record` (`pause: true`). **Never self-authorize a pause skip** — switching to quick-pass requires `gate_cli.py set` with the user's explicit verbatim request (or the Rapid pattern for fully-automated).
+- Run `gate_cli.py validate --stage <analyze|synth|all>` before ANALYZE, SYNTH, and export; a non-zero exit blocks the stage with the same blocking rule as Phase-Guard.
+- All gate JSONs are written through `gate_cli.py record`; hand-written JSONs missing `decision_source` / `pause` / `user_decision` / `confirmed_at` fail validation.
+
+CLI syntax, accepted mode-change phrases, and the full command table: `references/GATES.md` § Confirmation enforcement.
 
 ## Default Paths
 
@@ -194,11 +192,11 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 5. Use THINK (first principles / triangulation) before Gate A when confidence is low — in Evidence-Deep, THINK is offered by default after judgment, not only when confidence is low
 6. **Run Gate M after every collect batch** — default collect fills papers, web, github, and search (parallel bucket agents). Show the diversity report; warn if a default bucket is empty **without** an explicit opt-out. Prevents premature analysis on narrow or single-type corpora
 7. Write long reports chapter-by-chapter to disk; keep a pruned continuity brief; author `.omr/report-state.json` to match the topic outline; resume if interrupted
-8. Prefer a professionally formatted DOCX, PDF, or Markdown deliverable in the preferred language (timezone/locale auto-detect via `LANGUAGE.md` / `.omr/locale.json`, or explicit `--language`); drive its presentation via an LLM-authored `_document.json` (title, fonts, cover, TOC, header/footer, chapter order) rather than script defaults
+8. Export a professionally formatted DOCX/PDF/Markdown deliverable in the preferred language (locale auto-detected or explicit `--language`); presentation is driven by the LLM-authored `_document.json` (fonts, cover, TOC, chapter order), never script defaults — see `references/LANGUAGE.md` and `scripts/README.md`
 9. Keep internal traceability private; translate it into standard citations and natural prose
-10. Design SYNTH as a reader journey before a chapter list: define the reader's starting point and destination, argument spine, canonical dimensions, concept ladder, and chapter contracts; follow `references/SYNTH/narrative-coherence.md`
-11. Make the final report self-contained — no premise may live only in a cited source or another document — professional, and accessible: default to the explain-like-I'm-five `plain` register (academic/technical style only on explicit choice), define terms and premises before use, follow the 起承转合 four-move flow with mutual echo across sections (`references/SYNTH/narrative-coherence.md`), preserve one taxonomy and claim state, and run the reverse-outline Narrative Audit plus Consistency & Polish pass before export
-12. **Write in the report language, not through it** — apply `references/SYNTH/native-expression.md`: test every metaphor's provenance, use native heading style and sentence rhythm, avoid English-derived coinages, and clear all `high` findings from `scripts/prose_lint.py` before Gate D
+10. Design SYNTH as a reader journey before a chapter list — reader start/end points, argument spine, canonical dimensions, concept ladder, chapter contracts (`references/SYNTH/narrative-coherence.md`)
+11. Keep the report self-contained, professional, and accessible: default to the `plain` register (academic/technical only on explicit choice), define terms and premises before use, follow the 起承转合 four-move flow with mutual echo, and run the reverse-outline Narrative Audit plus Consistency & Polish pass before export (`references/SYNTH/narrative-coherence.md`)
+12. **Write in the report language, not through it** — apply `references/SYNTH/native-expression.md` and clear all `high` findings from `scripts/prose_lint.py` before Gate D
 13. Run LLM QA checklists (adapt thresholds to the scenario); write results under `.omr/quality-gates/`
 14. Write full reports to disk; reply in chat with summary only
 15. Run document lenses and visually inspect the rendered file before Gate D
@@ -210,14 +208,14 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 
 - Read/write project workspace; all mechanical scripts accept `--workspace <active-workspace>` (script default `<cwd>/_omr` is the container, not a topic root)
 - Agent-authored state under `<active-workspace>/.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
-- Mechanical scripts only: `gate_cli.py` (gate mode, confirmation fields, and gate-chain validation; no quality judgment), `export_report.py` (thin, spec-driven DOCX/PDF/Markdown renderer applying LLM-authored `_document.json`; the Markdown deliverable passes Mermaid figures and GFM tables through verbatim), `prefer_language.py` (timezone/locale → BCP-47 language tag), `version_control.py` (workspace tags/backups), `collect_cli.py` (records source + invokes `material_to_markdown.py`; `--id`/`--bucket`/`--inbox` for parallel workers, `--merge-inbox` for the coordinator), `material_to_markdown.py` (downloads source via arxiv/DOI/preprint hosts (ACL Anthology, bioRxiv, medRxiv, OpenReview, Zenodo, SSRN, HAL)/URL; papers persist `materials/papers-raw/<ID>.<ext>` and convert to `materials/papers/<ID>.md`; other buckets write `materials/<bucket>/<ID>.md`; **anydoc** with pymupdf/pdfplumber/markdownify fallbacks; `--index` batch-converts/retries every indexed source lacking a `.md`, `--convert-dir` batch-converts pre-downloaded files), `report_lint.py` (publication-safety linter: scans report chapters and the `_document.json` presentation spec (title/subtitle/author/header/footer string fields) for leaked internal IDs, evidence-grade labels, workflow jargon, gate names, and private paths), `prose_lint.py` (native-expression linter: flags calqued metaphors, English-derived coinages, article-style CJK headings, wrong measure words, 的-chains, passive/em-dash stacking, and over-long sentences; `--strict` fails on medium findings, `.omr/prose-lint-allow.txt` allowlists field-standard terms)
-- `python-docx` / `reportlab` via `scripts/requirements.txt` for export; **anydoc** (`npx -y @firecrawl/anydoc`, Node 20+) for material → Markdown conversion; optional `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` as fallbacks if anydoc is unavailable
+- Mechanical scripts only (no quality judgment; per-script flags, defaults, and examples in `scripts/README.md`): `gate_cli.py` (gate mode / confirmation / chain validation) · `export_report.py` (spec-driven DOCX/PDF/Markdown renderer) · `collect_cli.py` + `material_to_markdown.py` (record sources → download → full-text Markdown) · `prefer_language.py` (locale → BCP-47) · `version_control.py` (workspace tags/backups) · `report_lint.py` (publication safety) · `prose_lint.py` (native expression)
+- Export deps via `scripts/requirements.txt`; anydoc needs Node 20+; `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` are optional fallbacks
 
 ## Deep Dive
 
-- `references/REFERENCE.md` — complete operation guide, artifact naming, evidence boundaries, tree state, troubleshooting
+- `references/REFERENCE.md` — **File Index** (grep-able catalog of every doc with its load condition), artifact naming, evidence boundaries, tree state, troubleshooting
 - `references/GRAPH.md` — pattern graphs, node ↔ artifact contracts, unlock rules, cycles
-- `references/GATES.md` — gate definitions and QA checklists
+- `references/GATES.md` — gate definitions, QA checklists, and the confirmation-enforcement CLI
 - `references/LLM-STATE.md` — agent-owned state JSON schemas
 - `references/LANGUAGE.md` — timezone/locale → preferred BCP-47 language tag
 - `references/SYNTH/long-report.md` — incremental report state, chapter loop, continuity, and final review
@@ -225,3 +223,4 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 - `references/SYNTH/native-expression.md` — metaphor provenance, native heading style, sentence-rhythm budgets, and the translationese scan
 - `references/COLLECT/collect.md` — default four-bucket mix + parallel workers
 - `references/COLLECT/agents/bucket-worker.md` — per-bucket collect agent
+- `references/THINK/methods/README.md` — THINK method playbook index (load only the method being run)

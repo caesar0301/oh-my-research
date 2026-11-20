@@ -1,5 +1,7 @@
 # Abstraction Laddering — Playbook
 
+> Load when: running the Abstraction Laddering THINK method. Depth: lean.
+
 ## Purpose
 
 Move up ("why?") or down ("how?") the abstraction ladder to check the artifact is reasoning at the right altitude — neither too abstract to be testable nor too concrete to generalize.

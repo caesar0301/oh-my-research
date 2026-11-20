@@ -1,5 +1,7 @@
 # First Principles Analysis — Playbook
 
+> Load when: running the First Principles Analysis THINK method. Depth: deep.
+
 ## Purpose
 
 Strip the artifact back to assumptions, then rebuild conclusions from fundamental truths instead of inherited framing. Used when a judgment or evidence map feels plausible but you can't defend *why* it's true.

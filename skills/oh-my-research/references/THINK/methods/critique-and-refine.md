@@ -1,5 +1,7 @@
 # Critique and Refine — Playbook
 
+> Load when: running the Critique and Refine THINK method. Depth: lean.
+
 ## Purpose
 
 Standard quality pass on a draft: list strengths and weaknesses, then improve. The default method for synth chapters and any prose draft.

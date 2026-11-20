@@ -1,5 +1,7 @@
 # IDEA Mode (optional)
 
+> Load when: capturing speculative notes via the IDEA op. Depth: lean.
+
 Capture speculative thoughts outside the formal evidence pipeline. Supports Idea-First and Loop idea-dev.
 
 ## Trigger

@@ -137,10 +137,11 @@ For contributors working in this repo:
 make help
 make format          # python + json + yaml
 make test            # repo-level development tests
-make check           # CI: format checks + lint + tests
+make skill-lint      # skill-package Markdown structure (TOC / Load when / index)
+make check           # CI: format checks + lint + skill-lint + tests
 ```
 
-Development tests live in repo-level `tests/`; they are not part of the installed skill package under `skills/oh-my-research/`.
+Development tests live in repo-level `tests/`, and repo-maintenance scripts (`skill_lint.py`, `skill_version.py`) live in repo-level `scripts/`; neither is part of the installed skill package under `skills/oh-my-research/`. `scripts/skill_lint.py` enforces the skill's progressive-disclosure structure (SKILL.md entry budget, per-doc `> Load when:` lines, `## Contents` TOC for docs > 100 lines, single H1, no orphan docs outside the `REFERENCE.md` File Index).
 
 Package version lives in [`skills/oh-my-research/SKILL.md`](skills/oh-my-research/SKILL.md) (`metadata.version`); history in [`CHANGELOG.md`](CHANGELOG.md). CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 

@@ -1,5 +1,7 @@
 # Workflow Phases — Checklist
 
+> Load when: executing or checking off workflow phase checklists. Depth: lean.
+
 ## [INIT]
 
 - [ ] Topic confirmed

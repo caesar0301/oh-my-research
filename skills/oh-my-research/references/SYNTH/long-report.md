@@ -1,5 +1,23 @@
 # Long Deep Report Protocol
 
+> Load when: executing the SYNTH chapter loop — Phases A–F, citation map, resume, export. Depth: deep.
+
+## Contents
+
+- [Why](#why)
+- [Artifacts (on disk)](#artifacts-on-disk)
+- [State machine (LLM-authored)](#state-machine-llm-authored)
+- [Phase A — Reader journey and outline (one turn)](#phase-a--reader-journey-and-outline-one-turn)
+- [Phase B — Citation map (one turn)](#phase-b--citation-map-one-turn)
+- [Phase C — Chapter loop (many turns)](#phase-c--chapter-loop-many-turns)
+- [Phase D — Closing chapters](#phase-d--closing-chapters)
+- [Phase E — Narrative and expression review](#phase-e--narrative-and-expression-review)
+- [Phase F — Export](#phase-f--export)
+- [Resume](#resume)
+- [Anti-patterns](#anti-patterns)
+- [Agent turn checklist](#agent-turn-checklist)
+- [Figures (Mermaid)](#figures-mermaid)
+
 How to produce long surveys/reports under LLM context limits. Follow this whenever mode is `survey`, `report`, or `manuscript`. `brief` may use a shorter 3–5 chapter variant of the same loop.
 
 ## Why

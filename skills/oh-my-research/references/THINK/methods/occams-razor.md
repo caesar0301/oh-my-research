@@ -1,5 +1,7 @@
 # Occam's Razor Application — Playbook
 
+> Load when: running the Occam's Razor Application THINK method. Depth: lean.
+
 ## Purpose
 
 Find the simplest explanation/taxonomy sufficient for the evidence, eliminating unnecessary complexity that the artifact has accumulated.

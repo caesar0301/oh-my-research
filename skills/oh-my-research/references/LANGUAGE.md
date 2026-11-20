@@ -1,5 +1,15 @@
 # Language Preference
 
+> Load when: resolving the report language (timezone/locale → BCP-47). Depth: lean.
+
+## Contents
+
+- [Priority (highest first)](#priority-highest-first)
+- [Timezone → language (examples)](#timezone--language-examples)
+- [Locale → language](#locale--language)
+- [Mechanical helper](#mechanical-helper)
+- [Agent checklist](#agent-checklist)
+
 Reports and chat summaries use **one** primary language, identified by a **BCP-47-like tag** (e.g. `en`, `zh-CN`, `zh-TW`, `ja`, `ko`, `de`, `fr`, `es`, `pt-BR`, `ru`, `ar`, …).
 
 First-class export chrome (TOC/subtitle defaults, CJK fonts) is richest for `en` and Chinese-family tags; other languages still work — the agent writes body prose in that language, and export falls back to English chrome labels unless `_document.json` overrides them.

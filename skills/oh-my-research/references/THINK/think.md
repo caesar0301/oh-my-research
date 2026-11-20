@@ -1,5 +1,7 @@
 # THINK Mode — Research Elicitation
 
+> Load when: running a THINK pass — method selection, ledger, outcome stamps. Depth: lean.
+
 Shared refinement checkpoint for research depth. Applies **named thinking paradigms** to research artifacts (evidence-map, judgment, report chapters) — **never to code**.
 
 ## Trigger

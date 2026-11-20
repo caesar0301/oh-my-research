@@ -1,5 +1,7 @@
 # Thesis Defense Simulation — Playbook
 
+> Load when: running the Thesis Defense Simulation THINK method. Depth: lean.
+
 ## Purpose
 
 Put the judgment's main conclusion in front of a committee that stress-tests method and evidence, as a dissertation defense would.

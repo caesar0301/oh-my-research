@@ -1,5 +1,19 @@
 # LLM-Driven State & Quality
 
+> Load when: reading or writing any `.omr/` state JSON (tree, loop, report-state, quality-gates, locale). Depth: deep.
+
+## Contents
+
+- [Principle](#principle)
+- [Files the agent writes directly](#files-the-agent-writes-directly)
+- [INIT without a script](#init-without-a-script)
+- [THINK without a registry script](#think-without-a-registry-script)
+- [QA (LLM checklist)](#qa-llm-checklist)
+- [Gate M (LLM checklist — source diversity & sufficiency)](#gate-m-llm-checklist--source-diversity--sufficiency)
+- [Report progress (LLM-authored state)](#report-progress-llm-authored-state)
+- [Presentation spec (LLM-authored)](#presentation-spec-llm-authored)
+- [Still use scripts for](#still-use-scripts-for)
+
 Judgment, structure, and progress tracking are **agent-owned**. Do not rely on Python helpers to invent chapter plans, pass/fail research quality, or pick thinking methods.
 
 ## Principle
@@ -8,7 +22,7 @@ Judgment, structure, and progress tracking are **agent-owned**. Do not rely on P
 |---------|--------|
 | Research judgment, outlines, gates, method choice, continuity | **LLM** following reference docs |
 | Report content **and presentation** (title, fonts, colors, cover, TOC, header/footer, chapter order) — via `_document.json` | **LLM** authoring the spec |
-| Bytes on disk: DOCX/PDF/Markdown render from spec, version backups, skill semver sync, URL indexing + full-text Markdown conversion (anydoc + fallbacks) | **Scripts** (`export_report.py`, `version_control.py`, `skill_version.py`, `collect_cli.py`, `material_to_markdown.py`) |
+| Bytes on disk: DOCX/PDF/Markdown render from spec, version backups, URL indexing + full-text Markdown conversion (anydoc + fallbacks) | **Scripts** (`export_report.py`, `version_control.py`, `collect_cli.py`, `material_to_markdown.py`) |
 
 `export_report.py` is a **thin renderer**: it applies the LLM-authored `docs/<mode>/_document.json`, not hardcoded styling. It never invents structure or layout — it renders exactly what the spec + chapters describe.
 
@@ -227,9 +241,9 @@ python scripts/export_report.py --mode survey --format docx --language en
 # Snapshots / tags (workspace research artifacts)
 python scripts/version_control.py tag v1.0
 
-# Skill package semver (from oh-my-research repo root)
-python skills/oh-my-research/scripts/skill_version.py check
-python skills/oh-my-research/scripts/skill_version.py bump minor --message "…"
+# Skill package semver (repo-maintenance tool at the repo root, not shipped)
+python scripts/skill_version.py check
+python scripts/skill_version.py bump minor --message "…"
 
 # Optional: record a URL into materials/index
 python scripts/collect_cli.py "https://arxiv.org/abs/…"

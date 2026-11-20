@@ -1,5 +1,12 @@
 # VERSION Mode
 
+> Load when: tagging, diffing, or backing up a workspace (VERSION op). Depth: lean.
+
+## Contents
+
+- [Workspace versioning](#workspace-versioning)
+- [Skill package versioning](#skill-package-versioning)
+
 Script: `scripts/version_control.py` (mechanical tags/backups only). All paths are relative to the active OMR workspace root.
 
 Two distinct version tracks:
@@ -80,14 +87,14 @@ Keywords: skill version, bump skill, changelog, release skill.
 | `set` | Set an explicit semver in `SKILL.md`, sync marketplace, prepend a `CHANGELOG.md` stub |
 | `bump` | Semver bump (`major` / `minor` / `patch`), then same as `set` |
 
-Script (from repo root):
+Script (repo-maintenance tool at the **repo root**, not part of the installed skill package):
 
 ```bash
-python3 skills/oh-my-research/scripts/skill_version.py show
-python3 skills/oh-my-research/scripts/skill_version.py check
-python3 skills/oh-my-research/scripts/skill_version.py sync
-python3 skills/oh-my-research/scripts/skill_version.py bump minor --message "Describe the change"
-python3 skills/oh-my-research/scripts/skill_version.py set 2.0.0 --message "Breaking change summary"
+python3 scripts/skill_version.py show
+python3 scripts/skill_version.py check
+python3 scripts/skill_version.py sync
+python3 scripts/skill_version.py bump minor --message "Describe the change"
+python3 scripts/skill_version.py set 2.0.0 --message "Breaking change summary"
 ```
 
 ### Semver policy

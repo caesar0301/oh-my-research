@@ -11,14 +11,14 @@
 #   make check
 
 .PHONY: help format format-python format-json format-yaml format-md \
-	lint check format-check json-check yaml-check test install-format-tools
+	lint check format-check json-check yaml-check skill-lint test install-format-tools
 
 PYTHON ?= python3
 RUFF ?= ruff
 PRETTIER ?= prettier
 
-# Skill package (production) + repo-level development tests
-PYTHON_PATHS := skills tests
+# Skill package (production) + repo-level development scripts and tests
+PYTHON_PATHS := skills scripts tests
 
 # JSON / YAML / Markdown under the repo (exclude caches / venvs)
 FIND_PRUNE := \( -path './.git/*' -o -path './.venv/*' -o -path './venv/*' \
@@ -84,9 +84,13 @@ format-md: ## Format Markdown with prettier (optional)
 	command -v $(PRETTIER) >/dev/null 2>&1 || { echo "prettier not found"; exit 1; }
 	$(PRETTIER) --write --prose-wrap preserve $$files
 
-lint: ## Lint Python with ruff
+lint: ## Lint Python (ruff) + skill-package Markdown structure (skill_lint.py)
 	@command -v $(RUFF) >/dev/null || { echo "ruff not found. Try: make install-format-tools"; exit 1; }
 	$(RUFF) check $(PYTHON_PATHS)
+	$(MAKE) skill-lint
+
+skill-lint: ## Lint the skill package Markdown structure (progressive-disclosure rules)
+	$(PYTHON) scripts/skill_lint.py
 
 test: ## Run repo-level development tests (not part of the skill package)
 	$(PYTHON) -m unittest discover -s tests -v

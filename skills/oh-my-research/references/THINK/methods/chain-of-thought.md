@@ -1,5 +1,7 @@
 # Chain-of-Thought Scaffolding — Playbook
 
+> Load when: running the Chain-of-Thought Scaffolding THINK method. Depth: lean.
+
 ## Purpose
 
 Force the reasoning between premise and conclusion into explicit intermediate steps, exposing the leap where a thin argument skips a flawed link.

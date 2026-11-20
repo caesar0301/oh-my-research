@@ -1,5 +1,20 @@
 # Graph-Guided Workflow
 
+> Load when: choosing a workflow pattern, picking the next step, or updating tree-state. Depth: lean.
+
+## Contents
+
+- [Purpose](#purpose)
+- [Pattern Library (report-first)](#pattern-library-report-first)
+- [Evidence-Deep (default)](#evidence-deep-default)
+- [Node ↔ Artifact Contracts](#node--artifact-contracts)
+- [Unlock Rules (tree-state)](#unlock-rules-tree-state)
+- [Cross-Stage Jump Protection (v1.4 — blocking by default)](#cross-stage-jump-protection-v14--blocking-by-default)
+- [Cycles](#cycles)
+- [Pattern Selection](#pattern-selection)
+- [Next-Step Presentation](#next-step-presentation)
+- [Updating State](#updating-state)
+
 ## Purpose
 
 Pattern JSON graphs drive **recommended next steps**. Skills/ops remain freely invocable; the graph records successful paths and unlocks.

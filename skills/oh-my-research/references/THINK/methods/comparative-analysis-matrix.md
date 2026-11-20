@@ -1,5 +1,7 @@
 # Comparative Analysis Matrix — Playbook
 
+> Load when: running the Comparative Analysis Matrix THINK method. Depth: lean.
+
 ## Purpose
 
 Score competing schools/approaches against explicit weighted criteria so a recommendation rests on visible, defensible trade-offs instead of taste.

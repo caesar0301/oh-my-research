@@ -1,5 +1,7 @@
 # Problem Decomposition — Playbook
 
+> Load when: running the Problem Decomposition THINK method. Depth: lean.
+
 ## Purpose
 
 Break a sprawling research question into independent sub-questions, analyze each, then reassemble — so the report covers the whole instead of one tangled corner.

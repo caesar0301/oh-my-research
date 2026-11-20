@@ -1,5 +1,7 @@
 # THINK Method Catalog
 
+> Load when: choosing a THINK method (one-line catalog). Depth: lean.
+
 Research-curated elicitation methods. Agents pick best-fit; users may name a method.
 
 ## Core research (always prefer these first)

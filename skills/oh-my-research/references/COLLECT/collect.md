@@ -1,5 +1,19 @@
 # COLLECT Mode
 
+> Load when: running the COLLECT op — four-bucket mix, parallel workers, full-text conversion, Gate M. Depth: deep.
+
+## Contents
+
+- [Trigger](#trigger)
+- [Default mix (always four buckets)](#default-mix-always-four-buckets)
+- [Parallel collection (one agent per bucket)](#parallel-collection-one-agent-per-bucket)
+- [Full-Text Conversion (Non-negotiable)](#full-text-conversion-non-negotiable)
+- [Handlers](#handlers)
+- [Indexes](#indexes)
+- [Philosophy](#philosophy)
+- [Gate M — Source Diversity & Sufficiency Check](#gate-m--source-diversity--sufficiency-check)
+- [Chat reply](#chat-reply)
+
 User URLs plus **default four-bucket discovery**. After each source is recorded, **download + convert it to full-text Markdown** so ANALYZE can read the entire paper — not just the abstract.
 
 All artifact paths below are relative to the active OMR workspace root. Scripts default `--workspace` to `Path.cwd()/_omr` (the container); pass the topic root explicitly when a topic lives in `_omr/<topic-slug>/`.

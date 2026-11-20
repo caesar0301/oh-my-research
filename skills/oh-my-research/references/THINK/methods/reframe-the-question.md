@@ -1,5 +1,7 @@
 # Reframe the Question — Playbook
 
+> Load when: running the Reframe the Question THINK method. Depth: lean.
+
 ## Purpose
 
 Check whether the stated research question is the real one. Often the question is wrong, and a better framing unlocks the answer the evidence already supports.
