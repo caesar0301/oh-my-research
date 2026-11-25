@@ -13,7 +13,7 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
-## [Unreleased]
+## [2.2.1] — 2026-11-25
 
 ### Changed
 
