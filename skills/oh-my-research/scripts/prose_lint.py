@@ -413,7 +413,7 @@ def main() -> int:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr)",
     )
     p.add_argument("--mode", default=None, help="survey/report/manuscript/brief")
     p.add_argument("--file", type=Path, default=None, help="lint a specific file")

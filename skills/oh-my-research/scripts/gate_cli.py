@@ -478,7 +478,7 @@ def build_parser() -> argparse.ArgumentParser:
     def add_workspace(sub: argparse.ArgumentParser) -> None:
         sub.add_argument(
             "--workspace",
-            help="active OMR workspace (default: <cwd>/.omr, or legacy <cwd>/_omr)",
+            help="active OMR workspace (default: <cwd>/.omr)",
         )
 
     init_parser = subparsers.add_parser(

@@ -17,7 +17,7 @@ Pipeline (per source):
   3. For papers: persist the binary at `.omr/materials/papers-raw/<ID>.<ext>` and write
      full-text Markdown to `.omr/materials/papers/<ID>.md` (same stem, different suffix).
      Other buckets still write `.omr/materials/<bucket>/<ID>.md`. The working root
-     defaults to `.omr/` (legacy `_omr/` fallback); see `workspace_root.py`.
+     defaults to `.omr/`; see `workspace_root.py`.
 
 The script is mechanical: no semantic analysis, no summarization. It only turns
 bytes on disk into Markdown text that ANALYZE then reads in full.
@@ -662,7 +662,7 @@ def main() -> int:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr)",
     )
     p.add_argument("--title", default=None)
     p.add_argument(

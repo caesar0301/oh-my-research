@@ -16,7 +16,7 @@
 
 User URLs plus **default four-bucket discovery**. After each source is recorded, **download + convert it to full-text Markdown** so ANALYZE can read the entire paper — not just the abstract.
 
-All artifact paths below are relative to the active OMR workspace root. Scripts default `--workspace` to `Path.cwd()/.omr` (the container; legacy `Path.cwd()/_omr` when only that exists); pass the topic root explicitly when a topic lives in `.omr/<topic-slug>/`.
+All artifact paths below are relative to the active OMR workspace root. Scripts default `--workspace` to `Path.cwd()/.omr` (the container); pass the topic root explicitly when a topic lives in `.omr/<topic-slug>/`.
 
 ## Trigger
 
@@ -59,7 +59,7 @@ Workers must **not** write `docs/index/papers-index.json` concurrently. Coordina
 2. Read `docs/index/papers-index.json` and **pre-assign** IDs for known items **and** reserved slots per bucket. Do **not** write the index yet. Unused reserved IDs are dropped at merge.
 3. Write `.omr/collect-batch.json` (topic, caps, assignments).
 4. Launch **four subagents in one parallel tool turn** (plus datasets only if opted in). Each follows `references/COLLECT/agents/bucket-worker.md`.
-5. Merge: `python3 scripts/collect_cli.py --merge-inbox` (defaults to `.omr/` under cwd, legacy `_omr/`)
+5. Merge: `python3 scripts/collect_cli.py --merge-inbox` (defaults to `.omr/` under cwd)
 6. Optional wave 2 for leftover URLs (new reserved IDs, same inbox/merge).
 7. Post-collect validation + **Gate M**.
 
@@ -69,7 +69,7 @@ Each worker records with:
 python3 scripts/collect_cli.py "<source>" --id P-001 --bucket papers --inbox
 ```
 
-(`--workspace` defaults to `.omr/` under cwd, legacy `_omr/`; pass `--workspace <path>` to override.)
+(`--workspace` defaults to `.omr/` under cwd; pass `--workspace <path>` to override.)
 
 **Fallback:** if the runtime cannot spawn subagents, still cover all four default buckets, sequentially. Never leave a half-merged index.
 

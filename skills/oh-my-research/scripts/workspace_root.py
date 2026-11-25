@@ -1,23 +1,16 @@
 #!/usr/bin/env python3
-"""Resolve the OMR working root (container) with legacy compatibility.
+"""Resolve the OMR working root (container).
 
 The working root is the directory that holds topic workspaces (or, for a
-legacy single-topic project, the workspace itself). The modern default is the
-hidden ``.omr/`` directory; older projects used ``_omr/``. This module keeps a
-single, shared resolution rule so every mechanical script agrees on the root.
+single-topic project, the workspace itself). The default is the hidden
+``.omr/`` directory. This module keeps a single, shared resolution rule so
+every mechanical script agrees on the root.
 
 Precedence (highest first):
 
   1. an explicit ``--workspace`` path (callers handle this verbatim),
   2. the ``OMR_WORKSPACE_ROOT`` environment variable,
-  3. an existing ``<cwd>/.omr`` directory          (modern default),
-  4. an existing ``<cwd>/_omr`` directory          (legacy fallback),
-  5. ``<cwd>/.omr``                                (modern default, created
-     later by INIT when it does not exist yet).
-
-Rule 4 is the compatibility guarantee: a project that already has ``_omr/``
-keeps using it instead of silently abandoning its data in a fresh ``.omr/``.
-Rule 5 means brand-new projects get ``.omr`` without any migration step.
+  3. ``<cwd>/.omr`` (created later by INIT when it does not exist yet).
 
 Note: the per-workspace state directory is also named ``.omr`` (e.g.
 ``<workspace>/.omr/tree-state.json``). That is a different level — it lives
@@ -31,11 +24,10 @@ import os
 from pathlib import Path
 
 PREFERRED_DIRNAME = ".omr"
-LEGACY_DIRNAME = "_omr"
 ENV_VAR = "OMR_WORKSPACE_ROOT"
 
 # Shared argparse help text so every script advertises the same default.
-DEFAULT_HELP = "<cwd>/.omr (legacy <cwd>/_omr)"
+DEFAULT_HELP = "<cwd>/.omr"
 
 
 def resolve_workspace_root(
@@ -52,7 +44,7 @@ def resolve_workspace_root(
         An explicit override (e.g. ``--workspace``). When given it always wins
         and is returned verbatim (resolved to an absolute path).
     base:
-        Directory to look in for ``.omr`` / ``_omr``. Defaults to ``Path.cwd()``.
+        Directory to look in for ``.omr``. Defaults to ``Path.cwd()``.
         Mostly useful for tests.
     env:
         Environment mapping to read ``OMR_WORKSPACE_ROOT`` from. Defaults to
@@ -67,14 +59,7 @@ def resolve_workspace_root(
         return Path(override).resolve()
 
     root = (base or Path.cwd()).resolve()
-    preferred = root / PREFERRED_DIRNAME
-    legacy = root / LEGACY_DIRNAME
-
-    if preferred.is_dir():
-        return preferred
-    if legacy.is_dir():
-        return legacy
-    return preferred
+    return root / PREFERRED_DIRNAME
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ A deep report is often tens of thousands of words. Holding outline + all evidenc
 
 ## Artifacts (on disk)
 
-All paths are relative to the active OMR workspace root (default container `.omr/`, topic root `.omr/<topic-slug>/`; legacy `_omr/` container still supported).
+All paths are relative to the active OMR workspace root (default container `.omr/`, topic root `.omr/<topic-slug>/`).
 
 | File | Public? | Role |
 |------|---------|------|

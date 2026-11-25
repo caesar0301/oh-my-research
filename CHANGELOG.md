@@ -13,6 +13,12 @@ Keep these in sync (use `scripts/skill_version.py`):
 
 Workspace research tags/backups are separate — see `references/VERSION/version.md`.
 
+## [2.2.2] — 2026-11-25
+
+### Changed
+
+- **Legacy `_omr/` working-root support removed — `.omr/` is now the only default.** The shared resolver (`skills/oh-my-research/scripts/workspace_root.py`) no longer falls back to an existing `<cwd>/_omr`; the working root is always `<cwd>/.omr` unless `--workspace` (or `OMR_WORKSPACE_ROOT`) overrides it. A leftover `_omr/` directory is ignored. `SKILL.md` (Workspace resolution), `INIT/init.md`, `REFERENCE.md`, `AGENTS.md.template`, `GRAPH.md`, `COLLECT/*`, `SYNTH/*`, `scripts/README.md`, and all script help/docstrings now state the `.omr` default only; `.gitignore` ignores only `.omr/`. Projects still using `_omr/` must rename it to `.omr/` or pass `--workspace <path>` explicitly. The resolver's `LEGACY_DIRNAME` constant and its fallback tests are removed; a new test asserts a stray `_omr/` directory is ignored.
+
 ## [2.2.1] — 2026-11-25
 
 ### Changed

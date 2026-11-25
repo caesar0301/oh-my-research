@@ -486,13 +486,13 @@ def main() -> None:
         "--write-workspace",
         type=Path,
         default=None,
-        help="Write .omr/locale.json under this workspace (default: <cwd>/.omr, or legacy <cwd>/_omr)",
+        help="Write .omr/locale.json under this workspace (default: <cwd>/.omr)",
     )
     parser.add_argument(
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root to read .omr/locale.json from (default: <cwd>/.omr, or legacy <cwd>/_omr)",
+        help="OMR working root to read .omr/locale.json from (default: <cwd>/.omr)",
     )
     parser.add_argument(
         "--language",

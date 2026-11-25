@@ -16,7 +16,7 @@
 
 ## Workspace Structure
 
-`<workspace>` is the active workspace root for this topic: an explicit `--workspace` path, otherwise `<project-root>/.omr/<topic-slug>/` under the default OMR working root (legacy `<project-root>/_omr/` container and single-topic workspaces remain valid). Parallel topics live in sibling subdirectories and never share state. INIT creates **only** the files below. Every other path appears when the first real file is written there — never as an empty folder.
+`<workspace>` is the active workspace root for this topic: an explicit `--workspace` path, otherwise `<project-root>/.omr/<topic-slug>/` under the default OMR working root. Parallel topics live in sibling subdirectories and never share state. INIT creates **only** the files below. Every other path appears when the first real file is written there — never as an empty folder.
 
 ```
 <workspace>/

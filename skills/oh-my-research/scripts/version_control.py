@@ -113,7 +113,7 @@ def main() -> None:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr)",
     )
     sub = p.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("tag")

@@ -185,7 +185,7 @@ Tune the spec to the report: e.g. a Chinese report sets `fonts.body.eastasia` + 
 
 ## Default deep-survey layout
 
-All paths are under the active OMR workspace root (default container `.omr/`, topic root `.omr/<topic-slug>/`; legacy `_omr/` container still supported).
+All paths are under the active OMR workspace root (default container `.omr/`, topic root `.omr/<topic-slug>/`).
 
 ```
 .omr/docs/survey/              # private drafting workspace

@@ -1,7 +1,7 @@
 """Tests for the shared OMR working-root resolver.
 
-Verifies the `.omr` default, the legacy `_omr` fallback, the "both exist"
-precedence, explicit overrides, and the ``OMR_WORKSPACE_ROOT`` env var.
+Verifies the `.omr` default, that a stray `_omr` directory is ignored,
+explicit overrides, and the ``OMR_WORKSPACE_ROOT`` env var.
 """
 
 from __future__ import annotations
@@ -32,22 +32,21 @@ class WorkspaceRootTests(unittest.TestCase):
     def resolve(self, *, env: dict[str, str] | None = None):
         return workspace_root.resolve_workspace_root(base=self.base, env=env or {})
 
-    def test_prefers_dot_omr_when_nothing_exists(self) -> None:
+    def test_defaults_to_dot_omr_when_nothing_exists(self) -> None:
         # Brand-new project: default to the hidden .omr container.
         self.assertEqual(self.resolve(), self.base / ".omr")
 
-    def test_falls_back_to_legacy_omr_when_only_that_exists(self) -> None:
-        (self.base / "_omr").mkdir()
-        self.assertEqual(self.resolve(), self.base / "_omr")
-
-    def test_dot_omr_wins_when_both_exist(self) -> None:
+    def test_uses_existing_dot_omr(self) -> None:
         (self.base / ".omr").mkdir()
+        self.assertEqual(self.resolve(), self.base / ".omr")
+
+    def test_ignores_stray_legacy_omr_dir(self) -> None:
+        # A leftover _omr/ must not be picked up as the working root.
         (self.base / "_omr").mkdir()
         self.assertEqual(self.resolve(), self.base / ".omr")
 
     def test_explicit_workspace_always_wins(self) -> None:
         (self.base / ".omr").mkdir()
-        (self.base / "_omr").mkdir()
         explicit = self.base / "custom-root"
         self.assertEqual(
             workspace_root.resolve_workspace_root(explicit, base=self.base, env={}),
@@ -75,7 +74,6 @@ class WorkspaceRootTests(unittest.TestCase):
 
     def test_constants(self) -> None:
         self.assertEqual(workspace_root.PREFERRED_DIRNAME, ".omr")
-        self.assertEqual(workspace_root.LEGACY_DIRNAME, "_omr")
         self.assertEqual(workspace_root.ENV_VAR, "OMR_WORKSPACE_ROOT")
 
 

@@ -9,7 +9,7 @@ Markdown file so ANALYZE can read the entire paper, not just the abstract.
 Papers persist the raw binary at `.omr/materials/papers-raw/<ID>.<ext>` and the
 converted Markdown at `.omr/materials/papers/<ID>.md` (same stem, different suffix).
 Other buckets still write `.omr/materials/<bucket>/<ID>.md`. The working root
-defaults to `.omr/` (legacy `_omr/` fallback); see `workspace_root.py`.
+defaults to `.omr/`; see `workspace_root.py`.
 
 Parallel COLLECT: bucket workers pass `--id` + `--bucket` + `--inbox` to write
 `.omr/docs/index/inbox/<ID>.json` without touching `papers-index.json`. The
@@ -382,7 +382,7 @@ def main() -> None:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr)",
     )
     p.add_argument("--title", default=None)
     p.add_argument(
