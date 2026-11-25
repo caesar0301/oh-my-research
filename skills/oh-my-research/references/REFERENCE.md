@@ -125,7 +125,7 @@ The full decision tree — intention detection, workspace-state detection, and P
 
 ## Artifact Naming
 
-Resolve the **active workspace** first (see `SKILL.md` § Workspace resolution): an explicit `--workspace` path, otherwise `<project-root>/_omr/<topic-slug>/` (legacy workspaces at `<project-root>/_omr/` remain valid). All paths below are relative to the active workspace root.
+Resolve the **active workspace** first (see `SKILL.md` § Workspace resolution): an explicit `--workspace` path, otherwise `<project-root>/.omr/<topic-slug>/` under the default working root (legacy `<project-root>/_omr/` container and single-topic workspaces remain valid). All paths below are relative to the active workspace root.
 
 | Artifact | Pattern | Location |
 |----------|---------|----------|

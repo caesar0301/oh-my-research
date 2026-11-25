@@ -152,7 +152,7 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 13. Per-chapter lenses completed; whole-document reverse outline + Narrative Audit completed; mandatory **Consistency & Polish pass** (`long-report.md` § Phase E.5) has no blocking findings.
 14. Gaps and limitations are present and tied to what would change the conclusions.
 15. Rendered DOCX/PDF inspected; for Markdown: Mermaid lint clean, TOC anchors resolve, front-matter complete; publication-safety and native-expression scans clean.
-16. Optional wiki under `_omr/deliverables/wiki/` after Gate D (`--no-wiki` to skip).
+16. Optional wiki under `<workspace>/deliverables/wiki/` after Gate D (`--no-wiki` to skip).
 
 ## Process (summary)
 
@@ -166,7 +166,7 @@ Helper: `scripts/prefer_language.py`. `export_report.py` uses the same default w
 6. Run per-chapter lenses → build reverse outline → run whole-document Narrative Audit → apply structural fixes → run the **Consistency & Polish pass** (`long-report.md` § Phase E.5), including `prose_lint.py` until no `high` finding remains.
 7. LLM authors `docs/<mode>/_document.json` (presentation decisions — see below).
 8. LLM QA2 → `gate_cli.py validate --workspace <active-workspace> --stage all` → `export_report.py` renders DOCX/PDF/Markdown into `<active-workspace>/deliverables/` → inspect → `report_lint.py` + `prose_lint.py` → Gate D.
-9. Deliver the `_omr/deliverables/` path + short summary; optional `_omr/deliverables/wiki/`.
+9. Deliver the `<workspace>/deliverables/` path + short summary; optional `<workspace>/deliverables/wiki/`.
 
 ## Presentation is LLM-driven (not baked into the script)
 
@@ -185,10 +185,10 @@ Tune the spec to the report: e.g. a Chinese report sets `fonts.body.eastasia` + 
 
 ## Default deep-survey layout
 
-All paths are under the active OMR workspace root (default container `_omr/`, topic root `_omr/<topic-slug>/`).
+All paths are under the active OMR workspace root (default container `.omr/`, topic root `.omr/<topic-slug>/`; legacy `_omr/` container still supported).
 
 ```
-_omr/docs/survey/              # private drafting workspace
+.omr/docs/survey/              # private drafting workspace
 ├── _outline.md
 ├── _citation-map.md          # private; not exported
 ├── _continuity.md            # private semantic continuity contract; not exported
@@ -206,7 +206,7 @@ _omr/docs/survey/              # private drafting workspace
     ├── 08-conclusions.md
     └── 09-references.md
 
-_omr/deliverables/             # public hand-off (OMR working root)
+.omr/deliverables/             # public hand-off (OMR working root)
 └── <topic>-survey-<lang>.docx|pdf|md
 ```
 
@@ -237,7 +237,7 @@ Progress: 33%
 When finished:
 
 ```
-Report: _omr/deliverables/<topic>-survey-en.docx
+Report: .omr/deliverables/<topic>-survey-en.docx
 Language: English
 Chapters: 9
 Key findings: …

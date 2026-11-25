@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from workspace_root import resolve_workspace_root
+
 
 def versions_dir(workspace: Path) -> Path:
     return workspace / ".omr" / "versions"
@@ -111,7 +113,7 @@ def main() -> None:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     sub = p.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("tag")
@@ -123,7 +125,7 @@ def main() -> None:
     d.add_argument("a")
     d.add_argument("b")
     args = p.parse_args()
-    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
+    ws = resolve_workspace_root(args.workspace)
     if args.cmd == "tag":
         print(json.dumps(tag(ws, args.label), indent=2))
     elif args.cmd in ("history", "list"):

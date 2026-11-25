@@ -65,7 +65,7 @@ collect → [Gate M] → analyze ⟲ think → [Gate T] → [Gate A / QA1] → [
 | `synth` | **judgment** (required) | `docs/<mode>/` drafts + `deliverables/*`, optional `deliverables/wiki/` |
 | `reconcile` | existing plans/synth | archive + updated artifacts |
 
-All artifact paths above are relative to the active OMR workspace root (default container `_omr/`, topic root `_omr/<topic-slug>/`).
+All artifact paths above are relative to the active OMR workspace root (default container `.omr/`, topic root `.omr/<topic-slug>/`; legacy `_omr/` container still supported).
 
 ## Unlock Rules (tree-state)
 

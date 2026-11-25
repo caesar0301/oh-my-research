@@ -16,7 +16,7 @@
 
 User URLs plus **default four-bucket discovery**. After each source is recorded, **download + convert it to full-text Markdown** so ANALYZE can read the entire paper — not just the abstract.
 
-All artifact paths below are relative to the active OMR workspace root. Scripts default `--workspace` to `Path.cwd()/_omr` (the container); pass the topic root explicitly when a topic lives in `_omr/<topic-slug>/`.
+All artifact paths below are relative to the active OMR workspace root. Scripts default `--workspace` to `Path.cwd()/.omr` (the container; legacy `Path.cwd()/_omr` when only that exists); pass the topic root explicitly when a topic lives in `.omr/<topic-slug>/`.
 
 ## Trigger
 
@@ -59,7 +59,7 @@ Workers must **not** write `docs/index/papers-index.json` concurrently. Coordina
 2. Read `docs/index/papers-index.json` and **pre-assign** IDs for known items **and** reserved slots per bucket. Do **not** write the index yet. Unused reserved IDs are dropped at merge.
 3. Write `.omr/collect-batch.json` (topic, caps, assignments).
 4. Launch **four subagents in one parallel tool turn** (plus datasets only if opted in). Each follows `references/COLLECT/agents/bucket-worker.md`.
-5. Merge: `python3 scripts/collect_cli.py --merge-inbox` (defaults to `_omr/` under cwd)
+5. Merge: `python3 scripts/collect_cli.py --merge-inbox` (defaults to `.omr/` under cwd, legacy `_omr/`)
 6. Optional wave 2 for leftover URLs (new reserved IDs, same inbox/merge).
 7. Post-collect validation + **Gate M**.
 
@@ -69,7 +69,7 @@ Each worker records with:
 python3 scripts/collect_cli.py "<source>" --id P-001 --bucket papers --inbox
 ```
 
-(`--workspace` defaults to `_omr/` under cwd; pass `--workspace <path>` to override.)
+(`--workspace` defaults to `.omr/` under cwd, legacy `_omr/`; pass `--workspace <path>` to override.)
 
 **Fallback:** if the runtime cannot spawn subagents, still cover all four default buckets, sequentially. Never leave a half-merged index.
 
@@ -103,15 +103,15 @@ npx -y @firecrawl/anydoc --version   # verify
 pip install pymupdf pdfplumber markdownify beautifulsoup4
 ```
 
-Script: `scripts/material_to_markdown.py` — downloads the source (arxiv SDK / DOI redirect / direct URL / local file), converts via the chain above, persists paper binaries to `_omr/materials/papers-raw/<ID>.<ext>`, writes Markdown to `_omr/materials/papers/<ID>.md` (other buckets: `_omr/materials/<bucket>/<ID>.md`), and records failures to `_omr/materials/failed/`.
+Script: `scripts/material_to_markdown.py` — downloads the source (arxiv SDK / DOI redirect / direct URL / local file), converts via the chain above, persists paper binaries to `.omr/materials/papers-raw/<ID>.<ext>`, writes Markdown to `.omr/materials/papers/<ID>.md` (other buckets: `.omr/materials/<bucket>/<ID>.md`), and records failures to `.omr/materials/failed/`.
 
-**Batch conversion of pre-downloaded files:** If the user has already downloaded a batch of PDFs (e.g. via `curl`/`wget`) into `_omr/materials/papers-raw/` without corresponding `.md` files, use:
+**Batch conversion of pre-downloaded files:** If the user has already downloaded a batch of PDFs (e.g. via `curl`/`wget`) into `.omr/materials/papers-raw/` without corresponding `.md` files, use:
 
 ```bash
-python3 scripts/material_to_markdown.py --convert-dir _omr/materials/papers-raw
+python3 scripts/material_to_markdown.py --convert-dir .omr/materials/papers-raw
 ```
 
-This scans the directory for convertible files (`.pdf`, `.docx`, `.html`, etc.) that lack a corresponding `.md` file, and writes Markdown to `_omr/materials/papers/<stem>.md`. The material ID is derived from the filename stem (e.g. `2506.23852.pdf` → ID `2506.23852`). Legacy mixed PDFs still sitting in `_omr/materials/papers/` convert in place if you pass `--convert-dir _omr/materials/papers`.
+This scans the directory for convertible files (`.pdf`, `.docx`, `.html`, etc.) that lack a corresponding `.md` file, and writes Markdown to `.omr/materials/papers/<stem>.md`. The material ID is derived from the filename stem (e.g. `2506.23852.pdf` → ID `2506.23852`). Legacy mixed PDFs still sitting in `.omr/materials/papers/` convert in place if you pass `--convert-dir .omr/materials/papers`.
 
 ## Handlers
 
@@ -172,7 +172,7 @@ If conversion failed, `markdown_status: "failed"` and `markdown_failure_reason` 
 
   ```bash
   # Convert pre-downloaded binaries (e.g. curl'ed PDFs)
-  python3 scripts/material_to_markdown.py --convert-dir _omr/materials/papers-raw
+  python3 scripts/material_to_markdown.py --convert-dir .omr/materials/papers-raw
   # Convert / retry every indexed source lacking a non-empty .md
   python3 scripts/material_to_markdown.py --index
   ```

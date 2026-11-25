@@ -26,7 +26,7 @@ A deep report is often tens of thousands of words. Holding outline + all evidenc
 
 ## Artifacts (on disk)
 
-All paths are relative to the active OMR workspace root (default container `_omr/`, topic root `_omr/<topic-slug>/`).
+All paths are relative to the active OMR workspace root (default container `.omr/`, topic root `.omr/<topic-slug>/`; legacy `_omr/` container still supported).
 
 | File | Public? | Role |
 |------|---------|------|
@@ -38,7 +38,7 @@ All paths are relative to the active OMR workspace root (default container `_omr
 | `.omr/report-state.json` | no | Progress machine for resume |
 | `deliverables/*` | **yes** | Final DOCX/PDF/Markdown — the only shareable surface (optional `deliverables/wiki/`) |
 
-Public/private split: only files under `_omr/deliverables/` are handed to a reader. Drafts, working ledgers, and the presentation spec stay in `_omr/docs/<mode>/`.
+Public/private split: only files under `<workspace>/deliverables/` are handed to a reader. Drafts, working ledgers, and the presentation spec stay in `<workspace>/docs/<mode>/`.
 
 Underscore-prefixed working files are **excluded from export content** by `export_report.py` (chapters only). `_document.json` is read as the presentation spec, not rendered as content.
 

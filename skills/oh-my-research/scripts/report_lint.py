@@ -22,7 +22,7 @@ Exit codes: 0 = clean, 1 = violations found, 2 = usage error.
 
 Usage:
   python3 scripts/report_lint.py --mode survey
-  python3 scripts/report_lint.py --file _omr/docs/survey/ego-end-to-end-pipeline.md
+  python3 scripts/report_lint.py --file .omr/docs/survey/ego-end-to-end-pipeline.md
   python3 scripts/report_lint.py --mode survey --json  # machine-readable output
 """
 
@@ -34,6 +34,8 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+
+from workspace_root import resolve_workspace_root
 
 # --- Patterns --------------------------------------------------------------
 
@@ -269,14 +271,14 @@ def main() -> int:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     p.add_argument("--mode", default=None, help="survey/report/manuscript/brief")
     p.add_argument("--file", type=Path, default=None, help="lint a specific file")
     p.add_argument("--json", action="store_true", help="machine-readable output")
     args = p.parse_args()
 
-    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
+    ws = resolve_workspace_root(args.workspace)
     files = find_report_files(ws, args.mode, args.file)
     spec_files = find_document_specs(ws, args.mode)
 

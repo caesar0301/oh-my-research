@@ -25,6 +25,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from workspace_root import resolve_workspace_root
+
 # Exact IANA / legacy zone → BCP-47 language tag (timezone wins over locale).
 TIMEZONE_LANGUAGE: dict[str, str] = {
     # Chinese family
@@ -484,13 +486,13 @@ def main() -> None:
         "--write-workspace",
         type=Path,
         default=None,
-        help="Write .omr/locale.json under this workspace (default: <cwd>/_omr)",
+        help="Write .omr/locale.json under this workspace (default: <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     parser.add_argument(
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root to read .omr/locale.json from (default: <cwd>/_omr)",
+        help="OMR working root to read .omr/locale.json from (default: <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     parser.add_argument(
         "--language",
@@ -507,8 +509,7 @@ def main() -> None:
         )
         return
 
-    default_workspace = Path.cwd() / "_omr"
-    ws_for_read = (args.workspace or default_workspace).resolve()
+    ws_for_read = resolve_workspace_root(args.workspace)
     result = resolve_language(
         explicit=args.language,
         workspace=ws_for_read,

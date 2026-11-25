@@ -22,20 +22,20 @@ Also: new project, start research, initialize workspace, or first message with a
 
 ## Existing topic first (mandatory)
 
-`_omr/` is the default working root (container), not automatically the workspace for the new question.
+`.omr/` is the default working root (container), not automatically the workspace for the new question. **Legacy compatibility:** if `<project-root>/_omr/` exists and `<project-root>/.omr/` does not, use `_omr/` as the working root so existing data is not abandoned; if both exist, `.omr/` wins.
 
-1. If the user supplied `--workspace <path>`, use it as the active workspace and skip the scan.
+1. If the user supplied `--workspace <path>` (or `OMR_WORKSPACE_ROOT`), use it as the active workspace and skip the scan.
 2. Otherwise scan the working root for directories containing both `AGENTS.md` and `.omr/tree-state.json`; the root itself counts as a legacy single-topic workspace.
 3. Match the new question against the topic slug and the `Research Question` / title in `AGENTS.md`, plus names in `deliverables/`. Exactly one match → **resume that workspace; do not INIT again**. Several matches → ask the user to pick. No match → continue with INIT below and create `<working-root>/<topic-slug>/`.
 4. Record the resolved active workspace path; every later op and script call uses it.
 
 ## Steps
 
-1. Derive `topic-slug` from the topic: lowercase, spaces → hyphens (e.g. `agent memory` → `agent-memory`). Use the user-supplied `--workspace` when present; otherwise create `<project-root>/_omr/<topic-slug>/` as the active workspace. A legacy single-topic workspace directly at `<project-root>/_omr/` is still valid when it already matches the question.
+1. Derive `topic-slug` from the topic: lowercase, spaces → hyphens (e.g. `agent memory` → `agent-memory`). Use the user-supplied `--workspace` when present; otherwise create `<working-root>/<topic-slug>/` as the active workspace (working root defaults to `<project-root>/.omr`, legacy `<project-root>/_omr`). A legacy single-topic workspace directly at the working root is still valid when it already matches the question.
 2. Create **only** (inside the active workspace):
 
 ```
-<working-root>/<topic-slug>/   # active workspace; <working-root> defaults to <project-root>/_omr
+<working-root>/<topic-slug>/   # active workspace; <working-root> defaults to <project-root>/.omr (legacy <project-root>/_omr)
 ├── AGENTS.md
 └── .omr/
     ├── tree-state.json

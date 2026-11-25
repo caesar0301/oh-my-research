@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from workspace_root import resolve_workspace_root
+
 MODES = ("semi-automated", "quick-pass", "fully-automated")
 
 EXPLICIT_PHRASES = (
@@ -72,7 +74,7 @@ def utc_now() -> str:
 
 
 def default_workspace(workspace: str | None) -> Path:
-    return (Path(workspace) if workspace else Path.cwd() / "_omr").resolve()
+    return resolve_workspace_root(workspace)
 
 
 def mode_path(workspace: Path) -> Path:
@@ -475,7 +477,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     def add_workspace(sub: argparse.ArgumentParser) -> None:
         sub.add_argument(
-            "--workspace", help="active OMR workspace (default: <cwd>/_omr)"
+            "--workspace",
+            help="active OMR workspace (default: <cwd>/.omr, or legacy <cwd>/_omr)",
         )
 
     init_parser = subparsers.add_parser(

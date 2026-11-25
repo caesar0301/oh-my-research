@@ -17,7 +17,8 @@ starter with --emit-spec, then edit it per report/scenario/language.
 Default output is the workspace-level public hand-off directory:
 <workspace>/deliverables/<topic>-<mode>-<language>.<format>
 
-The default workspace is `<cwd>/_omr` (the OMR working root). Override with
+The default workspace is `<cwd>/.omr` (the OMR working root), with automatic
+fallback to the legacy `<cwd>/_omr` when only that exists. Override with
 `--workspace`.
 """
 
@@ -35,6 +36,8 @@ from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from workspace_root import resolve_workspace_root
 
 MODES = ("survey", "report", "manuscript", "brief")
 
@@ -2334,7 +2337,7 @@ def main() -> None:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     parser.add_argument("--mode", default="survey", choices=MODES)
     parser.add_argument("--format", default="docx", choices=["docx", "pdf", "md"])
@@ -2359,11 +2362,11 @@ def main() -> None:
         default=None,
         help="Output path (absolute, or relative to --workspace). "
         "Default: <workspace>/deliverables/<topic>-<mode>-<language>.<format> "
-        "(workspace defaults to <cwd>/_omr)",
+        "(workspace defaults to <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     args = parser.parse_args()
 
-    workspace = (args.workspace or (Path.cwd() / "_omr")).resolve()
+    workspace = resolve_workspace_root(args.workspace)
     language = args.language or default_language(workspace)
     root = workspace / "docs" / args.mode
     if args.emit_spec:

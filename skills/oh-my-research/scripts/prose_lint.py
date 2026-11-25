@@ -25,9 +25,9 @@ Exit codes: 0 = clean or warnings only, 1 = high findings (or any with --strict)
 
 Usage:
   python3 scripts/prose_lint.py --mode report
-  python3 scripts/prose_lint.py --file _omr/deliverables/report-zh-CN.md
+  python3 scripts/prose_lint.py --file .omr/deliverables/report-zh-CN.md
   python3 scripts/prose_lint.py --mode report --json
-  python3 scripts/prose_lint.py --mode report --allow _omr/.omr/prose-lint-allow.txt
+  python3 scripts/prose_lint.py --mode report --allow .omr/.omr/prose-lint-allow.txt
 """
 
 from __future__ import annotations
@@ -38,6 +38,8 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+
+from workspace_root import resolve_workspace_root
 
 # --- Rule data -------------------------------------------------------------
 
@@ -411,7 +413,7 @@ def main() -> int:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     p.add_argument("--mode", default=None, help="survey/report/manuscript/brief")
     p.add_argument("--file", type=Path, default=None, help="lint a specific file")
@@ -422,7 +424,7 @@ def main() -> int:
     p.add_argument("--json", action="store_true", help="machine-readable output")
     args = p.parse_args()
 
-    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
+    ws = resolve_workspace_root(args.workspace)
     files = find_files(ws, args.mode, args.file)
     if not files:
         if args.json:

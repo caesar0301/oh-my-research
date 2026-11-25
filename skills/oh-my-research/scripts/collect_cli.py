@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Lightweight collect CLI: record sources into _omr/materials/ + papers-index.json.
+"""Lightweight collect CLI: record sources into .omr/materials/ + papers-index.json.
 
 Creates only the directories needed for the files being written — never a full
 empty materials/ tree. After recording a source, optionally invokes
 `material_to_markdown.py` to download + convert the source into a full-text
 Markdown file so ANALYZE can read the entire paper, not just the abstract.
 
-Papers persist the raw binary at `_omr/materials/papers-raw/<ID>.<ext>` and the
-converted Markdown at `_omr/materials/papers/<ID>.md` (same stem, different suffix).
-Other buckets still write `_omr/materials/<bucket>/<ID>.md`.
+Papers persist the raw binary at `.omr/materials/papers-raw/<ID>.<ext>` and the
+converted Markdown at `.omr/materials/papers/<ID>.md` (same stem, different suffix).
+Other buckets still write `.omr/materials/<bucket>/<ID>.md`. The working root
+defaults to `.omr/` (legacy `_omr/` fallback); see `workspace_root.py`.
 
 Parallel COLLECT: bucket workers pass `--id` + `--bucket` + `--inbox` to write
-`_omr/docs/index/inbox/<ID>.json` without touching `papers-index.json`. The
+`.omr/docs/index/inbox/<ID>.json` without touching `papers-index.json`. The
 coordinator then runs `--merge-inbox`.
 """
 
@@ -26,6 +27,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+
+from workspace_root import resolve_workspace_root
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _CONVERTER = _SCRIPT_DIR / "material_to_markdown.py"
@@ -379,7 +382,7 @@ def main() -> None:
         "--workspace",
         type=Path,
         default=None,
-        help="OMR working root (default: <cwd>/_omr)",
+        help="OMR working root (default: <cwd>/.omr, or legacy <cwd>/_omr)",
     )
     p.add_argument("--title", default=None)
     p.add_argument(
@@ -407,7 +410,7 @@ def main() -> None:
         help="download + convert each source to full-text Markdown via anydoc (default: on)",
     )
     args = p.parse_args()
-    ws = (args.workspace or (Path.cwd() / "_omr")).resolve()
+    ws = resolve_workspace_root(args.workspace)
 
     if args.merge_inbox:
         print(json.dumps(merge_inbox(ws), indent=2))

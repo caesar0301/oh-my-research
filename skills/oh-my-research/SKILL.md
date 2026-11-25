@@ -36,16 +36,17 @@ Optional: IDEA, DECIDE (stance), RECONCILE. Default pattern: **Evidence-Deep**. 
 
 ## Workspace resolution (multi-topic)
 
-`_omr/` is the **default OMR working root (a container)**, not necessarily the active workspace. The active workspace is the topic root that every op reads and writes.
+`.omr/` is the **default OMR working root (a container)**, not necessarily the active workspace. The active workspace is the topic root that every op reads and writes. **Legacy compatibility:** the older `_omr/` working root is still supported — if `<project-root>/_omr/` exists and `<project-root>/.omr/` does not, resolve `_omr/` as the working root so existing data is not abandoned. If both exist, `.omr/` wins. An explicit `--workspace` (or the `OMR_WORKSPACE_ROOT` env var) always wins.
 
 1. If the user explicitly passes `--workspace <path>` or names a workspace, use it verbatim as the active workspace. Do **not** append a topic slug.
-2. Otherwise resolve `<project-root>/_omr/` as the working root and **scan it before INIT**:
+2. Otherwise resolve the working root (`<project-root>/.omr/` by default, legacy `<project-root>/_omr/` fallback) and **scan it before INIT**:
    - A topic workspace is any directory containing `AGENTS.md` **and** `.omr/tree-state.json`. The working root itself counts for legacy single-topic workspaces.
    - Match the new request against topic slug, `AGENTS.md` research question/title, and existing deliverable names. Exactly one match → resume that workspace. Several matches → ask the user. No match → INIT a new `<working-root>/<topic-slug>/`.
-3. Set the active workspace to the resolved topic root. All state reads (`.omr/tree-state.json`, gates, report-state) and all mechanical scripts use this root. Script defaults (`<cwd>/_omr`) point at the container, so pass `--workspace <topic-root>` explicitly whenever the active workspace is a topic subdirectory.
+3. Set the active workspace to the resolved topic root. All state reads (`.omr/tree-state.json`, gates, report-state) and all mechanical scripts use this root. Script defaults (`<cwd>/.omr`, legacy `<cwd>/_omr`) point at the container, so pass `--workspace <topic-root>` explicitly whenever the active workspace is a topic subdirectory.
 
 ```
-<project-root>/_omr/                       # default working root (container)
+<project-root>/.omr/                       # default working root (container)
+                                          # (legacy <project-root>/_omr/ still supported)
 ├── AGENTS.md, .omr/...                    # legacy single-topic workspace (still supported)
 ├── yolo-vs-rfdetr/                        # topic workspace A
 │   ├── AGENTS.md, .omr/...
@@ -135,7 +136,7 @@ Before routing to a stage, resolve the active workspace first (see Workspace res
 | WORKFLOW | `workflow [--pattern P]` | Graph-driven multi-step Evidence-Deep (or other pattern) | `references/WORKFLOW/workflow-overview.md` |
 | QA | `qa qa1\|qa2\|all\|state-check` | LLM QA checklists; `state-check` reconciles disk vs tree-state and runs `gate_cli.py validate` in the active workspace | `references/GATES.md` |
 
-Every op acts on the resolved active workspace. When calling mechanical scripts directly, add `--workspace <active-workspace>`; the built-in default `<cwd>/_omr` is the container, not a topic root.
+Every op acts on the resolved active workspace. When calling mechanical scripts directly, add `--workspace <active-workspace>`; the built-in default `<cwd>/.omr` (legacy `<cwd>/_omr`) is the container, not a topic root.
 
 ## Confirmation Gates
 
@@ -166,7 +167,7 @@ CLI syntax, accepted mode-change phrases, and the full command table: `reference
 
 ## Default Paths
 
-`<workspace>` below means the **active workspace root** resolved by Workspace resolution: an explicit `--workspace` path, otherwise a topic root under the default container `<project-root>/_omr/<topic-slug>/` (legacy single-topic workspaces at `<project-root>/_omr/` remain valid). All research artifacts — state, materials, docs, and deliverables — live under `<workspace>`. Paths below are **logical destinations**. Create a folder only when writing the first file into it (see `references/INIT/init.md`).
+`<workspace>` below means the **active workspace root** resolved by Workspace resolution: an explicit `--workspace` path, otherwise a topic root under the default container `<project-root>/.omr/<topic-slug>/` (legacy `<project-root>/_omr/` container and single-topic workspaces remain valid). All research artifacts — state, materials, docs, and deliverables — live under `<workspace>`. Paths below are **logical destinations**. Create a folder only when writing the first file into it (see `references/INIT/init.md`).
 
 **Two surfaces.** `<workspace>/deliverables/` is the only public, reader-facing surface — everything a user reads or shares lands there. `<workspace>/materials/`, `<workspace>/docs/`, and `<workspace>/.omr/` are private working state and never leave the workspace.
 
@@ -206,7 +207,7 @@ Templates: `assets/`. Patterns: `patterns/`. Full operation reference: `referenc
 
 ## Dependencies
 
-- Read/write project workspace; all mechanical scripts accept `--workspace <active-workspace>` (script default `<cwd>/_omr` is the container, not a topic root)
+- Read/write project workspace; all mechanical scripts accept `--workspace <active-workspace>` (script default `<cwd>/.omr`, legacy `<cwd>/_omr`, is the container, not a topic root)
 - Agent-authored state under `<active-workspace>/.omr/` (tree, loop, report-state, quality-gates) — see `references/LLM-STATE.md`
 - Mechanical scripts only (no quality judgment; per-script flags, defaults, and examples in `scripts/README.md`): `gate_cli.py` (gate mode / confirmation / chain validation) · `export_report.py` (spec-driven DOCX/PDF/Markdown renderer) · `collect_cli.py` + `material_to_markdown.py` (record sources → download → full-text Markdown) · `prefer_language.py` (locale → BCP-47) · `version_control.py` (workspace tags/backups) · `report_lint.py` (publication safety) · `prose_lint.py` (native expression)
 - Export deps via `scripts/requirements.txt`; anydoc needs Node 20+; `pymupdf` / `pdfplumber` / `markdownify` / `beautifulsoup4` are optional fallbacks
